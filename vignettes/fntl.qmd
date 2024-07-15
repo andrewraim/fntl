@@ -1,0 +1,3085 @@
+---
+title: "`fntl`: Numerical Tools for Rcpp and Lambda Functions"
+author:
+  - name: Andrew M. Raim
+    email: andrew.raim@gmail.com
+affiliations:
+  - name: U.S. Census Bureau
+    department: Center for Statistical Research and Methodology
+    address: 4600 Silver Hill Road
+    city: Washington DC
+    country: U.S.A.
+format:
+  pdf:
+    fontsize: 12pt
+    indent: false
+    toc: true
+    number-sections: true
+    colorlinks: true
+    link-citations: true
+    prompt: false
+    include-in-header:
+      text: |
+        \usepackage{common}
+vignette: >
+  %\VignetteIndexEntry{fntl}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{quarto::pdf}
+bibliography: references.bib
+editor_options: 
+  chunk_output_type: console
+abstract: |
+  R programmers can combine R and C++ to effectively navigate
+  a variety of computing tasks: R excels as a language for interactive tasks
+  such as data wrangling, analysis, and plotting; on the other hand, C++ can be
+  used to efficiently carry out intensive computations. Rcpp and related
+  tools have greatly simplified interoperability between the two languages.
+  However, numerical computing tasks that involve functions as arguments, such
+  as integration, root-finding, and optimization, which are routinely carried
+  out in R, are not as straightforward in C++ within the Rcpp framework.
+  The `fntl` package seeks to improve this by providing a straightforward
+  API for numerical tools where functional arguments are specified as C++
+  lambda functions. Like functions in R, lambda functions can be defined in
+  the course of a C++ program, "capturing" variables in the surrounding
+  environment if desired, and be passed as arguments to other functions. This
+  enables the development of R-like programs in C++, which may be appealing to
+  Rcpp users compared to existing alternatives in the extended Rcpp family of
+  packages. Because the overhead to evaluate a lambda function is low compared
+  to that of evaluating an R function from C++, good performance is also
+  possible in this paradigm.
+thanks: |
+  Document was compiled `{r} format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")` and
+  corresponds to `fntl` version `{r} packageVersion("fntl")`.
+  **Contact**`:` <andrew.raim@gmail.com>, Center for Statistical Research &
+  Methodology, U.S. Census Bureau, Washington, DC, 20233, U.S.A.
+geometry:
+  - left=0.75in
+  - right=0.75in
+  - top=0.75in
+  - bottom=1.00in
+code-block-bg: "#FAFAFA"
+code-block-border-left: "#008CFF"
+callout-icon: false
+filters:
+  - include-code-files
+execute:
+  eval: true
+mainfont: Latin Modern Roman
+sansfont: Latin Modern Roman
+---
+
+```{r}
+#| include: false
+library(fntl)
+library(tidyverse)
+
+set.seed(1234)
+```
+
+# Disclaimer and Acknowledgments {-}
+
+This document is released to inform interested parties of ongoing research and
+to encourage discussion of work in progress. Any views expressed are those of
+the author and not those of the U.S. Census Bureau.
+
+Thanks to Drs. Joseph Kang and Tommy Wright (U.S. Census Bureau) for reviewing
+a draft of this document.
+
+Although there are no guarantees of correctness of the `fntl` package,
+reasonable efforts will be made to address shortcomings. Comments, questions,
+corrections, and possible improvements can be communicated through the
+project's Github repository (<https://github.com/andrewraim/fntl>).
+
+# Introduction {#sec-intro}
+
+Users of R [@Rcore2024] can implement intensive computations in compiled C++
+and engage in interactive computation through the interpreted R language. The
+Rcpp package [@Rcpp2024] simplifies the process by automating interoperation
+between the two languages and providing an intuitive API in C++. However,
+numerical tools such as integration, root-finding, and optimization, which are
+routinely used in R, are not as readily available or easy to use when carrying
+out lower-level programming in C++. Numerical tools in R may be invoked
+from C++, but this incurs an overhead which can offset gains in performance
+which motivate the use of C++. The purpose of the `fntl` package is to
+facilitate access to such numerical tools in C++ using lambda functions. Here,
+R-like code can be achieved in C++ where functions are defined on the fly and
+passed as arguments to other routines. The name "fntl" is a portmanteau of
+"**f**unctions", "**n**umerical **t**ools", and "**l**ambdas".
+
+@IhakaGentleman1996 describe programming with functions as one of the main
+motivations in developing R. Namely, functions may be defined dynamically in
+the course of a program and can make use of variables from the surrounding
+environment. As an example, consider the following R snippet to compute the
+maximum likelihood estimate (MLE) of $X_1, \ldots, X_n \sim \text{N}(\mu, 1)$.
+
+```{r}
+mu_true = 0
+x = rnorm(n = 200, mean = mu_true, sd = 1)
+loglik = function(mu) { sum(dnorm(x, mu, 1, log = TRUE)) }
+optimize(loglik, lower = -100, upper = 100, maximum = TRUE)
+```
+
+Here the generated sample `x` is "baked in" to the definition of `loglik` so
+that `loglik` can be regarded as a univariate function of `mu` to be used with
+`optimize`. The ability to construct functions such as `loglik` in the course
+of a program and pass them to other functions, as any other variable, can be
+tremendously convenient. @Wickham2019 discusses some design patterns which are
+possible using functions in R. However, such conveniences come at a cost, as
+performance can be inefficient in both speed and memory management.
+
+Performance limitations in R can sometimes be worked around; for example, loops
+and apply statements are typically slow because they are executed by an interpreter,
+but matrix operations are typically fast because they make use of calls
+to BLAS, LAPACK, and other compiled matrix libraries. Refactoring loops into
+matrix operations can yield a significant performance improvement when it is
+feasible. Compiled languages such as FORTRAN and C/C++ are often used for high
+performance implementation of numerical methods; however, they are not
+well-suited for interactive usages such as data wrangling, data analysis,
+and graphics like R, MATLAB, or Python. Julia [@BezansonEtAl2017] has emerged
+over the past decade as a language for scientific computing which is both
+suitable to be used interactively and compiles into efficient executable code.
+
+R supports integration with FORTRAN and C/C++ so that high performance code
+can be used interactively from the R interpreter; therefore, it remains a
+viable alternative to languages like Julia. The `Rcpp` package largely
+automates integration with C/C++ code so that users can focus their efforts on
+solving the problem at hand. For a function call from R to C++, this automation
+includes unpacking the arguments from `SEXP` objects into C++ objects and later
+packing the result into an `SEXP` object to be returned. Overhead from repeated
+packing and unpacking can hinder performance; on the other hand,
+performance while submerged in C++ is free of this overhead. The Rcpp API
+provides general C++ classes for vectors, matrices, lists, and other routinely
+used objects from R. Additional Rcpp extension packages have been developed to
+provide APIs with more application-specific classes; for example, RcppArmadillo
+[@EddelbuettelSanderson2014] exposes the API from Armadillo for numerical
+matrix operations.
+
+A performance penalty is also suffered when defining a function in R and using
+it from C++ with Rcpp. Calling the function from C++ requires going
+back through the R runtime environment in addition to packing arguments into
+`SEXP` objects and unpacking return values from `SEXP` objects. Doing so
+repeatedly accumulates the penalty, and can negate performance benefits of
+using C++. Instead, we will consider utilizing lambda functions in C++, which
+were introduced in the C++11 specification. There are alternative methods of
+defining and passing functions as objects - such as through function pointers
+and functor classes - but lambda functions seem best aligned with the R style
+discussed by @IhakaGentleman1996. Traditional functions and classes used in the
+function pointer and functor approaches, respectively, are declared in their
+own blocks prior to use. Another major difference lies in auxiliary data - such
+as sample data in a loglikelihood function - which are not considered to be
+primary arguments. With function pointers, auxiliary data are passed as
+additional arguments that each caller must furnish. Functors are classes which
+expose the function of interest and encapsulate auxiliary data using member
+variables.
+
+To demonstrate lambdas, consider the following C++ code snippet.
+
+```{cpp}
+auto f = [](double x, double y) -> double { return x*y; };
+```
+
+The function `f` may be invoked as usual with an expression such as `f(x, y)`.
+Here, `f` is a lambda with `double` arguments `x` and `y` which returns the
+product `x*y` as another `double`. The `auto` keyword instructs the compiler to
+infer the type of `f` from the  return type of the right-hand side of the
+equality operator. In the previous example, the return type of the lambda can
+also be inferred, and we may rewrite it as follows.
+
+```{cpp}
+auto f = [](double x, double y) { return x*y; };
+```
+
+Like an R function, variables in scope of the lambda may be "baked in" to it.
+Here is an example from our MLE setting.
+
+```{cpp}
+Rcpp::NumericVector x = Rcpp::rnorm(200);
+auto loglik = [&](double mu) {
+    double out = Rcpp::sum(Rcpp::dnorm(x, mu, 1, true));
+	return out;
+};
+```
+
+The function `loglik` takes a `double` argument `mu` and returns a `double`.
+The randomly generated data `x` is included in the function definition; C++
+documentation refers to `x` as a *capture* of the lambda `loglik`. The
+bracketed expression `[&]` specifies that captures of `loglik` should be by
+reference; alternatively, `[=]` would specify that captures should be done by
+value so that copies of the original variable are used. It is also possible to
+specify by-reference or by-value for each captured variable.
+
+To be able to pass a lambda with captures as an argument to other
+functions, we wrap it in a [Standard Template Library][stl-url] (STL) function
+as follows.
+
+```{cpp}
+std::function<double(double)> loglik = [&](double mu) {
+    double out = Rcpp::sum(Rcpp::dnorm(x, mu, 1, true));
+	return out;
+};
+```
+
+Note that the template argument of `std::function<double(double)>` describes
+the domain and range of the function: the `double` in parentheses is the
+argument and the `double` outside indicates the return type.
+
+Lambda functions can be used directly with the Rcpp API in some cases. For
+example, an Rcpp Gallery [post][RcppLambdaPost] demonstrates the use
+of the STL `transform` function to apply a lambda to each element of a vector.
+The `fntl` package avoids duplicating this existing functionality.
+
+Numerical tools implemented in `fntl` are covered in other Rcpp-related
+packages to some extent. The `RcppNumerical` package [@RcppNumerical2024]
+implements numerical integration - both univariate and multivariate - and
+optimization using a limited memory Broyden, Fletcher, Goldfarb and Shanno
+method. This is accomplished by providing an Rcpp interface to  several open
+source libraries. The `roptim` package [@Roptim2022] provides an Rcpp interface
+to the R API to call individual optimization methods underlying the `optim`
+function. Function arguments in both `RcppNumerical` and `roptim` are specified
+via C++ functors. This vignette of `roptim` provides a discussion on calling
+the R API which was helpful in the development of `fntl`. A number of numerical
+utilities in the GSL [@GalassiEtAl2009] and [Boost](https://www.boost.org)
+libraries are provided by the `RcppGSL` [@RcppGSL2024] and `BH` [@BH2024]
+packages, respectively. The `RcppGSL` package requires installation of the
+underlying GSL library to build the source package. The author of the present
+document finds the interfaces of both GSL and Boost to be somewhat daunting,
+which has motivated a search for alternatives.
+
+The `fntl` package is guided by several design principles. The interface is
+intended to be simple and familiar to R users. External dependencies beyond
+the R platform itself and the Rcpp package are avoided; this is to support use
+in locked-down computing environments where adding or upgrading system libraries
+may be nontrivial. For numerical methods, we first prefer to make use of
+functions exposed as entry points in the R API [@WritingRExtensions, Section 6].
+In cases where a desired R method is not exposed in the API, we roll our own
+implementation. Such methods in `fntl` may not be exactly the same as those in
+R, but are intended to be comparable. 
+
+@sec-overview presents an overview of the `fntl` API. Subsequent sections
+present the API in detail by topic: numerical integration in @sec-integrate,
+numerical differentiation in @sec-diff, root-finding in @sec-findroot,
+univariate optimization in @sec-optimize, multivariate optimization in
+@sec-optim, and matrix operations in @sec-matrix. The C++ examples in each
+section can be obtained as standalone files in the
+[vignettes/examples][examples-url] folder of the `fntl` source repository.
+
+[stl-url]: https://www.cppreference.com/Cpp_STL_ReferenceManual.pdf
+[RcppLambdaPost]: https://gallery.rcpp.org/articles/simple-lambda-func-c++11
+[examples-url]: https://github.com/andrewraim/fntl/tree/main/vignettes/examples
+
+
+# Overview {#sec-overview}
+
+## A First Example {#sec-first-example}
+
+We will first consider a brief example to illustrate use of the `fntl` package.
+If attempting to follow along, ensure that you have successfully installed the
+`fntl` package on your system. The following C++ code, given in the file
+`examples/first.cpp`, computes the integral
+$B(a,b) = \int_0^1 x^{a-1} (1-x)^{b-1} dx$.
+
+```{.cpp include="examples/first.cpp"}
+```
+
+There are a number of points to note in this example.
+
+1. The first two lines - the `depends` attribute and the include of `fntl.h` -
+   are needed to access the `fntl` library from C++.
+
+2. Functions and other objects in `fntl` are accessed through the `fntl`
+   namespace (e.g., `fntl::integrate`).
+
+3. The call to `integrate` follows a similar pattern as many functions in
+   `fntl`. Primary arguments include the function `f` and the bounds of the
+   integral, while optional arguments such as the number of subdivisions are
+   passed in a struct of type `integrate_args`. The result of `integrate` is
+   an `integrate_result` struct containing the integral approximation `value`,
+   a return code `status`, and several other outputs from the operation.
+
+4. The `integrate_args` struct uses default values for any unspecified
+   arguments. Users often will not want to specify values such as tolerances
+   or verbosities. Similar argument names and default values as the
+   corresponding R function are used when possible.
+
+5. The integrand `f` is defined as a `dfd`; this is a typedef in `fntl`
+   which is a shorthand for `std::function<double(double)>`.
+
+6. The last line shows the `integrate_result` being wrapped into an Rcpp `List`
+   so that it becomes an R list when returned to R.
+
+7. The `status` code is a value from the `integrate_status` enum class. Here it
+   is converted to an integer using the function `to_underlying`.
+   
+8. An R function `first_ex` is generated by specifying an `Rcpp::export`
+   annotation. This is done for most functions in this document to facilitate
+   demonstrations.
+
+Let us invoke the `first_ex` function through R. 
+
+```{r}
+Rcpp::sourceCpp("examples/first.cpp")
+out = first_ex(2, 3)
+print(out$value)
+```
+
+## Arguments
+
+There are a number of `args` structs which represent optional arguments to
+functions. `integrate_args` is one example; other `args` types have a prefix
+matching their corresponding function. Each of these may
+be instantiated from an Rcpp `List` or exported to an Rcpp `List` using the
+`as` and `wrap` mechanisms, respectively.^[Details on implementing these
+mechanisms may be found in the [Rcpp Extending][rcpp-extend] vignette.]
+
+[rcpp-extend]: https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-extending.pdf
+
+```{cpp}
+// Create args and export to a List
+fntl::integrate_args args0;
+Rcpp::List x = Rcpp::wrap(args0);
+
+// Instantiate a second args struct from the list x
+x["stop_on_error"] = false;
+fntl::integrate_args args1 = Rcpp::as<fntl::integrate_args>(x);
+```
+
+When instantiating an `args` struct from a `List`, we throw an error if the
+list contains any elements with names which are not expected by the struct;
+this is to protect against mistakes which could occur when a field is named
+incorrectly where the effects may be subtle and difficult to track down.
+
+```{cpp}
+// This will cause an exception
+x["abcdefg"] = 0;
+fntl::integrate_args args1 = Rcpp::as<fntl::integrate_args>(x);
+```
+
+In most cases, a function that takes optional `args` has an alternative form
+where the `args` may be omitted; this form assumes all default values for the
+`args`. For example, our call to `integrate` in @sec-first-example could omit
+the `args` as follows.
+
+```{cpp}
+fntl::integrate_result out = fntl::integrate(f, 0, 1);
+```
+
+## Results
+
+Similar to `args`, there are a number of `result` structs that represent the
+output of a function. `integrate_result` is an example; other `result` types
+have a prefix matching their corresponding function. A `result` may be
+exported to an Rcpp `List` using the `wrap` mechanism. This was seen in
+@sec-first-example.
+
+```{cpp}
+fntl::integrate_result out = fntl::integrate(f, 0, 1, args);
+Rcpp::List x = Rcpp::wrap(out);
+```
+
+## Status Codes {#sec-status}
+
+Error conditions may result in an exception so that no return value is
+produced. Some conditions - such as failure to converge within a given number
+of iterations - may not result in an exception. Here, a `status` code is
+returned with the result to indicate a possible issue that may warrant further
+investigation. The example in @sec-first-example illustrates `integrate_status`
+returned by `integrate`; other `status` types have a prefix matching their
+corresponding function. Each `status` type is an enum class derived from either
+`int` or `unsigned int`: an enumeration that can be constructed from an integer
+or converted to an integer using the included function `to_underlying`.^[This
+function is based on a post from [StackOverflow][to-underlying-url].]
+
+```{cpp}
+fntl::integrate_status status = fntl::integrate_status::OK;  // Define a status
+int err = to_underlying(status);                            // status to int
+status1 = fntl::integrate_status(err);                       // int to status
+```
+
+[to-underlying-url]: https://stackoverflow.com/questions/8357240/how-to-automatically-convert-strongly-typed-enum-into-int
+
+## Function Typedefs
+
+`fntl` defines shorthands for several commonly used function types, given as
+follows, which are used throughout the present document.
+
+```{cpp}
+typedef function<double(double)> dfd;
+typedef function<double(const NumericVector&)> dfv;
+typedef function<double(const NumericVector&, const NumericVector&)> dfvv;
+typedef function<NumericVector(const NumericVector&)> vfv;
+typedef function<NumericMatrix(const NumericVector&)> mfv;
+```
+
+Type names are intended to convey argument and return types as briefly as
+possible. Symbols to the right of `f` represent arguments while those to the
+left represent the return type; in particular, `d` is **d**ouble, `v` is
+numeric **v**ector, and `m` is numeric **m**atrix. For example, a `dfvv`
+takes two vectors and returns a double.
+
+The namespace `std` for `function` and `Rcpp` for `NumericVector` and
+`NumericMatrix` have been omitted in the display so that statements each fit on
+a single line.
+
+## Constants
+
+The following constants are defined in `fntl` and utilized in the API.
+
+```{cpp}
+double mach_eps = std::numeric_limits<double>::epsilon();
+double mach_eps_2r = sqrt(mach_eps);
+double mach_eps_4r = std::pow(mach_eps, 0.25);
+unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+```
+
+These correspond to machine epsilon $\epsilon$, $\epsilon^{1/2}$,
+$\epsilon^{1/4}$, and the maximum value of an unsigned integer.
+
+## Error Actions
+
+Several functions in `fntl` take an `error_action` as an input to determine how
+to react in an error state. Here is the definition of `error_action`.
+
+```{cpp}
+enum class error_action : unsigned int {
+	STOP = 3L,     // <1>
+	WARNING = 2L,  // <2>
+	MESSAGE = 1L,  // <3>
+	NONE = 0L      // <4>
+};
+```
+1. Throw an exception.
+2. Emit a warning and proceed.
+3. Print a message and proceed.
+4. Do not take any of the above actions and proceed.
+
+Functions making use of an `error_action` typically also return a status code
+as in @sec-status, which can be inspected by the caller if an exception is not
+thrown.
+
+## Inferring Return Types
+
+@sec-intro mentioned that the return type of a lambda does not necessarily need
+to be specified in its interface. However, we must be vigilant when allowing
+the type to be inferred, especially when working with `Rcpp` objects which are
+converted seamlessly behind the scenes.
+
+The following example appears harmless but is likely to crash R.
+
+```{cpp}
+// [[Rcpp::depends(fntl)]]
+#include "fntl.h"
+
+// [[Rcpp::export]]
+Rcpp::List crash_ex(Rcpp::NumericVector x0)
+{
+	fntl::dfv f = [](Rcpp::NumericVector x) { return Rcpp::sum(x*x); };
+	auto out = fntl::gradient(f, x0);
+	return Rcpp::wrap(out);
+}
+```
+
+The issue appears to be that `Rcpp::sum` does not necessarily return a
+`double` - the expected result of a `fntl::dfv` - but something else that can
+be readily converted to a `double`.
+
+One way to address this is to specify that `double` is the return type of the
+lambda.
+
+```{cpp}
+fntl::dfv f = [](Rcpp::NumericVector x) -> double { return Rcpp::sum(x*x); };
+```
+
+A second way to address the issue is to explicitly convert the result to a
+`double` before returning.
+
+```{cpp}
+fntl::dfv f = [](Rcpp::NumericVector x) {
+	double out = Rcpp::sum(x*x);
+	return out;
+};
+```
+
+## R Functions as Lambdas
+
+Although not a primary intended use of the `fntl` package, it is possible to
+use it with R functions. This is accomplished by wrapping an `Rcpp::Function`
+into a lambda. This will incur the usual overhead of calling R code from C++,
+but may be useful for testing or in situations where the overhead is a small
+proportion of the run time.
+
+Here is an example based on the first example in @sec-first-example.
+
+```{.cpp include="examples/callr.cpp"}
+```
+
+We create function `f` in R and pass it as an argument to `callr_ex`. The
+lambda `ff` calls the function `f`, implicitly converting the input `x` into an
+`Rcpp::NumericVector`, and converts the output from an `Rcpp::NumericVector` to
+a `double`. Let us demonstrate a call to the function `callr_ex` from R.
+
+```{r}
+Rcpp::sourceCpp("examples/callr.cpp")
+a = 2
+b = 3
+f = function(x) { x^(a - 1) * (1 - x)^(b - 1) }
+out = callr_ex(f)
+print(out$value)
+```
+
+## R Interface
+
+The `fntl` package includes an R interface which may be used to invoke much of
+the underlying C++ API. This is intended for demonstration and testing purposes
+only; performance will generally suffer here because of the overhead in moving
+between C++ and R. In real applications, R code should make use of mainstream R
+functions rather than this R interface.
+
+For example, the `integrate0` R function is included to call the underlying
+`integrate` C++ function shown in @sec-first-example. (The suffix "0" is added
+to avoid a naming clash with R's `integrate` function). The R function
+`integrate_args` can be used to construct a list which is suitable to pass to
+`integrate0`.
+
+```{r}
+args = integrate_args()
+print(args)
+a = 2; b = 3
+f = function(x) { x^(a-1) * (1-x)^(b-1) }
+out = integrate0(f, 0, 1, args)
+print(out$value)
+```
+
+## Performance Illustration
+
+To illustrate performance characteristics, let us consider a brief simulation
+of the relationship between mean-squared error (MSE) and sample size
+in a logistic regression, suppose $Y_i \sim \text{Ber}(p_i)$ are independent
+with $p_i = \text{logit}^{-1}(\beta_0 + \beta_1 x_i)$. Data-generating values of
+the coefficients are taken to be $\beta_0 = 0$ and $\beta_1 = 1$, respectively.
+We take $R$ draws of $(y_1, \ldots, y_n)$ and compute the MLE
+$\hat{\beta}^{(r)} = (\hat{\beta}_0^{(r)}, \hat{\beta}_1^{(r)})$
+for the $r$th draw using the L-BFGS-B optimization method. The MSE associated
+with sample size $n$ is computed as
+$\text{MSE}_n = \frac{1}{R} \sum_{r=1}^R \lVert \hat{\beta}^{(r)} - \beta \rVert^2$;
+this is computed for sample sizes $n \in \{ 100, 200, 500, 1000, 10000 \}$.
+We describe four versions of the code; to see the implementations, refer to the
+corresponding source files in the `examples` folder.
+
+```{r}
+#| eval: false
+source("examples/timing1.R")
+Rcpp::sourceCpp("examples/timing2.cpp")
+Rcpp::sourceCpp("examples/timing3.cpp")
+Rcpp::sourceCpp("examples/timing4.cpp")
+n_levels = c(100, 200, 500, 1000, 10000)
+```
+
+The first version of the program `timing1_ex` is written in pure R. This
+version uses a naively coded version of the loglikelihood based on a loop over
+$y_1, \ldots, y_n$. Experienced R users will recognize that vectorization will
+dramatically improve the performance. However, we will proceed with the slow
+loglikelihood for illustration. A particular run of this code took 1.31 minutes.
+
+```{r}
+#| eval: false
+set.seed(1234)
+start = Sys.time()
+timing1_ex(R = 200, n_levels)
+print(Sys.time() - start)
+```
+
+The second version `timing2_ex` ports `timing1_ex` from R to C++, where loops
+generally need not be avoided to achieve good performance. Here we define the
+loglikelihood as a lambda function and use the `lbfgsb` function described in
+@sec-lbfgs to carry out optimization. A run of this code took 22.17 seconds.
+
+```{r}
+#| eval: false
+set.seed(1234)
+start = Sys.time()
+timing2_ex(R = 200, n_levels)
+print(Sys.time() - start)
+```
+
+A third version of the code `timing3_ex` demonstrates that overhead of calling
+an R function from C++ does not necessarily result in poor performance. Here we
+make a vectorized call to `dbinom` for each evaluation of the loglikelihood.
+In this case, the overhead does not contribute significantly to the run time:
+a run took 25.94 seconds.
+
+```{r}
+#| eval: false
+set.seed(1234)
+start = Sys.time()
+timing3_ex(R = 200, n_levels)
+print(Sys.time() - start)
+```
+
+Finally, a fourth version of the code `timing4_ex` demonstrates a case where
+the overhead of repeatedly calling an R function from C++ results in abysmal
+performance. Here we revert back to the loop in `timing2_ex`, but call the
+`plogis` function in R rather than use one provided in Rcpp. A run of this code
+took 9.89 minutes.
+
+```{r}
+#| eval: false
+set.seed(1234)
+start = Sys.time()
+timing4_ex(R = 200, n_levels)
+print(Sys.time() - start)
+```
+
+## Pass by Value and Reference
+
+References and const references can be used in C++ code to avoid making
+unnecessary copies of variables which waste time and memory. This additional
+level of control (and responsibility) is typically not considered in R
+programming, where pass-by-value is the standard. Consider the following
+function, which adds one to each element of a matrix and returns the sum of
+the result.
+
+```{cpp}
+double sum1p(Rcpp::NumericMatrix x) { return Rcpp::sum(x + 1); }
+```
+
+Here a copy of the matrix `x` is passed to `sum1p`. This pass-by-value can be
+changed to pass-by-reference which avoids copying `x`.
+
+```{cpp}
+double sum1p_1(Rcpp::NumericMatrix& x) { return Rcpp::sum(x + 1); }
+```
+
+The body of `sum1p_1` does not alter `x`, but there are no safeguards in place to
+enforce that it does not. This might raise anxiety for a user of `sum1p_1`
+about whether their `x` has been modified. To alleviate their anxiety, we can
+provide a safeguard using a const reference.
+
+```{cpp}
+double sum1p_2(const Rcpp::NumericMatrix& x) { return Rcpp::sum(x + 1); }
+```
+
+The compiler will emit an error if `sum1p_2` attempts to modify `x`.
+
+Examples given in this document tend to use pass-by-value to avoid extra visual
+clutter of const references. However, the `fntl` package makes frequent use of
+const references in both the API and internal implementation. It is recommended
+that users consider consider which of the three - by-value, by-reference, or
+by-const-reference - is most appropriate for their application in actual usage.
+
+# Integration {#sec-integrate}
+
+Compute the integral
+<!-- -->
+$$
+\int_a^b f(x) dx,
+$$
+<!-- -->
+where limit $a$ may be finite or $-\infty$ and limit $b$ may be finite or
+$\infty$. Directly uses the C functions [Rdqags][Rdqags-src] and
+[Rdqagi][Rdqagi-src] underlying the R function [integrate][Rintegrate-src].
+These functions are based on two respective QUADPACK routines:
+[dqags][dqags-src] for the case when both limits are finite and
+[dqagi][dqagi-src] for the case when one or both limits are infinite
+[@PiessensEtAl1983]. 
+
+[Rintegrate-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/integrate.R
+[Rdqags-src]: https://github.com/r-devel/r-svn/blob/b3133c253e72c7ae069e0d46964c9458a7219eaa/src/include/R_ext/Applic.h#L52
+[Rdqagi-src]: https://github.com/r-devel/r-svn/blob/b3133c253e72c7ae069e0d46964c9458a7219eaa/src/include/R_ext/Applic.h#L57
+[dqags-src]: https://www.netlib.org/quadpack/dqags.f
+[dqagi-src]: https://www.netlib.org/quadpack/dqagi.f
+
+**Function**
+
+Source code is in the file [inst/include/integrate.h][integrate-h].
+
+[integrate-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/integrate.h
+
+```{cpp}
+integrate_result integrate(
+	const dfd& f,        // <1>
+	double lower,                // <2>
+	double upper,                // <3>
+    const integrate_args& args   // <4>
+)
+
+integrate_result integrate(
+	const dfd& f,        // <1>
+	double lower,                // <2>
+	double upper                 // <3>
+)
+```
+1. Function to use as the integrand.
+2. Lower limit $a$ of integral; may be `R_NegInf`.
+3. Upper limit $b$ of integral; may be `R_PosInf`.
+4. Additional arguments.
+
+**Optional Arguments**
+
+```{cpp}
+struct integrate_args {
+	unsigned int subdivisions = 100L;  // <1>
+	double rel_tol = mach_eps_4r;      // <2>
+	double abs_tol = mach_eps_4r;      // <3>
+	bool stop_on_error = true;         // <4>
+};
+```
+1. The maximum number of subintervals.
+2. Relative accuracy requested.
+3. Absolute accuracy requested.
+4. If `true`, errors in `integrate` raise exceptions.
+
+**Result**
+
+```{cpp}
+struct integrate_result {
+	double value;             // <1>
+	double abs_error;         // <2>
+	int subdivisions;         // <3>
+	integrate_status status;  // <4>
+	int n_eval;               // <5>
+	std::string message;      // <6>
+
+	operator SEXP() const;    // <7>
+};
+```
+1. The final approximation of the integral.
+2. Estimate of the modulus of the absolute error.
+3. The number of subintervals produced in the subdivision process.
+4. A code describing the status of the operation.
+5. Number of function evaluations.
+6. A message describing the status of the operation.
+7. Conversion operator to `Rcpp::List`.
+
+The `SEXP` conversion operator produces the following representation of
+`integrate_result` as an `Rcpp::List`. The fields here directly correspond to
+those in `integrate_result`.
+
+|Name            | Type                  | Description |
+|:---------------|:----------------------|:------------|
+| `value`        | `Rcpp::NumericVector` | Length 1    |
+| `abs_error`    | `Rcpp::NumericVector` | Length 1    |
+| `subdivisions` | `Rcpp::IntegerVector` | Length 1    |
+| `status`       | `Rcpp::IntegerVector` | Length 1    |
+| `n_eval`       | `Rcpp::IntegerVector` | Length 1    |
+| `message`      | `Rcpp::StringVector`  | Length 1    |
+
+: {tbl-colwidths="[15,30,55]"}
+
+
+**Status Codes**
+
+```{cpp}
+enum class integrate_status : int {
+	OK = 0L,                                  // <1>
+	MAX_SUBDIVISIONS = 1L,                    // <2>
+	ROUNDOFF_ERROR = 2L,                      // <3>
+	BAD_INTEGRAND_BEHAVIOR = 3L,              // <4>
+	ROUNDOFF_ERROR_EXTRAPOLATION_TABLE = 4L,  // <5>
+	PROBABLY_DIVERGENT_INTEGRAL = 5L,         // <6>
+	INVALID_INPUT = 6L                        // <7>
+};
+```
+1. OK.
+2. maximum number of subdivisions reached.
+3. roundoff error was detected.
+4. extremely bad integrand behaviour.
+5. roundoff error is detected in the extrapolation table.
+6. the integral is probably divergent.
+7. the input is invalid.
+
+**Example**
+
+Compute the integral $\int_0^\infty e^{-x^2/2} dx$. A C++ function with Rcpp
+interface is defined in the file `examples/integrate.cpp`.
+
+```{.cpp include="examples/integrate.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/integrate.cpp")
+out = integrate_ex(0 , Inf)
+print(out)
+```
+
+# Differentiation {#sec-diff}
+
+This section presents methods for numerical differentiation. First we present
+simple finite differences, then Richardson extrapolation to automatically
+select a step size, then the functions to compute the gradient, Jacobian, and
+Hessian. The latter three make use of Richardson extrapolation.
+
+## Finite Differences {#sec-fd-deriv}
+
+Compute the first and second derivatives of
+$f : \mathbb{R}^n \rightarrow \mathbb{R}$ numerically at point $x$.
+Denote $e_i$ as the $i$th column of an $n \times n$ identity matrix.
+First derivatives in the $i$th coordinate are computed as
+<!-- -->
+\begin{align*}
+&\frac{\partial f(x)}{\partial x_i} \approx \frac{
+f(x + h e_i) - f(x - h e_i)
+}{2h}, \\
+%
+&\frac{\partial f(x)}{\partial x_i} \approx 
+\frac{ f(x + h e_i) - f(x) }{h}, \\
+%
+&\frac{\partial f(x)}{\partial x_i} \approx 
+\frac{ f(x) - f(x - h e_i) }{h},
+\end{align*}
+<!-- -->
+for given $h > 0$ using symmetric, forward, or backward differences
+respectively. Second derivatives in the $i$th and $j$th coordinate, with
+$i, j \in \{ 1 \ldots, n\}$, are computed as
+<!-- -->
+\begin{align*}
+&\frac{\partial^2 f(x)}{\partial x_i x_j} \approx
+\frac{
+f(x + h_i e_i + h_j e_j) - f(x + h_i e_i - h_j e_j) - f(x - h_i e_i + h_j e_j) +
+f(x - h_i e_i - h_j e_j)
+}{4 h_i h_j}, \\
+%
+&\frac{\partial^2 f(x)}{\partial x_i x_j} \approx
+\frac{
+f(x + h_i e_i + 2 h_j e_j) - f(x + h e_i) - f(x + h_j e_j) + f(x)
+}{ h_i h_j}, \\
+%
+&\frac{\partial^2 f(x)}{\partial x_i x_j} \approx
+\frac{
+f(x) - f(x - h_i e_i) - f(x - h_j e_j) + f(x - h_i e_i - h_j e_j)
+}{h_i h_j},
+\end{align*}
+<!-- -->
+for given $h_1 > 0$ and $h_2 > 0$
+using symmetric, forward, or backward differences respectively.
+The accuracy of these derivatives depends on the nature of the function $f$ at
+$x$ and the choice of $h$. See Section 5.7 of @PressEtAl2007 for discussion.
+
+**Function**
+
+Primary location of source code is the file [inst/include/fd-deriv.h][fd-deriv-h].
+
+[fd-deriv-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/fd-deriv.h
+
+```{cpp}
+double fd_deriv(
+	const dfv& f,                                  // <1>
+	const Rcpp::NumericVector& x,                  // <2>
+	unsigned int i,                                // <3>
+	double h,                                      // <5>
+	const fd_types& fd_type = fd_types::SYMMETRIC  // <7>
+)
+
+double fd_deriv2(
+	const dfv& f,                                  // <1>
+	const Rcpp::NumericVector& x,                  // <2>
+	unsigned int i,                                // <3>
+	unsigned int j,                                // <4>
+	double h_i,                                    // <5>
+	double h_j,                                    // <6>
+	const fd_types& fd_type = fd_types::SYMMETRIC  // <7>
+)
+```
+1. Function $d$ to differentiate.
+2. Point $x$ at which derivative is taken.
+3. First coordinate to differentiate.
+4. Second coordinate to differentiate.
+5. Step size in the first coordinate.
+6. Step size in the second coordinate
+7. Type of finite difference.
+
+The functions `fd_deriv` and `fd_deriv2` compute first and second derivatives,
+respectively. The options for `fd_type` are given in the following enumeration
+class.
+
+```{cpp}
+enum class fd_types : unsigned int {
+	SYMMETRIC = 0L,
+	FORWARD = 1L,
+	BACKWARD = 2L
+};
+```
+
+**Example**
+
+Compute the first and second derivatives of $f(x) = \sin(b^\top x)$ at
+$x_0 = (1/2, \ldots, 1/2)$ where $b = (1, \ldots, n)$. The gradient and Hessian
+are given in closed-form by
+<!-- -->
+\begin{align*}
+&\frac{\partial f(x)}{\partial x} = b \cos(b^\top x), \\
+&\frac{\partial^2 f(x)}{\partial x \partial x^\top} = -b b^\top \sin(b^\top x).
+\end{align*}
+<!-- -->
+Let us first prepare the problem in R.
+
+```{r}
+n = 3
+b = seq_len(n)
+x0 = rep(0.5, n)
+eps = 0.001  ## Fix a step size for finite differences
+g = function(x) { b * cos(sum(b * x)) }
+h = function(x) { -tcrossprod(b) * sin(sum(b * x)) }
+```
+
+To demonstrate the numerical first derivative, a C++ function with Rcpp
+interface is defined in the file `examples/fd-deriv.cpp`.
+
+```{.cpp include="examples/fd-deriv.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/fd-deriv.cpp")
+out3 = out2 = out1 = numeric(n)
+for (i in 1:n) {
+	out1[i] = fd_deriv_ex(x0, i-1, eps, type = 0)  ## Symmetric
+	out2[i] = fd_deriv_ex(x0, i-1, eps, type = 1)  ## Forward
+	out3[i] = fd_deriv_ex(x0, i-1, eps, type = 2)  ## Backward
+}
+print(out1)
+print(out2)
+print(out3)
+print(g(x0))
+```
+
+To demonstrate the numerical second derivative, a C++ function with Rcpp
+interface is defined in the file `examples/fd-deriv2.cpp`.
+
+```{.cpp include="examples/fd-deriv2.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/fd-deriv2.cpp")
+out3 = out2 = out1 = matrix(NA, n, n)
+for (i in 1:n) {
+for (j in 1:n) {
+	out1[i,j] = fd_deriv2_ex(x0, i-1, j-1, eps, eps, type = 0)  ## Symmetric
+	out2[i,j] = fd_deriv2_ex(x0, i-1, j-1, eps, eps, type = 1)  ## Forward
+	out3[i,j] = fd_deriv2_ex(x0, i-1, j-1, eps, eps, type = 2)  ## Backward
+}
+}
+print(out1)
+print(out2)
+print(out3)
+h(x0)
+```
+
+## Richardson Extrapolated Finite Differences {#sec-deriv}
+
+Compute the first and second derivatives of
+$f : \mathbb{R}^n \rightarrow \mathbb{R}$ numerically at point $x$ using
+Richardson extrapolation. This is typically more accurate than the simple
+finite differences in @sec-fd-deriv and does not require an informed choice of
+the step size $h$; however, it requires more evaluations of $f$. A general
+discussion of Richardson extrapolation is given in Section 9.6 of
+@QuarteroniSaccoSaleri2007.
+
+Taking the function $g(h)$ to be one of finite difference approximations 
+in \eqref{eqn:finite-differences1}--\eqref{eqn:finite-differences3}, $h > 0$ to
+be an initial step size, and $\delta \in (0,1)$ to be a reduction factor, the
+method computes a table of values
+<!-- -->
+\begin{align*}
+A_{mq} = 
+\begin{cases}
+g(\delta^m h), & \text{for $m = 0, \ldots, n$ and $q = 0$}, \\
+\displaystyle \frac{A_{m,q-1} - \delta^q A_{m-1,q-1}}{1 - \delta^q}, & 
+\text{for $m = 0, \ldots, n$ and $q = 1, \ldots, m$},
+\end{cases}
+\end{align*}
+<!-- -->
+given a predetermined $n$. Note that $n+1$ evaluations of $f$ are required. The
+result is taken to be the $A_{mq}$ such that
+<!-- -->
+$$
+e_{mq} = \max\{ |A_{mq} - A_{m,q-1}|, |A_{mq} - A_{m-1,q-1}| \}
+$$
+<!-- -->
+is the smallest, with the corresponding $e = e_{mq}$ reported as the achieved
+tolerance. Furthermore, because numerical error may begin to worsen as the
+table is iteratively computed, the method halts if it encounters the condition
+<!-- -->
+$$
+|A_{mq} - A_{m-1,q-1}| > \tau e,
+$$
+<!-- -->
+with $e$ as the smallest $e_{mq}$ computed so far and $\tau > 1$ is a given
+multiplier. These criteria for convergence and stopping early due to reduced
+numerical precision are suggested in Section 5.7 of @PressEtAl2007; similar
+considerations for halting criteria are considered in the Julia package
+[Richardson.jl][richardson-jl].
+
+Taking $n = 0$ produces finite differences described in @sec-fd-deriv using the
+initial step size $h$ as the perturbation. Here the achieved tolerance is
+reported as infinite.
+
+[richardson-jl]: https://github.com/JuliaMath/Richardson.jl
+
+**Function**
+
+Primary location of source code are the files
+[inst/include/deriv.h][deriv-h],
+[inst/include/deriv2.h][deriv2-h], and
+[inst/include/richardson.h][richardson-h].
+
+[deriv-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/deriv.h
+[deriv2-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/deriv2.h
+[richardson-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/richardson.h
+
+
+```{cpp}
+richardson_result deriv(
+	const dfv& f,                                  // <1>
+	const Rcpp::NumericVector& x,                  // <2>
+	unsigned int i,                                // <3>
+	const richardson_args& args,                   // <5>
+	const fd_types& fd_type = fd_types::SYMMETRIC  // <6>
+)
+
+richardson_result deriv(
+	const dfv& f,                                  // <1>
+	const Rcpp::NumericVector& x,                  // <2>
+	unsigned int i,                                // <3>
+	const fd_types& fd_type = fd_types::SYMMETRIC  // <6>
+)
+
+richardson_result deriv2(
+	const dfv& f,                                  // <1>
+	const Rcpp::NumericVector& x,                  // <2>
+	unsigned int i,                                // <3>
+	unsigned int j,                                // <4>
+	const richardson_args& args,                   // <5>
+	const fd_types& fd_type = fd_types::SYMMETRIC  // <6>
+)
+
+richardson_result deriv2(
+	const dfv& f,                                  // <1>
+	const Rcpp::NumericVector& x,                  // <2>
+	unsigned int i,                                // <3>
+	unsigned int j,                                // <4>
+	const fd_types& fd_type = fd_types::SYMMETRIC  // <6>
+)
+```
+1. Function $d$ to differentiate.
+2. Point $x$ at which derivative is taken.
+3. Optional arguments.
+4. First coordinate to differentiate.
+5. Second coordinate to differentiate.
+6. Type of finite difference.
+
+The functions `deriv` and `deriv2` compute first and second derivatives,
+respectively. The enum class `fd_type` is described in @sec-fd-deriv.
+
+
+**Optional Arguments**
+
+```{cpp}
+struct richardson_args
+{
+	double delta = 0.5;                 // <1>
+	unsigned int maxiter = 10;          // <2>
+	double h = 1;                       // <3>
+	double tol = mach_eps_4r;           // <4>
+	double accuracy_factor = R_PosInf;  // <5>
+
+	richardson_args() { };              // <6>
+	richardson_args(SEXP obj);          // <7>
+	operator SEXP() const;              // <8>
+};
+
+```
+1. The factor $\delta$ used to reduce $h$.
+2. Maximum number of iterations.
+3. The initial value of $h$.
+4. Tolerance for convergence.
+5. The factor $\tau$ used to check for loss of precision. The infinite default
+   value disables the check.
+6. Default constructor.
+7. Constructor from an `Rcpp::List`.
+8. Conversion operator to `Rcpp::List`.
+
+**Result**
+
+```{cpp}
+struct richardson_result
+{
+	double value;              // <1>
+	double err;                // <2>
+	unsigned int iter;         // <3>
+	richardson_status status;  // <4>
+
+	operator SEXP() const;     // <5>
+};
+```
+1. The final approximation of the derivative.
+2. An estimate of the error in approximation.
+3. Number of iterations $m$ used to produce the approximation.
+4. A code describing the status of the operation. 
+5. Conversion operator to `Rcpp::List`.
+
+The `SEXP` conversion operator produces the following representation of
+`fd_deriv_result` as an `Rcpp::List`.
+
+|Name      | Type                  | Description                       |
+|:---------|:----------------------|:----------------------------------|
+| `value`  | `Rcpp::NumericVector` | A scalar based on field `value`.  |
+| `err`    | `Rcpp::NumericVector` | A scalar based on field `err`.    |
+| `iter`   | `Rcpp::IntegerVector` | A scalar based on field `iter`.   |
+| `status` | `Rcpp::IntegerVector` | A scalar based on field `status`.   |
+
+**Status Codes**
+
+```{cpp}
+enum class richardson_status : unsigned int {
+	OK = 0L,                  // <1>
+	NOT_CONVERGED = 1L,       // <2>
+	NUMERICAL_PRECISION = 2L  // <3>
+};
+```
+1. OK.
+2. Not converged within `maxiter` iterations.
+3. Early termination due to numerical precision.
+
+**Example**
+
+Compute first and second derivatives of $f(x) = \sin(b^\top x)$ at
+$x_0 = (1/2, \ldots, 1/2)$ with $b = (1, \ldots, n)$. This is a continuation of
+the example in @sec-fd-deriv. Let us again define the point $x_0$.
+
+```{r}
+n = 3
+x0 = rep(0.5, n)
+```
+
+To demonstrate the numerical first derivative, a C++ function with Rcpp
+interface is defined in the file `examples/deriv.cpp`.
+
+```{.cpp include="examples/deriv.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/deriv.cpp")
+out3 = out2 = out1 = numeric(n)
+for (i in 1:n) {
+	out1[i] = deriv_ex(x0, i-1, type = 0)$value  ## Symmetric
+	out2[i] = deriv_ex(x0, i-1, type = 1)$value  ## Forward
+	out3[i] = deriv_ex(x0, i-1, type = 2)$value  ## Backward
+}
+print(out1)
+print(out2)
+print(out3)
+```
+
+To demonstrate the numerical second derivative, a C++ function with Rcpp
+interface is defined in the file `examples/deriv2.cpp`.
+
+```{.cpp include="examples/deriv2.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/deriv2.cpp")
+out3 = out2 = out1 = matrix(NA, n, n)
+for (i in 1:n) {
+for (j in 1:n) {
+	out1[i,j] = deriv2_ex(x0, i-1, j-1, type = 0)$value  ## Symmetric
+	out2[i,j] = deriv2_ex(x0, i-1, j-1, type = 1)$value  ## Forward
+	out3[i,j] = deriv2_ex(x0, i-1, j-1, type = 2)$value  ## Backward
+}
+}
+print(out1)
+print(out2)
+print(out3)
+```
+
+## Gradient {#sec-gradient}
+
+The gradient of $f : \mathbb{R}^n \rightarrow \mathbb{R}$:
+<!-- -->
+$$
+\frac{\partial f(x)}{\partial x}
+=
+\left[
+\frac{\partial f(x)}{\partial x_1},
+\ldots,
+\frac{\partial f(x)}{\partial x_n}
+\right].
+$$
+<!-- -->
+Each coordinate is computed via `deriv` in @sec-deriv.
+
+**Function**
+
+Primary location of source code is the file [inst/include/gradient.h][gradient-h].
+
+[gradient-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/gradient.h
+
+```{cpp}
+gradient_result gradient(
+	const dfv& f,                                  // <1>
+	const Rcpp::NumericVector& x,                  // <2>
+	const richardson_args& args,                   // <3>
+	const fd_types& fd_type = fd_types::SYMMETRIC  // <4>
+)
+
+gradient_result gradient(
+	const dfv& f,                                  // <1>
+	const Rcpp::NumericVector& x,                  // <2>
+	const fd_types& fd_type = fd_types::SYMMETRIC  // <4>
+)
+```
+1. Function to take the gradient of.
+2. Point at which to compute the gradient.
+3. Optional arguments.
+4. Type of finite difference to use. See the definition of `fd_types` in
+   @sec-fd-deriv.
+
+The arguments in `args` are applied to each coordinate of the gradient.
+
+**Result**
+
+```{cpp}
+struct gradient_result {
+	std::vector<double> value;       // <1>
+	std::vector<double> err;         // <2>
+	std::vector<unsigned int> iter;  // <3>
+
+	operator SEXP() const;           // <4>
+};
+```
+1. The final approximation of the gradient.
+2. The respective approximation errors from `deriv` for each coordinate.
+2. The respective iterations taken in `deriv` for each coordinate.
+4. Conversion operator to `Rcpp::List`.
+
+The `SEXP` conversion operator produces the following representation of
+`gradient_result` as an `Rcpp::List`. The fields here directly correspond to
+those in `gradient_result`.
+
+|Name     | Type                  | Description |
+|:--------|:----------------------|:------------|
+| `value` | `Rcpp::NumericVector` | Length $n$  |
+| `err`   | `Rcpp::NumericVector` | Length $n$  |
+| `iter`  | `Rcpp::IntegerVector` | Length $n$  |
+
+: {tbl-colwidths="[15,30,55]"}
+
+**Example**
+
+Compute the gradient of $f(x) = x^\top x$. A C++ function with Rcpp interface
+is defined in the file `examples/gradient.cpp`.
+
+```{.cpp include="examples/gradient.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/gradient.cpp")
+gradient_ex(x0 = 1:4)
+```
+
+Compare to `grad` from the `numDeriv` package [@numDeriv].
+
+```{r}
+f = function(x) { sum(x^2) }
+numDeriv::grad(f, x = 1:4)
+```
+
+## Jacobian
+
+The Jacobian of $f : \mathbb{R}^n \rightarrow \mathbb{R}^m$:
+<!-- -->
+$$
+\frac{\partial f(x)}{\partial x}
+=
+\begin{bmatrix}
+\frac{\partial f_1(x)}{\partial x_1} & \cdots & \frac{\partial f_1(x)}{\partial x_n} \\
+\vdots & \ddots & \vdots \\
+\frac{\partial f_m(x)}{\partial x_1} & \cdots & \frac{\partial f_m(x)}{\partial x_n}
+\end{bmatrix}.
+$$
+<!-- -->
+Each coordinate is computed via `deriv` in @sec-deriv.
+
+**Function**
+
+Source code is in the file [inst/include/jacobian.h][jacobian-h].
+
+[jacobian-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/jacobian.h
+
+```{cpp}
+jacobian_result jacobian(
+	const vfv& f,                                 // <1>
+	const Rcpp::NumericVector& x,                 // <2>
+	const richardson_args& args                   // <3>
+	const fd_types& fd_type = fd_types::SYMMETRIC // <4>
+)
+
+jacobian_result jacobian(
+	const vfv& f,                                 // <1>
+	const Rcpp::NumericVector& x,                 // <2>
+	const fd_types& fd_type = fd_types::SYMMETRIC // <4>
+)
+```
+1. Function to obtain the Jacobian of
+2. Point at which to take the Jacobian.
+3. Optional arguments.
+4. Type of finite difference to use. See the definition of `fd_types` in
+   @sec-fd-deriv.
+
+**Result**
+
+```{cpp}
+struct jacobian_result
+{
+	std::vector<double> value;       // <1>
+	std::vector<double> err;         // <2>
+	std::vector<unsigned int> iter;  // <3>
+	double rows;                     // <4>
+	double cols;                     // <5>
+
+	operator SEXP() const;           // <6>
+};
+```
+1. The final approximation of the Jacobian stored as a vector in row-major
+   format.
+2. The respective approximation errors from `deriv` for each coordinate of
+   `value`.
+3. The respective iterations taken in `deriv` for each coordinate of `value`.
+4. The row dimension $m$ of the Jacobian.
+5. The column dimension $n$ of the Jacobian.
+6. Conversion operator to `Rcpp::List`.
+
+The `SEXP` conversion operator produces the following representation of
+`jacobian_result` as an `Rcpp::List`.
+
+|Name     | Type                  | Description                                    |
+|:--------|:----------------------|:-----------------------------------------------|
+| `value` | `Rcpp::NumericMatrix` | An $m \times n$ matrix based on field `value`. |
+| `err`   | `Rcpp::NumericMatrix` | An $m \times n$ matrix based on field `err`.   |
+| `iter`  | `Rcpp::IntegerMatrix` | An $m \times n$ matrix based on field `iter`.  |
+
+: {tbl-colwidths="[15,30,55]"}
+
+**Example**
+
+Compute the Jacobian of $f(x) = [f_1(x), \ldots, f_5(x)]$,
+$f_i(x) = \sum_{j=1}^i \sin(x_j)$, at the point $x = (1,2,3,4,5)$. To obtain
+the resulting value as an $m \times n$ matrix, we apply the List conversion
+operator to the result. A C++ function with Rcpp interface is defined in the
+file `examples/jacobian.cpp`.
+
+```{.cpp include="examples/jacobian.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/jacobian.cpp")
+out = jacobian_ex(x0 = 1:4)
+names(out)
+print(out$value)
+```
+
+Compare to `jacobian` from the `numDeriv` package [@numDeriv].
+
+```{r}
+f = function(x) { cumsum(sin(x)) }
+numDeriv::jacobian(f, x = 1:4)
+```
+
+## Hessian {#sec-hessian}
+
+Compute the Hessian of $f : \mathbb{R}^n \rightarrow \mathbb{R}$ numerically
+at point $x$:
+<!-- -->
+$$
+\frac{\partial^2 f(x)}{\partial x \partial x^\top} =
+\begin{bmatrix}
+\frac{\partial^2 f(x)}{\partial x_1 \partial x_1} &
+\cdots &
+\frac{\partial^2 f(x)}{\partial x_1 \partial x_n} \\
+\vdots & \ddots & \vdots \\
+\frac{\partial^2 f(x)}{\partial x_n \partial x_1} &
+\cdots &
+\frac{\partial^2 f(x)}{\partial x_n \partial x_n}
+\end{bmatrix}.
+$$
+<!-- -->
+
+Each coordinate is computed via `deriv2` in @sec-deriv.
+
+Note that there is a C function [fdhess][fdhess-src] within R which is based on
+Algorithm A5.6.2 of @DennisSchnabel1983. However, it is not included in the API
+for external use [@WritingRExtensions, Section 6].
+
+[fdhess-src]: https://github.com/r-devel/r-svn/blob/5c0e367225ec0ed9e1a95864302a6311708533ee/src/include/R_ext/Applic.h#L131
+
+
+**Function**
+
+Primary location of source code is the file [inst/include/hessian.h][hessian-h].
+
+[hessian-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/hessian.h
+
+```{cpp}
+hessian_result hessian(
+	const dfv& f,                                  // <1>
+	const Rcpp::NumericVector& x,                  // <2>
+	const richardson_args& args,                   // <3>
+	const fd_types& fd_type = fd_types::SYMMETRIC  // <4>
+)
+
+hessian_result hessian(
+	const dfv& f,                                  // <1>
+	const Rcpp::NumericVector& x,                  // <2>
+	const fd_types& fd_type = fd_types::SYMMETRIC  // <4>
+)
+```
+1. Function $f$ for which Hessian is to be computed.
+2. Point $x$ at which Hessian is taken.
+3. Optional arguments.
+4. Type of finite difference to use. See the definition of `fd_types` in
+   @sec-fd-deriv.
+
+**Result**
+
+The result is an $n \times n$ Hessian matrix.
+
+```{cpp}
+struct hessian_result
+{
+	std::vector<double> value;       // <1>
+	std::vector<double> err;         // <2>
+	std::vector<unsigned int> iter;  // <3>
+	double dim;                      // <4>
+
+	operator SEXP() const;           // <5>
+};
+```
+1. The value of the Hessian: a vector containing the lower-triangular in
+   column-major order.
+2. The respective approximation errors from `deriv2` for each coordinate.
+3. The respective iterations taken in `deriv2` for each coordinate.
+4. The row and column dimension.
+5. Conversion operator to `Rcpp::List`.
+
+**Example**
+
+Compute the Hessian of $f(x) = \sum_{i=1}^n \sin(x_i)$ at $x = (1, 2)$. To
+obtain the resulting value as an $n \times n$ matrix, we apply the List
+conversion operator to the result. A C++ function with Rcpp interface is
+defined in the file `examples/hessian.cpp`.
+
+```{.cpp include="examples/hessian.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/hessian.cpp")
+out = hessian_ex(x0 = c(1,2))
+print(out)
+```
+
+Compare to `hessian` from the `numDeriv` package [@numDeriv].
+
+```{r}
+f = function(x) { sum(sin(x)) }
+numDeriv::hessian(f, x = c(1,2))
+```
+
+# Root-Finding {#sec-findroot}
+
+Find a root of $f : \mathbb{R} \rightarrow \mathbb{R}$, if present, on the
+interval $[a,b]$; i.e., find $x \in [a,b]$ such that $f(x) \approx 0$.
+The R function [uniroot][Runiroot-src] has its implementation in an underlying
+C function [zeroin2][zeroin2-src] which appears not to be readily exported
+for external use. We therefore provide several alternatives in C++.
+
+[Runiroot-src]: https://github.com/r-devel/r-svn/blob/685baa84532ee09727f04725d5128f39d564bea5/src/library/stats/R/nlm.R#L55
+[zeroin2-src]: https://github.com/r-devel/r-svn/blob/685baa84532ee09727f04725d5128f39d564bea5/src/library/stats/src/stats.h#L61C8-L61C17
+
+There are currently two implementations. The bisection method
+[e.g., @PressEtAl2007, Section 9.1] is simpler while Brent's method is
+faster and is used in `uniroot`. This implementation of Brent's method is based
+on the ALGOL code in Section 4.6 of @Brent1973. The two functions use a common
+arguments struct, results struct, and status codes, which are given below.
+
+**Optional Arguments**
+
+```{cpp}
+struct findroot_args {
+	double tol = mach_eps_4r;                      // <1>
+	unsigned int maxiter = 1000;                   // <2>
+	error_action action = error_action::STOP;      // <3>
+	
+	findroot_args() { };                           // <4>
+	findroot_args(SEXP obj);                       // <5>
+	operator SEXP() const;                         // <6>
+};
+```
+1. Tolerance for convergence.
+2. Maximum number of iterations.
+3. Action to take if operation returns a status code other than `OK`.
+4. Default constructor.
+5. Constructor from an `Rcpp::List`.
+6. Conversion operator to `Rcpp::List`.
+
+**Result**
+
+```{cpp}
+struct findroot_result {
+	double root;                 // <1>
+	double f_root;               // <2>
+	unsigned int iter;           // <3>
+	double tol;                  // <4>
+	findroot_status status;      // <5>
+	std::string message;         // <6>
+
+	operator SEXP() const;       // <7>
+};
+```
+1. The final approximation for the root.
+2. The value of $f$ at the root.
+3. The number of iterations.
+4. An estimate of the error in approximation.
+5. A code describing the status of the operation.
+6. A message describing the status of the operation.
+7. Conversion operator to `Rcpp::List`.
+
+The `SEXP` conversion operator produces the following representation of
+`findroot_result` as an `Rcpp::List`. The fields here directly correspond to
+those in `findroot_result`.
+
+|Name       | Type                  | Description |
+|:----------|:----------------------|:------------|
+| `root`    | `Rcpp::NumericVector` | Length 1    |
+| `f_root`  | `Rcpp::NumericVector` | Length 1    |
+| `iter`    | `Rcpp::IntegerVector` | Length 1    |
+| `tol`     | `Rcpp::NumericVector` | Length 1    |
+| `status`  | `Rcpp::IntegerVector` | Length 1    |
+| `message` | `Rcpp::StringVector`  | Length 1    |
+
+: {tbl-colwidths="[15,30,55]"}
+
+**Status Codes**
+
+```{cpp}
+enum class findroot_status : unsigned int {
+	OK = 0L,                  // <1>
+	NUMERICAL_OVERFLOW = 1L,  // <2>
+	NOT_CONVERGED = 2L        // <3>
+};
+```
+1. OK.
+2. Numerical overflow: tol may be too small.
+3. Not converged within `maxiter` iterations.
+
+
+## Bisection {#sec-bisection}
+
+This algorithm successively shrinks the starting interval and terminates when
+the absolute difference is smaller than a tolerance $\epsilon$.
+
+**Function**
+
+Primary location of source code is the file [inst/include/findroot-bisect.h][findroot-bisect-h].
+
+[findroot-bisect-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/findroot-bisect.h
+
+```{cpp}
+findroot_result findroot_bisect(
+	const dfd& f,              // <1>
+	double lower,              // <2>
+	double upper,              // <3>
+	const findroot_args& args  // <4>
+)
+
+findroot_result findroot_bisect(
+	const dfd& f,              // <1>
+	double lower,              // <2>
+	double upper               // <3>
+)
+```
+1. Function $f$ for which a root is desired.
+2. Lower limit $a$ of search interval. Must be finite.
+3. Upper limit $b$ of search interval. Must be finite.
+4. Additional arguments.
+
+
+**Example**
+
+Find the root of the function $f(x) = x^2 - 1$ on $[0,10]$. A C++ function with
+Rcpp interface is defined in the file `examples/findroot-bisect.cpp`.
+
+```{.cpp include="examples/findroot-bisect.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/findroot-bisect.cpp")
+out = findroot_bisect_ex(0, 10)
+print(out)
+```
+
+## Brent's Algorithm
+
+The algorithm successively shrinks the starting interval and terminates when
+the absolute difference is smaller than a tolerance $\epsilon$.
+
+**Function**
+
+Primary location of source code is the file [inst/include/findroot-brent.h][findroot-brent-h].
+
+[findroot-brent-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/findroot-brent.h
+
+```{cpp}
+findroot_result findroot_brent(
+	const dfd& f,              // <1>
+	double lower,              // <2>
+	double upper,              // <3>
+	const findroot_args& args  // <4>
+)
+
+findroot_result findroot_brent(
+	const dfd& f,              // <1>
+	double lower,              // <2>
+	double upper               // <3>
+)
+```
+1. Function $f$ for which a root is desired.
+2. Lower limit $a$ of search space.
+3. Upper limit $b$ of search space.
+4. Additional arguments.
+
+**Example**
+
+Find the root of the function $f(x) = x^2 - 1$ on $[0,10]$. A C++ function with
+Rcpp interface is defined in the file `examples/findroot-brent.cpp`.
+
+```{.cpp include="examples/findroot-brent.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/findroot-brent.cpp")
+out = findroot_brent_ex(0, 10)
+print(out)
+```
+
+# Univariate Optimization {#sec-optimize}
+
+Minimize the function $f : \mathbb{R} \rightarrow \mathbb{R}$ on a given
+interval $[a, b]$. The R [optimize][Roptimize-src] function is based on an
+underlying [Brent_fmin][optimize-src] C implementation of Brent's algorithm
+[@Brent1973, Section 5]. However, this function appears not to be exported
+from R for external use.
+
+We provide several alternatives in C++: The golden section search method
+[e.g., @PressEtAl2007, Section 10.2] is simple, guaranteed to converge, and
+does not require information about derivatives. Brent's algorithm is more
+involved but converges faster. The implementation of Brent's algorithm in C++
+based is on the ALGOL code in Section 5.8 of @Brent1973. The golden section and
+Brent functions use a common arguments struct, results struct, and status codes,
+which are given below.
+
+[optimize-src]: https://github.com/r-devel/r-svn/blob/5521fa62273d38f50e7e963337d74ec2f223c532/src/library/stats/src/optimize.c#L94
+[Roptimize-src]: https://github.com/r-devel/r-svn/blob/5521fa62273d38f50e7e963337d74ec2f223c532/src/library/stats/R/nlm.R#L35
+
+**Optional Arguments**
+
+```{cpp}
+struct optimize_args
+{
+	bool fnscale = 1;                          // <1>
+	double tol = mach_eps_2r;                  // <2>
+	unsigned int maxiter = 1000;               // <3>
+	unsigned int report_period = uint_max;     // <4>
+	error_action action = error_action::STOP;  // <5>
+
+	optimize_args() { };                       // <6>
+	optimize_args(SEXP obj);                   // <7>
+	operator SEXP() const;                     // <8>
+};
+
+
+```
+1. Scaling factor to be applied to the value of $f(x)$ during optimization. Use
+   `-1` to implement maximization rather than minimization.
+2. Tolerance $\epsilon$ for convergence.
+3. The maximum number of iterations.
+4. The frequency of reports.
+5. Action to take if operation returns a status code other than `OK`.
+6. Default constructor.
+7. Constructor from an `Rcpp::List`.
+8. Conversion operator to `Rcpp::List`.
+
+**Result**
+
+```{cpp}
+struct optimize_result
+{
+	double par;                   // <1>
+	double value;                 // <2>
+	unsigned int iter;            // <3>
+	double tol;                   // <4>
+	optimize_status status;       // <5>
+	std::string message;          // <6>
+
+	operator SEXP() const;        // <7>
+};
+```
+1. The final value of the optimization variable.
+2. The value of the function corresponding to `par`.
+3. The number of iterations taken.
+4. The achieved tolerance $\delta$.
+5. Status code from the optimizer.
+6. A message describing the status of the operation.
+7. Conversion operator to `Rcpp::List`.
+
+The `SEXP` conversion operator produces the following representation of
+`optimize_result` as an `Rcpp::List`. The fields here directly correspond to
+those in `optimize_result`.
+
+|Name       | Type                  | Description |
+|:----------|:----------------------|:------------|
+| `par`     | `Rcpp::NumericVector` | Length 1    |
+| `value`   | `Rcpp::NumericVector` | Length 1    |
+| `iter`    | `Rcpp::IntegerVector` | Length 1    |
+| `tol`     | `Rcpp::NumericVector` | Length 1    |
+| `status`  | `Rcpp::IntegerVector` | Length 1    |
+| `message` | `Rcpp::StringVector`  | Length 1    |
+
+: {tbl-colwidths="[15,30,55]"}
+
+**Status Codes**
+
+```{cpp}
+enum class optimize_status : unsigned int {
+	OK = 0L,                  // <1>
+	NUMERICAL_OVERFLOW = 1L,  // <2>
+	NOT_CONVERGED = 2L        // <3>
+};
+```
+1. OK.
+2. Numerical overflow: tol may be too small.
+3. iteration limit had been reached.
+
+## Golden Section Search {#sec-golden}
+
+The algorithm successively shrinks the starting interval and terminates when
+$\delta = b - a$ is smaller than a given tolerance $\epsilon$.
+
+**Function**
+
+Primary location of source code is the file [inst/include/goldensection.h][goldensection-h].
+
+[goldensection-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/goldensection.h
+
+```{cpp}
+optimize_result goldensection(
+	const dfd& f,              // <1>
+	double lower,              // <2>
+	double upper,              // <3>
+	const optimize_args& args  // <4>
+)
+
+optimize_result goldensection(
+	const dfd& f,              // <1>
+	double lower,              // <2>
+	double upper               // <3>
+)
+```
+1. Function $f$ to minimize.
+2. Lower limit $a$ of search space.
+2. Upper limit $b$ of search space.
+4. Additional arguments.
+
+**Example**
+
+Maximize the function $f(x) = \exp(-x)$ on $[0,1]$. A C++ function with Rcpp
+interface is defined in the file `examples/goldensection.cpp`.
+
+```{.cpp include="examples/goldensection.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/goldensection.cpp")
+out = goldensection_ex(0, 1)
+print(out)
+```
+
+## Brent's Algorithm {#sec-brent-optim}
+
+This algorithm successively shrinks the starting interval and terminates when
+$\delta = |x - m|$ is smaller than a tolerance $\epsilon$, where
+$m = (a + b) / 2$ is the midpoint of the current $[a, b]$.
+
+**Function**
+
+Primary location of source code is the file [inst/include/optimize-brent.h][optimize-brent-h].
+
+[optimize-brent-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/optimize-brent.h
+
+```{cpp}
+optimize_result optimize_brent(
+	const dfd& f,              // <1>
+	double lower,              // <2>
+	double upper,              // <3>
+	const optimize_args& args  // <4>
+)
+
+optimize_result optimize_brent(
+	const dfd& f,              // <1>
+	double lower,              // <2>
+	double upper               // <3>
+)
+```
+1. Function $f$ to minimize.
+2. Lower limit $a$ of search space.
+2. Upper limit $b$ of search space.
+4. Additional arguments.
+
+**Example**
+
+Maximize the function $f(x) = \exp(-x)$ on $[0,1]$. A C++ function with Rcpp
+interface is defined in the file `examples/optimize-brent.cpp`.
+
+```{.cpp include="examples/optimize-brent.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/optimize-brent.cpp")
+out = optimize_brent_ex(0, 1)
+print(out)
+```
+
+# Multivariate Optimization {#sec-optim}
+
+This section presents methods to minimize a function
+$f : \mathbb{R}^n \rightarrow \mathbb{R}$ from a given starting value $x_0$.
+
+## Nelder-Mead
+
+Relies only on evaluation of $f$ and does not use the
+gradient or Hessian [@NelderMead1965]. This function directly calls
+[nmmin][nmmin-src], the C function that gets invoked when using the
+[optim][Roptim-src] R function with `method = "Nelder-Mead"`.
+
+[nmmin-src]: https://github.com/r-devel/r-svn/blob/62dd8b09461d5d1313f4722d9d63abb463a9e42d/src/include/R_ext/Applic.h#L71
+[Roptim-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/optim.R
+
+**Function**
+
+Primary location of source code is the file [inst/include/neldermead.h][neldermead-h].
+
+[neldermead-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/neldermead.h
+
+```{cpp}
+neldermead_result neldermead(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f,                     // <2>
+	const neldermead_args& args       // <3>
+)
+
+neldermead_result neldermead(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f                      // <2>
+)
+```
+1. Initial value for optimization variable.
+2. Function $f$ to minimize.
+3. Additional arguments.
+
+**Optional Arguments**
+
+```{cpp}
+struct neldermead_args
+{
+	double alpha = 1.0;           // <1>
+	double beta = 0.5;            // <2>
+	double gamma = 2.0;           // <3>
+	unsigned int trace = 0;       // <4>
+	double abstol = R_NegInf;     // <5>
+	double reltol = mach_eps_2r;  // <6>
+	unsigned int maxit = 500;     // <7>
+	double fnscale = 1.0;         // <8>
+
+	neldermead_args() { };        // <9>
+	neldermead_args(SEXP obj);    // <10>
+	operator SEXP() const;        // <11>
+};
+```
+1. Reflection factor.
+2. Contraction and reduction factor.
+3. Extension factor.
+4. If positive, print progress info.
+5. Absolute tolerance.
+6. User-initialized conversion tolerance.
+7. Maximum number of iterations.
+8. Scaling factor to be applied to the value of $f(x)$ during optimization. Use
+   `-1` to implement maximization rather than minimization.
+9. Default constructor.
+10. Constructor from an `Rcpp::List`.
+11. Conversion operator to `Rcpp::List`.
+
+**Result**
+
+```{cpp}
+struct neldermead_result {
+	std::vector<double> par;   // <1>
+	double value;              // <2>
+	neldermead_status status;  // <3>
+	int fncount;               // <4>
+
+	operator SEXP() const;     // <5>
+};
+```
+1. The final approximation of the optimizer.
+2. The value of $f$ at the optimizer.
+3. A code describing the status of the operation.
+4. The number of function evaluations.
+5. Conversion operator to `Rcpp::List`.
+
+The `SEXP` conversion operator produces the following representation of
+`neldermead_result` as an `Rcpp::List`. The fields here directly correspond to
+those in `neldermead_result`.
+
+|Name       | Type                  | Description |
+|:----------|:----------------------|:------------|
+| `par`     | `Rcpp::NumericVector` | Length $n$  |
+| `value`   | `Rcpp::NumericVector` | Length 1    |
+| `status`  | `Rcpp::IntegerVector` | Length 1    |
+| `fncount` | `Rcpp::IntegerVector` | Length 1    |
+
+: {tbl-colwidths="[15,30,55]"}
+
+**Status Codes**
+
+```{cpp}
+enum class neldermead_status : unsigned int {
+	OK = 0L,                 // <1>
+	NOT_CONVERGED = 1L,      // <2>
+	SIMLEX_DEGENERACY = 10L  // <3>
+};
+```
+1. OK.
+2. Not converged within `maxiter` iterations.
+3. Degeneracy of the Nelder–Mead simplex.
+
+**Example**
+
+Minimize the function $f(x) = \sum_{i=1}^n x_i^2 - 1$ for $n = 2$. Take
+$x_0 = (1,-1)$ as the initial value. A C++ function with Rcpp interface is
+defined in the file `examples/neldermead.cpp`.
+
+```{.cpp include="examples/neldermead.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/neldermead.cpp")
+out = neldermead_ex(x0 = c(1, -1))
+print(out)
+```
+
+## BFGS
+
+Minimization using the BFGS (Broyden-Fletcher-Goldfarb-Shanno)
+algorithm [@Nash1990]. Relies on evaluation of $f$ and its gradient
+$g(x) = \frac{\partial f(x)}{\partial x}$ but not the Hessian. This function
+directly calls [vmmin][vmmin-src], the C function that gets invoked when
+using the [optim][Roptim-src] R function with `method = "BFGS"`.
+
+[vmmin-src]: https://github.com/r-devel/r-svn/blob/62dd8b09461d5d1313f4722d9d63abb463a9e42d/src/include/R_ext/Applic.h#L67
+[Roptim-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/optim.R
+
+**Function**
+
+Primary location of source code is the file [inst/include/bfgs.h][bfgs-h].
+
+[bfgs-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/bfgs.h
+
+```{cpp}
+bfgs_result bfgs(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f,                     // <2>
+	const vfv& g,                     // <3>
+	const bfgs_args& args             // <4>
+)
+
+bfgs_result bfgs(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f,                     // <2>
+	const bfgs_args& args             // <4>
+)
+
+bfgs_result bfgs(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f,                     // <2>
+	const vfv& g                      // <3>
+)
+
+bfgs_result bfgs(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f                      // <2>
+)
+```
+1. Initial value for optimization variable.
+2. Function $f$ to minimize.
+3. Gradient function $g(x) = \frac{\partial f(x)}{\partial x}$.
+4. Additional arguments.
+
+Forms with the $g$ argument omitted compute the gradient using finite
+differences, via the `gradient` method in [@sec-gradient].
+
+**Optional Arguments**
+
+```{cpp}
+struct bfgs_args {
+	richardson_args deriv_args;    // <1>
+	double parscale = 1;           // <2>
+	int trace = 0;                 // <3>
+	double fnscale = 1;            // <4>
+	int maxit = 100;               // <5>
+	int report = 10;               // <6>
+	double abstol = R_NegInf;      // <7>
+	double reltol = mach_eps_2r;   // <8>
+
+	bfgs_args() { };               // <9>
+	bfgs_args(SEXP obj);           // <10>
+	operator SEXP() const;         // <11>
+};
+```
+
+1. Arguments for Richardson extrapolated numerical derivatives to compute
+   the gradient if $g$ is omitted in the call to `bfgs`. See @sec-deriv.
+2. A vector of scaling values for the parameters. (Currently not used).
+3. If positive, tracing information on the progress of the optimization is
+   produced. There are six levels which give progressively more detail.
+4. Scaling factor applied to the value of `f` and `g` during optimization.
+5. The maximum number of iterations.
+6. The frequency of reports.
+7. Absolute tolerance.
+8. Relative tolerance.
+9. Default constructor.
+10. Constructor from an `Rcpp::List`.
+11. Conversion operator to `Rcpp::List`.
+
+**Result**
+
+```{cpp}
+struct bfgs_result {
+	std::vector<double> par;  // <1>
+	double value;             // <2>
+	bfgs_status status;       // <3>
+	int fncount;              // <4>
+	int grcount;              // <5>
+
+	operator SEXP() const;    // <6>
+};
+```
+1. The final value of the optimization variable.
+2. The value of the function corresponding to `par`.
+3. Status code from the optimizer.
+4. Number of times the objective function was called.
+5. Number of times the gradient function was called.
+6. Conversion operator to `Rcpp::List`.
+
+The `SEXP` conversion operator produces the following representation of
+`bfgs_result` as an `Rcpp::List`. The fields here directly correspond to
+those in `bfgs_result`.
+
+|Name       | Type                  | Description |
+|:----------|:----------------------|:------------|
+| `par`     | `Rcpp::NumericVector` | Length $n$  |
+| `value`   | `Rcpp::NumericVector` | Length 1    |
+| `status`  | `Rcpp::IntegerVector` | Length 1    |
+| `fncount` | `Rcpp::IntegerVector` | Length 1    |
+| `grcount` | `Rcpp::IntegerVector` | Length 1    |
+
+: {tbl-colwidths="[15,30,55]"}
+
+**Status Codes**
+
+```{cpp}
+enum class bfgs_status : unsigned int {
+	OK = 0L,             // <1>
+	NOT_CONVERGED = 1L   // <2>
+};
+```
+1. OK.
+2. iteration limit maxit had been reached.
+
+**Example**
+
+Maximize the function $f(x) = \exp(-x^\top x)$. First use the default
+numerical gradient, then use an explicitly coded the gradient function
+$g(x) = -2 x \exp(-x^\top x)$. A C++ function with Rcpp interface is defined in
+the file `examples/bfgs.cpp`.
+
+```{.cpp include="examples/bfgs.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/bfgs.cpp")
+out = bfgs_ex(x0 = rep(1, 4))
+print(out$numerical)
+print(out$analytical)
+```
+
+## L-BFGS-B {#sec-lbfgs}
+
+Minimization using the L-BFGS-B (Limited memory
+Broyden-Fletcher-Goldfarb-Shanno) algorithm [@ByrdEtAl1995]. Relies on
+evaluation of $f$ and its gradient $g(x) = \frac{\partial f(x)}{\partial x}$
+but not the Hessian. This function directly calls [lbfgsb][lbfgsb-src], the C
+function that gets invoked when using the [optim][Roptim-src] R function with
+`method = "L-BFGS-B"`.
+
+[lbfgsb-src]: https://github.com/r-devel/r-svn/blob/62dd8b09461d5d1313f4722d9d63abb463a9e42d/src/include/R_ext/Applic.h#L79
+[Roptim-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/optim.R
+
+**Function**
+
+Primary location of source code is the file [inst/include/lbfgsb.h][lbfgsb-h].
+
+[lbfgsb-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/lbfgsb.h
+
+```{cpp}
+lbfgsb_result lbfgsb(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f,                     // <2>
+	const vfv& g,                     // <3>
+	const lbfgsb_args& args           // <4>
+)
+
+lbfgsb_result lbfgsb(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f,                     // <2>
+	const lbfgsb_args& args           // <4>
+)
+
+lbfgsb_result lbfgsb(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f,                     // <2>
+	const vfv& g                      // <3>
+)
+
+lbfgsb_result lbfgsb(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f                      // <2>
+)
+```
+1. Initial value for optimization variable.
+2. Function $f$ to minimize.
+3. Gradient function $g(x) = \frac{\partial f(x)}{\partial x}$.
+4. Additional arguments.
+
+Forms with the $g$ argument omitted compute the gradient using finite
+differences, via the `gradient` method in [@sec-gradient].
+
+**Optional Arguments**
+
+```{cpp}
+struct lbfgsb_args {
+	std::vector<double> lower;     // <1>
+	std::vector<double> upper;     // <2>
+	richardson_args deriv_args;    // <3>
+	double parscale = 1;           // <4>
+	int trace = 0;                 // <5>
+	double fnscale = 1;            // <6>
+	int lmm = 5;                   // <7>
+	int maxit = 100;               // <8>
+	int report = 10;               // <9>
+	double factr = 1e7;            // <10>
+	double pgtol = 0;              // <11>
+
+	lbfgsb_args() { };             // <12>
+	lbfgsb_args(SEXP obj);         // <13>
+	operator SEXP() const;         // <14>
+};
+```
+1. A vector of lower bounds. If left unspecified, will be taken to be a vector
+   of `-Inf` values.
+2. A vector of upper bounds. If left unspecified, will be taken to be a vector
+   of `Inf` values.
+3. Arguments for Richardson extrapolated numerical derivatives to compute
+   the gradient if $g$ is omitted in the call to `lbfgsb`. See @sec-deriv.
+4. A vector of scaling values for the parameters. (Currently not used).
+5. If positive, tracing information on the progress of the optimization is
+   produced. There are six levels which give progressively more detail.
+6. Scaling factor applied to the value of `f` and `g` during optimization.
+7. Number of BFGS updates retained.
+8. The maximum number of iterations.
+9. The frequency of reports.
+10. Convergence occurs when the reduction in the objective is within this
+    factor of the machine tolerance.
+11. A tolerance on the projected gradient in the current search direction. The
+    check is suppressed when the value is zero.
+12. Default constructor.
+13. Constructor from an `Rcpp::List`.
+14. Conversion operator to `Rcpp::List`.
+
+**Result**
+
+```{cpp}
+struct lbfgsb_result {
+	std::vector<double> par;  // <1>
+	double value;             // <2>
+	lbfgsb_status status;     // <3>
+	int fncount;              // <4>
+	int grcount;              // <5>
+	std::string msg;          // <6>
+
+	operator SEXP() const;    // <7>
+};
+```
+1. The final value of the optimization variable.
+2. The value of the function corresponding to `par`.
+3. Status code from the optimizer.
+4. Number of times the objective function was called.
+5. Number of times the gradient function was called.
+6. String with additional information from the optimizer.
+7. Conversion operator to `Rcpp::List`.
+
+The `SEXP` conversion operator produces the following representation of
+`lbfgsb_result` as an `Rcpp::List`. The fields here directly correspond to
+those in `lbfgsb_result`.
+
+|Name       | Type                  | Description |
+|:----------|:----------------------|:------------|
+| `par`     | `Rcpp::NumericVector` | Length $n$  |
+| `value`   | `Rcpp::NumericVector` | Length 1    |
+| `status`  | `Rcpp::IntegerVector` | Length 1    |
+| `fncount` | `Rcpp::IntegerVector` | Length 1    |
+| `grcount` | `Rcpp::IntegerVector` | Length 1    |
+| `message` | `Rcpp::StringVector`  | Length 1    |
+
+: {tbl-colwidths="[15,30,55]"}
+
+**Status Codes**
+
+```{cpp}
+enum class lbfgsb_status : unsigned int {
+	OK = 0L,             // <1>
+	NOT_CONVERGED = 1L,  // <2>
+	WARN = 51L,          // <3>
+	ERROR = 52L,         // <4>
+};
+```
+1. OK.
+2. iteration limit maxit had been reached.
+3. algorithm reported a warning.
+4. algorithm reported an error.
+
+**Example**
+
+Maximize the function $f(x) = \exp(-x^\top x)$. First use the default
+numerical gradient, then use explicitly coded gradient function
+$g(x) = -2 x \exp(-x^\top x)$. A C++ function with Rcpp interface is defined in
+the file `examples/lbfgsb.cpp`.
+
+```{.cpp include="examples/lbfgsb.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/lbfgsb.cpp")
+out = lbfgsb_ex(x0 = rep(1, 4))
+print(out$numerical)
+print(out$analytical)
+```
+
+## Conjugate Gradient {#sec-cg}
+
+Minimization using the conjugate gradient algorithm
+[@FletcherReeves1964; @Nash1990]. Relies on evaluation of $f$ and its gradient
+$g(x) = \frac{\partial f(x)}{\partial x}$ but not the Hessian. This function
+directly calls [cgmin][cgmin-src], the C function that gets invoked when
+using the [optim][Roptim-src] R function with `method = "CG"`.
+
+[cgmin-src]: https://github.com/r-devel/r-svn/blob/62dd8b09461d5d1313f4722d9d63abb463a9e42d/src/include/R_ext/Applic.h#L75
+[Roptim-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/optim.R
+
+**Function**
+
+Primary location of source code is the file [inst/include/cg.h][cg-h].
+
+[cg-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/cg.h
+
+```{cpp}
+cg_result bfgs(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f,                     // <2>
+	const vfv& g,                     // <3>
+	const cg_args& args               // <4>
+)
+
+cg_result cg(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f,                     // <2>
+	const cg_args& args               // <4>
+)
+
+cg_result cg(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f,                     // <2>
+	const vfv& g                      // <3>
+)
+
+cg_result cg(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f                      // <2>
+)
+```
+1. Initial value for optimization variable.
+2. Function $f$ to minimize.
+3. Gradient function $g(x) = \frac{\partial f(x)}{\partial x}$.
+4. Additional arguments.
+
+Forms with the $g$ argument omitted compute the gradient using finite
+differences, via the `gradient` method in [@sec-gradient].
+
+**Optional Arguments**
+
+```{cpp}
+
+struct cg_args
+{
+	richardson_args deriv_args;    // <1>
+	double parscale = 1;           // <2>
+	double fnscale = 1;            // <3>
+	double abstol = R_NegInf;      // <4>
+	double reltol = mach_eps_2r;   // <5>
+	int type = 1;                  // <6>
+	int trace = 0;                 // <7>
+	int maxit = 100;               // <8>
+
+	cg_args() { };                 // <9>
+	cg_args(SEXP obj);             // <10>
+	operator SEXP() const;         // <11>
+};
+```
+
+1. Arguments for Richardson extrapolated numerical derivatives to compute
+   the gradient if $g$ is omitted in the call to `cg`. See @sec-deriv.
+2. A vector of scaling values for the parameters. (Currently not used).
+3. Scaling factor applied to the value of `f` and `g` during optimization.
+4. Absolute tolerance.
+5. Relative tolerance.
+6.  Type of update: 1 for Fletcher-Reeves, 2 for Polak-Ribiere, and 3 for
+    Beale-Sorenson.
+7. If positive, tracing information on the progress of the optimization is
+   produced. There are six levels which give progressively more detail.
+8. The maximum number of iterations.
+9. Default constructor.
+10. Constructor from an `Rcpp::List`.
+11. Conversion operator to `Rcpp::List`.
+
+**Result**
+
+```{cpp}
+struct cg_result {
+	std::vector<double> par;  // <1>
+	double value;             // <2>
+	cg_status status;         // <3>
+	int fncount;              // <4>
+	int grcount;              // <5>
+
+	operator SEXP() const;    // <6>
+};
+```
+1. The final value of the optimization variable.
+2. The value of the function corresponding to `par`.
+3. Status code from the optimizer.
+4. Number of times the objective function was called.
+5. Number of times the gradient function was called.
+6. Conversion operator to `Rcpp::List`.
+
+The `SEXP` conversion operator produces the following representation of
+`cg_result` as an `Rcpp::List`. The fields here directly correspond to
+those in `cg_result`.
+
+|Name       | Type                  | Description |
+|:----------|:----------------------|:------------|
+| `par`     | `Rcpp::NumericVector` | Length $n$  |
+| `value`   | `Rcpp::NumericVector` | Length 1    |
+| `status`  | `Rcpp::IntegerVector` | Length 1    |
+| `fncount` | `Rcpp::IntegerVector` | Length 1    |
+| `grcount` | `Rcpp::IntegerVector` | Length 1    |
+
+: {tbl-colwidths="[15,30,55]"}
+
+**Status Codes**
+
+```{cpp}
+enum class cg_status : unsigned int {
+	OK = 0L,             // <1>
+	NOT_CONVERGED = 1L   // <2>
+};
+```
+1. OK.
+2. iteration limit maxit had been reached.
+
+**Example**
+
+Maximize the function $f(x) = \exp(-x^\top x)$. First use the default
+numerical gradient, then use an explicitly coded the gradient function
+$g(x) = -2 x \exp(-x^\top x)$. A C++ function with Rcpp interface is defined in
+the file `examples/cg.cpp`.
+
+```{.cpp include="examples/cg.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/cg.cpp")
+out = cg_ex(x0 = rep(1, 4))
+print(out$numerical)
+print(out$analytical)
+```
+
+## Newton-Type Algorithm for Nonlinear Optimization
+
+Minimization using the Newton-type algorithm underlying the
+[nlm][nlm-src] R function. The amounts to calling the C function
+[optif9][optif9-src] within the R API. The implementation of `optif9` is based
+on @DennisSchnabel1983.
+
+The gradient $g(x) = \frac{\partial f(x)}{\partial x}$ and Hessian 
+$h(x) = \frac{\partial^2 f(x)}{\partial x \partial x^\top}$ may be provided
+explicitly if available. When the gradient and/or Hessian are not
+specified, numerical approximations are used by `optif9`.
+
+[optif9-src]: https://github.com/r-devel/r-svn/blob/62dd8b09461d5d1313f4722d9d63abb463a9e42d/src/include/R_ext/Applic.h#L136
+[nlm-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/nlm.R
+
+**Function**
+
+Primary location of source code is the file [inst/include/nlm.h][nlm-h].
+
+[nlm-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/nlm.h
+
+```{cpp}
+
+nlm_result nlm(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f,                     // <2>
+	const vfv& g,                     // <3>
+	const mfv& h,                     // <4>
+	const nlm_args& args              // <5>
+)
+
+nlm_result nlm(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f,                     // <2>
+	const vfv& g,                     // <3>
+	const nlm_args& args              // <5>
+)
+
+nlm_result nlm(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f,                     // <2>
+	const nlm_args& args              // <5>
+)
+
+nlm_result nlm(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f,                     // <2>
+	const vfv& g,                     // <3>
+	const mfv& h                      // <4>
+)
+
+nlm_result nlm(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f,                     // <2>
+	const vfv& g                      // <3>
+)
+
+nlm_result nlm(
+	const Rcpp::NumericVector& init,  // <1>
+	const dfv& f                      // <2>
+)
+```
+1. Initial value for optimization variable.
+2. Function $f$ to minimize.
+3. Gradient of $f$.
+4. Hessian of $f$.
+5. Additional arguments.
+
+**Optional Arguments**
+
+```{cpp}
+struct nlm_args
+{
+	std::vector<double> typsize;   // <1>
+	unsigned int print_level = 0;  // <2>
+	double fscale = 1;             // <3>
+	double fnscale = 1;            // <4>
+	unsigned int ndigit = 12;      // <5>
+	double gradtol = 1e-6;         // <6>
+	double stepmax = R_PosInf;     // <7>
+	double steptol = 1e-6;         // <8>
+	int iterlim = 100;             // <9>
+	unsigned int method = 1;       // <10>
+	double trust_radius = 1.0;     // <11>
+
+	nlm_args() { };                // <12>
+	nlm_args(SEXP obj);            // <13>
+	operator SEXP() const;         // <14>
+};
+```
+1. An estimate of the size of each parameter at the minimum.
+2. Verbosity of messages during optimization:
+	- 0: no printing;
+	- 1: final details are printed;
+	- 2: full tracing is provided.
+3. An estimate of the size of f at the minimum.
+4. Scaling factor applied to the value of `f`, `g`, and `h` during
+   optimization. Taking this to be `-1` changes the optimization to
+   maximization.
+5. Number of significant digits in the function $f$.
+6. Tolerance to terminate algorithm based on the distance of gradient to zero.
+7. Maximum allowable scaled step length
+8. Tolerance to terminate algorithm based on relative step size of successive
+   iterates.
+9. The maximum number of iterations.
+10. Algorithm used in optimization:
+	- 1: line search;
+    - 2: double dogleg;
+    - 3: more-hebdon.
+11. Radius of trust region.
+12. Default constructor.
+13. Constructor from an `Rcpp::List`.
+14. Conversion operator to `Rcpp::List`.
+
+Arguments correspond to those in `nlm` with the following exceptions.
+
+- The arguments `method` and `trust_radius` are provided from within `optif9`
+  but not exposed from `nlm`.
+  
+- An argument `hessian `is provided in `nlm` to compute the value of the
+  Hessian via finite differences using the final value of the optimization
+  variable. That is not provided here, but may be requested using the Hessian
+  function in @sec-hessian.
+
+- The `nlm` function provides an `check.analyticals` argument to check the
+  correctness of provided expressions for the gradient and Hessian. This
+  argument is not provided here, but a similar check can be done using the
+  numerical gradient and Hessian functions in @sec-gradient and @sec-hessian,
+  respectively.
+
+See the `nlm` manual page for additional details about other arguments.
+
+If `typsize` is given as the default empty value, it is transformed internally
+to a vector of $n$ ones to match the default in `nlm`. Similarly, if `stepmax`
+is given as the default infinity value, it is transformed internally to match
+the default value in `nlm`.
+
+**Result**
+
+```{cpp}
+struct nlm_result
+{
+	std::vector<double> par;      // <1>
+	std::vector<double> grad;     // <2>
+	double estimate;              // <3>
+	int iterations;               // <4>
+	nlm_status status;            // <5>
+
+	operator SEXP() const;        // <6>
+};
+```
+1. The final value of the optimization variable.
+2. The final value of the gradient.
+3. The value of the function corresponding to `par`.
+4. Number of iterations carried out.
+5. Status code from the optimizer.
+6. Conversion operator to `Rcpp::List`.
+
+The `SEXP` conversion operator produces the following representation of
+`nlm_result` as an `Rcpp::List`. The fields here directly correspond to
+those in `nlm_result`.
+
+|Name          | Type                  | Description  |
+|:-------------|:----------------------|:-------------|
+| `par`        | `Rcpp::NumericVector` | Length $n$   |
+| `grad`       | `Rcpp::NumericVector` | Length $n$   |
+| `estimate`   | `Rcpp::NumericVector` | Length 1     |
+| `iterations` | `Rcpp::IntegerVector` | Length 1     |
+| `status`     | `Rcpp::IntegerVector` | Length 1     |
+| `hessian`    | `Rcpp::IntegerVector` | Length $n^2$ |
+
+: {tbl-colwidths="[15,30,55]"}
+
+**Status Codes**
+
+```{cpp}
+enum class nlm_status : unsigned int {
+	OK = 0L,                   // <1>
+	GRADIENT_WITHIN_TOL = 1L,  // <2>
+	ITERATES_WITH_TOL = 2L,    // <3>
+	NO_LOWER_STEP = 3L,        // <4>
+	ITERATION_MAX = 4L,        // <5>
+	STEP_SIZE_EXCEEDED = 5L    // <6>
+};
+
+```
+1. OK.
+2. Relative gradient is within given tolerance.
+3. Relative step size of successive iterates is within given tolerance.
+4. Last global step failed to locate a point lower than `estimate`.
+5. Reached maximum number of iterations.
+6. Maximum step size `stepmax` exceeded five consecutive times. 
+
+See the manual page for `nlm` for more detail about these statuses.
+
+**Example**
+
+Maximize the function $f(x) = \exp(-x^\top x)$. The associated gradient and
+Hessian functions are $g(x) = -2 f(x) x$ and 
+$h(x) = (4 x x^\top - 2 I) f(x)$, respectively. Consider three calls: first
+with a numerical gradient and Hessian, then with explicitly coded gradient, and
+finally with both explicitly coded gradient and Hessian. A C++ function with
+Rcpp interface is defined in the file `examples/nlm.cpp`.
+
+```{.cpp include="examples/nlm.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/nlm.cpp")
+out = nlm_ex(x0 = rep(1, 4))
+nn = c("par", "grad")
+print(out$res1[nn])
+print(out$res2[nn])
+print(out$res3[nn])
+```
+
+# Matrix Operations {#sec-matrix}
+
+This section presents several matrix operations based on a lambda function.
+
+## Apply
+
+Apply a function to the elements, rows, or columns of an $m \times n$ matrix.
+Suppose $X \in \mathbb{R}^{m \times n}$ is a matrix with rows
+$x_{1 \bullet}, \ldots, x_{m \bullet}$ and columns
+$x_{\bullet 1}, \ldots, x_{\bullet n}$.
+
+The function `mat_apply` is an elementwise application of
+$f : \mathbb{R} \rightarrow \mathbb{R}$ which computes
+<!-- -->
+$$
+\text{\texttt{mat\_apply}}(X, f)
+= \begin{bmatrix}
+f(x_{11}) & \cdots & f(x_{1n}) \\
+\vdots & \ddots & \vdots \\
+f(x_{m1}) & \cdots & f(x_{mn}) \\
+\end{bmatrix}.
+$$
+<!-- -->
+The function `row_apply` is a rowwise application of
+$g : \mathbb{R}^n \rightarrow \mathbb{R}$ which computes
+<!-- -->
+$$
+\text{\texttt{row\_apply}}(X, g)
+= \big( g(x_{1 \bullet}), \ldots, g(x_{m \bullet}) \big).
+$$
+<!-- -->
+The function `col_apply` is a columnwise application of
+$h : \mathbb{R}^m \rightarrow \mathbb{R}$ which computes
+<!-- -->
+$$
+\text{\texttt{col\_apply}}(X, h)
+= \big( h(x_{\bullet 1}), \ldots, h(x_{\bullet n}) \big).
+$$
+<!-- -->
+The above replicate the behavior of following R calls, respectively.
+
+```{r}
+#| eval: false
+apply(X, c(1,2), f)
+apply(X, 1, f)
+apply(X, 2, f)
+```
+
+**Functions**
+
+Primary location of source code is the file [inst/include/apply.h][apply-h].
+
+[apply-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/apply.h
+
+```{cpp}
+template <typename T, int RTYPE>
+Rcpp::Vector<RTYPE> row_apply(
+	const Rcpp::Matrix<RTYPE>& X,							// <1>
+	const std::function<T(const Rcpp::Vector<RTYPE>&)>& f   // <2>
+)
+
+template <typename T, int RTYPE>
+Rcpp::Vector<RTYPE> col_apply(
+	const Rcpp::Matrix<RTYPE>& X,							// <1>
+	const std::function<T(const Rcpp::Vector<RTYPE>&)>& f   // <2>
+)
+
+template <typename T, int RTYPE>
+Rcpp::Matrix<RTYPE> mat_apply(
+	const Rcpp::Matrix<RTYPE>& X,							// <1>
+	const std::function<T(T)>& f                            // <2>
+)
+```
+1. An Rcpp matrix object.
+2. Function $f$ to apply.
+
+The functions `mat_apply`, `row_apply`, and `col_apply` correspond to
+elementwise, rowwise, and columnwise apply.
+
+Rcpp matrix objects may be of type `NumericMatrix`, `IntegerMatrix`,
+or one of the others defined in the [Rcpp API][rcpp-matrices-src]. The template
+argument `RTYPE` represents the type of data stored in in the matrix, taking
+on value `REALSXP` for `NumericMatrix`, `INTSXP` for `IntegerMatrix`, etc. The
+template argument `T` represents an underlying C++ variable type such as
+`double`, `int`, etc.
+
+The domain and range of function `f` should match the class of `x` and type of
+apply operation. As an example, suppose `X` is an object of type `NumericMatrix`.
+
+- The domain of `row_apply` should be of type `const NumericVector&` and
+  the range should be of type `double`.
+- The domain of `col_apply` should be of type `const NumericVector&` and
+  the range should be of type `double`.
+- The domain and range of `mat_apply` should be of type `double`.
+
+[rcpp-matrices-src]: https://dirk.eddelbuettel.com/code/rcpp/html/instantiation_8h.html
+
+**Example**
+
+Compute the square of each element of a matrix, then its rowwise sums, then its
+columnwise sums. A C++ function with Rcpp interface is defined in the file
+`examples/apply.cpp`.
+
+```{.cpp include="examples/apply.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/apply.cpp")
+X = matrix(1:12, 4, 3)
+out = apply_ex(X)
+print(out)
+```
+
+## Outer
+
+Construct a matrix from a real-valued function of two arguments. Or carry out a
+matrix multiplication without explicitly constructing the matrix.
+
+Suppose $f(x,x') : \mathbb{R}^d \times \mathbb{R}^d \rightarrow \mathbb{R}$ and
+$X \in \mathbb{R}^{n \times d}$ is a matrix with rows $x_1, \ldots, x_n$. Also
+let $a = [a_1 \cdots a_n]^\top$ be a fixed vector. The `outer` operation
+computes the $n \times n$ symmetric matrix
+<!-- -->
+$$
+\text{\texttt outer}(X, f) =
+\begin{bmatrix}
+f(x_1, x_1) & \cdots & f(x_1, x_n) \\
+\vdots & \ddots & \vdots \\
+f(x_n, x_1) & \cdots & f(x_n, x_n) \\
+\end{bmatrix}
+$$
+<!-- -->
+and the `outer_matvec` operation computes the $n$-dimensional vector
+<!-- -->
+$$
+\text{\texttt outer\_matvec}(X, f, a) =
+\begin{bmatrix}
+f(x_1, x_1) & \cdots & f(x_1, x_n) \\
+\vdots & \ddots & \vdots \\
+f(x_n, x_1) & \cdots & f(x_n, x_n) \\
+\end{bmatrix}
+\begin{bmatrix}
+a_1 \\
+\vdots \\
+a_n \\
+\end{bmatrix}.
+$$
+
+Now suppose $f(x,y) : \mathbb{R}^{d_1} \times \mathbb{R}^{d_2} \rightarrow \mathbb{R}$,
+$X \in \mathbb{R}^{m \times d_1}$ is a matrix with rows $x_1, \ldots, x_m$,
+$Y \in \mathbb{R}^{n \times d_2}$ is a matrix with rows $y_1, \ldots, y_n$,
+and $a = [a_1 \cdots a_n]^\top$ is a fixed vector. The `outer` operation
+computes the $m \times n$ matrix
+<!-- -->
+$$
+\text{\texttt outer}(X, Y, f) =
+\begin{bmatrix}
+f(x_1, y_1) & \cdots & f(x_1, y_n) \\
+\vdots & \ddots & \vdots \\
+f(x_m, y_1) & \cdots & f(x_m, y_n) \\
+\end{bmatrix}
+$$
+<!-- -->
+and the `outer_matvec` operation computes the $m$-dimensional vector
+<!-- -->
+$$
+\text{\texttt outer\_matvec}(X, Y, f, a) =
+\begin{bmatrix}
+f(x_1, y_1) & \cdots & f(x_1, y_n) \\
+\vdots & \ddots & \vdots \\
+f(x_m, y_1) & \cdots & f(x_m, y_n) \\
+\end{bmatrix}
+\begin{bmatrix}
+a_1 \\
+\vdots \\
+a_n \\
+\end{bmatrix}.
+$$
+
+The `outer` functions above replicate the behavior of the `outer` function in R.
+
+**Functions**
+
+Primary location of source code is the file [inst/include/outer.h][outer-h].
+
+[outer-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/outer.h
+
+```{cpp}
+Rcpp::NumericMatrix outer(
+	const Rcpp::NumericMatrix& X,  // <1>
+	const dfvv& f                  // <3>
+)
+
+Rcpp::NumericMatrix outer(
+	const Rcpp::NumericMatrix& X,  // <1>
+	const Rcpp::NumericMatrix& Y,  // <2>
+	const dfvv& f                  // <3>
+)
+
+Rcpp::NumericVector outer_matvec(
+	const Rcpp::NumericMatrix& X,  // <1>
+	const dfvv& f,                 // <3>
+	const Rcpp::NumericVector& a   // <4>
+)
+
+Rcpp::NumericVector outer_matvec(
+	const Rcpp::NumericMatrix& X,  // <1>
+	const Rcpp::NumericMatrix& Y,  // <2>
+	const dfvv& f,                 // <3>
+	const Rcpp::NumericVector& a   // <4>
+)
+```
+1. An Rcpp matrix object of dimension $m \times d$.
+2. An Rcpp matrix object of dimension $n \times d$.
+3. Function $f$ to apply.
+4. An Rcpp vector object of dimension $n$.
+
+**Example**
+
+Compute the distance between pairs of rows of $X$, then compute the distance
+between each pairs of rows taken from $X$ and $Y$. Then multiply the respective
+matrices by $a = [1, \ldots, 1]$. A C++ function with Rcpp interface is defined
+in the file `examples/outer.cpp`.
+
+```{.cpp include="examples/outer.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/outer.cpp")
+m = 5; n = 3; d = 2
+X = matrix(rnorm(10), m, d)
+Y = matrix(rnorm(6), n, d)
+a = rep(1, m)
+b = rep(1, n)
+out = outer_ex(X, Y, a, b)
+print(out)
+```
+
+## Matrix-Free Linear Solve
+
+Solve a linear system $A x = b$ for symmetric positive definite
+$A \in \mathbb{R}^{n \times n}$ [@NocedalWright2006]. Here the operation $Ax$
+is specified through a function $\ell(x) = Ax$. This can be used to avoid
+explicit storage of large matrices when $A$ is sparse. The solution $x^*$ is
+found by minimizing the quadratic function
+<!-- -->
+$$
+f(x) = \frac{1}{2} x^\top \ell(x) - b^\top x,
+$$
+<!-- -->
+so that $f'(x^*) = 0 \iff A x^* = b$. Minimization is carried out using the
+conjugate gradient method in @sec-cg.
+
+**Functions**
+
+Primary location of source code is the file [inst/include/solve_cg.h][solve_cg-h].
+
+[solve_cg-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/solve_cg.h
+
+```{cpp}
+cg_result solve_cg(
+	const vfv& l,                     // <1>
+	const Rcpp::NumericVector& b,     // <2>
+	const Rcpp::NumericVector& init,  // <3>
+	const cg_args& args               // <4>
+)
+
+cg_result solve_cg(
+	const vfv& l,                     // <1>
+	const Rcpp::NumericVector& b,     // <2>
+	const Rcpp::NumericVector& init   // <3>
+)
+
+cg_result solve_cg(
+	const vfv& l,                     // <1>
+	const Rcpp::NumericVector& b      // <2>
+)
+```
+1. The function $\ell : \mathbb{R}^n \rightarrow \mathbb{R}^n$.
+2. The vector $b \in \mathbb{R}^{n}$.
+3. Initial value for $x$.
+4. Optional arguments to CG method.
+
+The routine checks that `l(init)` is an $n$-dimensional vector, but there is no
+check that the operation $\ell$ represents a symmetric positive definite
+matrix.
+
+See @sec-cg for details on `cg_args` and `cg_result`.
+
+**Example**
+
+Solve the equation $Ax = b$ with $n \times n$ matrix $A$ having value 2 
+on the main diagonal and value 1 on the upper and lower diagonals; let
+$b = [1, \ldots, 1]$. The initial value for the solution is taken to be the
+default $x = 0$. A C++ function with Rcpp interface is defined in the file
+`examples/solve-cg.cpp`.
+
+```{.cpp include="examples/solve-cg.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/solve-cg.cpp")
+b = rep(1, 10)
+out = solve_cg_ex(b)
+print(out)
+```
+
+Compare the above to solving dense the system as follows.
+
+```{r}
+A = matrix(0, 10, 10)
+diag(A) = 2
+A[cbind(1:9, 2:10)] = 1
+A[cbind(2:10, 1:9)] = 1
+solve(A, b)
+```
+
+
+## Which
+
+Identify the indices of a matrix which satisfy a given indicator function.
+Specifically, let $X \in \mathbb{S}^{m \times n}$ be a matrix whose elements
+are in the domain $\mathbb{S}$ which may be doubles, integers, or another
+Rcpp `Matrix` type. Let $f : \mathbb{S} \rightarrow \{0, 1\}$ be an indicator
+function and suppose $k$ of the $mn$ elements in $X$ satisfy the indicator.
+The `which` operation produces a $k \times 2$ matrix
+<!-- -->
+$$
+\text{which}(X, f) =
+\begin{bmatrix}
+i_1 & j_1 \\
+\vdots & \vdots \\
+i_k & j_k \\
+\end{bmatrix},
+$$
+<!-- -->
+where each pair $(i_\ell, j_\ell)$ are coordinates of an element in $X$ that
+satisfies $f$. Indices $i_\ell$ and $j_\ell$ represent the row and column
+index, respectively. Indices are *zero-based* by default as they are primarily
+intended to be used in C++ code.
+
+An equivalent R operation is the following. Note that indices in R are
+*one-based*.
+
+```{r}
+#| eval: false
+which(f(X), arr.ind = TRUE)
+```
+
+**Functions**
+
+Primary location of source code is the file [inst/include/which.h][which-h].
+
+[which-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/which.h
+
+```{cpp}
+template <typename T, int RTYPE>
+Rcpp::IntegerMatrix which(
+	const Rcpp::Matrix<RTYPE>& X,      // <1>
+	const std::function<bool(T)>& f),  // <2>
+	bool one_based = false             // <3>
+)
+```
+1. An Rcpp matrix object.
+2. Function $f$ to apply.
+3. If `one_based = false`, zero-based indices are produced which are suitable
+   for use with C++ code. If `true`, one-based indices are produced.
+
+**Example**
+
+Construct a matrix and identify the elements between $0$ and $0.5$. A C++
+function with Rcpp interface is defined in the file `examples/which.cpp`.
+
+```{.cpp include="examples/which.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/which.cpp")
+x = runif(10, -1, 1)
+X = matrix(x, 2, 5)
+out = which_ex(X)
+print(X)
+print(out)
+```
+
+Here is the result in R for comparison.
+
+```{r}
+f = function(x) { x > 0 & x < 0.5 }
+which(f(X), arr.ind = TRUE) - 1
+```
+
+# References
+
+::: {#refs}
+:::

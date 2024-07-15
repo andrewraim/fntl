@@ -1,0 +1,27 @@
+Package: fntl
+Title: Numerical Tools for Rcpp and Lambda Functions
+Version: 0.1.0
+Authors@R: 
+    person("Andrew", "Raim", , "andrew.raim@gmail", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-4440-2330"))
+Description: What the package does (one paragraph).
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+URL: https://github.com/andrewraim/fntl
+Depends:
+    R (>= 4.3)
+Suggests: 
+    knitr,
+    numDeriv,
+    rmarkdown,
+    quarto,
+    tidyverse,
+    tinytest
+LinkingTo: 
+    Rcpp
+Imports: 
+    Rcpp
+VignetteBuilder:
+	quarto

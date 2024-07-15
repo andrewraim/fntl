@@ -1,0 +1,8 @@
+*.html
+*.R
+*.log
+notes_files
+fntl_files
+notes.*
+fntl.pdf
+
