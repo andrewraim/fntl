@@ -4,7 +4,12 @@ Version: 0.1.0
 Authors@R: 
     person("Andrew", "Raim", , "andrew.raim@gmail", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-4440-2330"))
-Description: What the package does (one paragraph).
+Description:
+    fntl is an R package to facilitate Rcpp programming. It provides a C++ API
+    for routinely used numerical tools such as integration, root-finding, and
+    optimization, where function arguments are given as lambdas. This enables
+    the development of R-like code in C++ where functions can be defined on the
+    fly and use variables in the surrounding environment.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
