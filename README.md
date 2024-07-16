@@ -18,7 +18,7 @@ command like the following.
 devtools::install_github("andrewraim/fntl", ref = "v0.1.0")
 ```
 
-Here, `0.1.0` represents a tagged release; replace it with a later version if
+Here, `v0.1.0` represents a tagged release; replace it with a later version if
 one exists.
 
 
