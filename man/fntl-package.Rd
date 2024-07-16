@@ -16,6 +16,6 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Andrew Raim \email{andrew.raim@gmail} (\href{https://orcid.org/0000-0002-4440-2330}{ORCID})
+\strong{Maintainer}: Andrew M. Raim \email{andrew.raim@gmail.com} (\href{https://orcid.org/0000-0002-4440-2330}{ORCID})
 
 }
