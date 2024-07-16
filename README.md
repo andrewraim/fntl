@@ -15,7 +15,7 @@ The `fntl` package may be installed directly from Github using a standard R
 command like the following.
 
 ```r
-devtools::install_github("andrewraim/fntl", ref = "0.1.0")
+devtools::install_github("andrewraim/fntl", ref = "v0.1.0")
 ```
 
 Here, `0.1.0` represents a tagged release; replace it with a later version if
