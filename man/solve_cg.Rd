@@ -15,6 +15,10 @@ solve_cg(l, b, init, args)
 
 \item{args}{List of additional arguments from \code{cg_args}.}
 }
+\value{
+A list with the form of a \code{solve_cg_result} described in section "Conjugate
+Gradient" of the package vignette.
+}
 \description{
 Solve the system \eqn{l(x) = b} where \eqn{l(x)} is a matrix-free
 representation of the linear operation \eqn{Ax}.

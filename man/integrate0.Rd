@@ -15,6 +15,10 @@ integrate0(f, lower, upper, args)
 
 \item{args}{List of additional arguments from the function \code{integrate_args}.}
 }
+\value{
+A list with the form of a \code{integrate_result} described in section
+"Integration" of the package vignette.
+}
 \description{
 Compute the integral \eqn{\int_a^b f(x) dx}.
 }

@@ -53,6 +53,13 @@
 #' deriv2(f, x0, i = 1, j = 1, args, fd_type = 1)
 #' deriv2(f, x0, i = 1, j = 1, args, fd_type = 2)
 #'
+#' @return
+#' `fd_deriv1` and `fd_deriv2` return a single numeric value corresponding to
+#' the first and second derivative via finite differences. `deriv1` and
+#' `deriv2` return a list with the form of a `richardson_result` described in
+#' section "Richardson Extrapolated Finite Differences" of the package
+#' vignette.
+#'
 #' @name deriv
 #'
 #' @export
@@ -92,6 +99,10 @@ deriv2 <- function(f, x, i, j, args, fd_type) {
 #' gradient0(f, x0, args)
 #' numDeriv::grad(f, x0)
 #'
+#' @return
+#' A list with the form of a `gradient_result` described in section "Gradient"
+#' of the package vignette.
+#'
 #' @export
 gradient0 <- function(f, x, args) {
     .Call(`_fntl_gradient_rcpp`, f, x, args)
@@ -111,6 +122,10 @@ gradient0 <- function(f, x, args) {
 #' print(out$value)
 #' numDeriv::jacobian(f, x0)
 #'
+#' @return
+#' A list with the form of a `jacobian_result` described in section "Jacobian"
+#' of the package vignette.
+#'
 #' @export
 jacobian0 <- function(f, x, args) {
     .Call(`_fntl_jacobian_rcpp`, f, x, args)
@@ -129,6 +144,10 @@ jacobian0 <- function(f, x, args) {
 #' hessian0(f, x0, args)
 #' numDeriv::hessian(f, x0)
 #'
+#' @return
+#' A list with the form of a `hessian_result` described in section "Hessian"
+#' of the package vignette.
+#'
 #' @export
 hessian0 <- function(f, x, args) {
     .Call(`_fntl_hessian_rcpp`, f, x, args)
@@ -146,6 +165,10 @@ hessian0 <- function(f, x, args) {
 #' args = findroot_args()
 #' findroot_bisect(f, 0, 10, args)
 #' findroot_brent(f, 0, 10, args)
+#'
+#' @return
+#' A list with the form of a `findroot_result` described in section
+#' "Root-Finding" of the package vignette.
 #'
 #' @name findroot
 #'
@@ -173,6 +196,10 @@ findroot_brent <- function(f, lower, upper, args) {
 #' goldensection(f, 0, 10, args)
 #' optimize_brent(f, 0, 10, args)
 #'
+#' @return
+#' A list with the form of a `optimize_result` described in section
+#' "Univariate Optimization" of the package vignette.
+#'
 #' @name univariate-optimization
 #'
 #' @export
@@ -199,6 +226,10 @@ optimize_brent <- function(f, lower, upper, args) {
 #' f = function(x) { exp(-x^2 / 2) }
 #' args = integrate_args()
 #' integrate0(f, 0, 10, args)
+#'
+#' @return
+#' A list with the form of a `integrate_result` described in section
+#' "Integration" of the package vignette.
 #'
 #' @export
 integrate0 <- function(f, lower, upper, args) {
@@ -251,6 +282,21 @@ integrate0 <- function(f, lower, upper, args) {
 #' nlm1(x0, f, g, h, args)
 #' nlm2(x0, f, g, args)
 #' nlm3(x0, f, args)
+#'
+#' @return
+#' A list with results corresponding to the specified function. See the
+#' package vignette for further details.
+#'
+#' - `cg1` and `cg2` return a `cg_result` which is documented in the section
+#'   "Conjugate Gradient".
+#' - `bfgs1` and `bfgs2` return a `bfgs_result` which is documented in the
+#'   section "BFGS".
+#' - `lbfgsb1` and `lbfgsb2` return a `lbfgsb_result` which is documented in
+#'   the section "L-BFGS-B".
+#' - `neldermead` returns a `neldermead_result` which is documented in
+#'   the section "Nelder-Mead".
+#' - `nlm1`, `nlm2`, and `nlm3` return a `nlm_result` which is documented in
+#'   the section "Newton-Type Algorithm for Nonlinear Optimization".
 #'
 #' @name multivariate-optimization
 #'
@@ -337,20 +383,24 @@ nlm3 <- function(init, f, args) {
 #' row_apply(X, f = function(x) { sum(x^2) })
 #' col_apply(X, f = function(x) { sum(x^2) })
 #'
-#' @name mat_apply
+#' @return
+#' `mat_apply` returns a matrix. `row_apply` and `col_apply` return a vector.
+#' See section "Apply" of the package vignette for details.
+#'
+#' @name matrix_apply
 #'
 #' @export
 mat_apply <- function(X, f) {
     .Call(`_fntl_mat_apply_rcpp`, X, f)
 }
 
-#' @name mat_apply
+#' @name matrix_apply
 #' @export
 row_apply <- function(X, f) {
     .Call(`_fntl_row_apply_rcpp`, X, f)
 }
 
-#' @name mat_apply
+#' @name matrix_apply
 #' @export
 col_apply <- function(X, f) {
     .Call(`_fntl_col_apply_rcpp`, X, f)
@@ -376,6 +426,11 @@ col_apply <- function(X, f) {
 #' X = matrix(1:12 / 6, nrow = 4, ncol = 3)
 #' f = function(x) { x < 1 }
 #' which0(X, f)
+#'
+#' @return
+#' A matrix with two columns. Each row contains a row and column index
+#' corresponding to an element of \eqn{X} that matches the criteria of \eqn{f}.
+#' See section "Which" of the package vignette for details.
 #'
 #' @export
 which0 <- function(X, f) {
@@ -462,6 +517,10 @@ which0 <- function(X, f) {
 #' outer1_matvec(X, f, a)
 #' outer2_matvec(X, Y, f, b)
 #'
+#' @return
+#' `outer1` and `outer2` return a matrix. `outer1_matvec` and `outer2_matvec`
+#' return a vector. See section "Outer" of the package vignette for details.
+#'
 #' @name outer
 #'
 #' @export
@@ -519,6 +578,10 @@ outer2_matvec <- function(X, Y, f, a) {
 #' init = rep(0, n)
 #' solve_cg(f, b, init, args)
 #'
+#' @return
+#' A list with the form of a `solve_cg_result` described in section "Conjugate
+#' Gradient" of the package vignette.
+#'
 #' @export
 solve_cg <- function(l, b, init, args) {
     .Call(`_fntl_solve_cg_rcpp`, l, b, init, args)
@@ -526,8 +589,25 @@ solve_cg <- function(l, b, init, args) {
 
 #' Arguments
 #'
-#' Get an arguments list for internal methods with defaults set. These can
-#' be adjusted and passed to their respective function.
+#' Get an arguments list for internal methods with the default settings. This
+#' object can be adjusted and passed to the respective function.
+#'
+#' @return
+#' An argument list corresponding to the specified function. The elements of
+#' the list are named and supplied with default values. See the package
+#' vignette for further details.
+#'
+#' - `findroot_args` is documented in the section "Root-Finding".
+#' - `optimize_args` is documented in the section "Univariate Optimization".
+#' - `integrate_args` is documented in the section "Integration".
+#' - `cg_args` is documented in the section "Conjugate Gradient".
+#' - `bfgs_args` is documented in the section "BFGS".
+#' - `lbfgsb_args` is documented in the section "L-BFGS-B".
+#' - `neldermead_args`is documented in the section "Nelder-Mead".
+#' - `nlm_args` is documented in the section "Newton-Type Algorithm for
+#'   Nonlinear Optimization".
+#' - `richardson_args` is documented in the section "Richardson
+#'   Extrapolated Finite Differences".
 #'
 #' @name args
 #' @export

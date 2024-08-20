@@ -19,6 +19,10 @@ findroot_brent(f, lower, upper, args)
 
 \item{args}{List of additional arguments from the function \code{findroot_args}.}
 }
+\value{
+A list with the form of a \code{findroot_result} described in section
+"Root-Finding" of the package vignette.
+}
 \description{
 Find Root
 }

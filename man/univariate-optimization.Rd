@@ -19,6 +19,10 @@ optimize_brent(f, lower, upper, args)
 
 \item{args}{List of additional arguments from the function \code{optimize_args}.}
 }
+\value{
+A list with the form of a \code{optimize_result} described in section
+"Univariate Optimization" of the package vignette.
+}
 \description{
 Univariate Optimization
 }

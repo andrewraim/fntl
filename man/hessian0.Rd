@@ -13,6 +13,10 @@ hessian0(f, x, args)
 
 \item{args}{List of additional arguments from the function \code{richardson_args}.}
 }
+\value{
+A list with the form of a \code{hessian_result} described in section "Hessian"
+of the package vignette.
+}
 \description{
 Numerical Hessian
 }

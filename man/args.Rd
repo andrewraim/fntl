@@ -31,7 +31,25 @@ nlm_args()
 
 richardson_args()
 }
+\value{
+An argument list corresponding to the specified function. The elements of
+the list are named and supplied with default values. See the package
+vignette for further details.
+\itemize{
+\item \code{findroot_args} is documented in the section "Root-Finding".
+\item \code{optimize_args} is documented in the section "Univariate Optimization".
+\item \code{integrate_args} is documented in the section "Integration".
+\item \code{cg_args} is documented in the section "Conjugate Gradient".
+\item \code{bfgs_args} is documented in the section "BFGS".
+\item \code{lbfgsb_args} is documented in the section "L-BFGS-B".
+\item \code{neldermead_args}is documented in the section "Nelder-Mead".
+\item \code{nlm_args} is documented in the section "Newton-Type Algorithm for
+Nonlinear Optimization".
+\item \code{richardson_args} is documented in the section "Richardson
+Extrapolated Finite Differences".
+}
+}
 \description{
-Get an arguments list for internal methods with defaults set. These can
-be adjusted and passed to their respective function.
+Get an arguments list for internal methods with the default settings. This
+object can be adjusted and passed to the respective function.
 }

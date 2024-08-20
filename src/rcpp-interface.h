@@ -55,6 +55,13 @@
 //' deriv2(f, x0, i = 1, j = 1, args, fd_type = 1)
 //' deriv2(f, x0, i = 1, j = 1, args, fd_type = 2)
 //'
+//' @return
+//' `fd_deriv1` and `fd_deriv2` return a single numeric value corresponding to
+//' the first and second derivative via finite differences. `deriv1` and
+//' `deriv2` return a list with the form of a `richardson_result` described in
+//' section "Richardson Extrapolated Finite Differences" of the package
+//' vignette.
+//'
 //' @name deriv
 //'
 //' @export
@@ -97,6 +104,10 @@ Rcpp::List deriv2_rcpp(const Rcpp::Function& f, const Rcpp::NumericVector& x,
 //' gradient0(f, x0, args)
 //' numDeriv::grad(f, x0)
 //'
+//' @return
+//' A list with the form of a `gradient_result` described in section "Gradient"
+//' of the package vignette.
+//'
 //' @export
 // [[Rcpp::export(name = "gradient0")]]
 Rcpp::List gradient_rcpp(const Rcpp::Function& f, const Rcpp::NumericVector& x,
@@ -116,6 +127,10 @@ Rcpp::List gradient_rcpp(const Rcpp::Function& f, const Rcpp::NumericVector& x,
 //' print(out$value)
 //' numDeriv::jacobian(f, x0)
 //'
+//' @return
+//' A list with the form of a `jacobian_result` described in section "Jacobian"
+//' of the package vignette.
+//'
 //' @export
 // [[Rcpp::export(name = "jacobian0")]]
 Rcpp::List jacobian_rcpp(const Rcpp::Function& f, const Rcpp::NumericVector& x,
@@ -134,6 +149,10 @@ Rcpp::List jacobian_rcpp(const Rcpp::Function& f, const Rcpp::NumericVector& x,
 //' hessian0(f, x0, args)
 //' numDeriv::hessian(f, x0)
 //'
+//' @return
+//' A list with the form of a `hessian_result` described in section "Hessian"
+//' of the package vignette.
+//'
 //' @export
 // [[Rcpp::export(name = "hessian0")]]
 Rcpp::List hessian_rcpp(const Rcpp::Function& f,
@@ -151,6 +170,10 @@ Rcpp::List hessian_rcpp(const Rcpp::Function& f,
 //' args = findroot_args()
 //' findroot_bisect(f, 0, 10, args)
 //' findroot_brent(f, 0, 10, args)
+//'
+//' @return
+//' A list with the form of a `findroot_result` described in section
+//' "Root-Finding" of the package vignette.
 //'
 //' @name findroot
 //'
@@ -177,6 +200,10 @@ Rcpp::List findroot_brent_rcpp(const Rcpp::Function& f, double lower, double upp
 //' args = optimize_args()
 //' goldensection(f, 0, 10, args)
 //' optimize_brent(f, 0, 10, args)
+//'
+//' @return
+//' A list with the form of a `optimize_result` described in section
+//' "Univariate Optimization" of the package vignette.
 //'
 //' @name univariate-optimization
 //'
@@ -205,6 +232,10 @@ Rcpp::List optimize_brent_rcpp(const Rcpp::Function& f, double lower,
 //' f = function(x) { exp(-x^2 / 2) }
 //' args = integrate_args()
 //' integrate0(f, 0, 10, args)
+//'
+//' @return
+//' A list with the form of a `integrate_result` described in section
+//' "Integration" of the package vignette.
 //'
 //' @export
 // [[Rcpp::export(name = "integrate0")]]
@@ -257,6 +288,21 @@ Rcpp::List integrate_rcpp(const Rcpp::Function& f, double lower, double upper,
 //' nlm1(x0, f, g, h, args)
 //' nlm2(x0, f, g, args)
 //' nlm3(x0, f, args)
+//'
+//' @return
+//' A list with results corresponding to the specified function. See the
+//' package vignette for further details.
+//'
+//' - `cg1` and `cg2` return a `cg_result` which is documented in the section
+//'   "Conjugate Gradient".
+//' - `bfgs1` and `bfgs2` return a `bfgs_result` which is documented in the
+//'   section "BFGS".
+//' - `lbfgsb1` and `lbfgsb2` return a `lbfgsb_result` which is documented in
+//'   the section "L-BFGS-B".
+//' - `neldermead` returns a `neldermead_result` which is documented in
+//'   the section "Nelder-Mead".
+//' - `nlm1`, `nlm2`, and `nlm3` return a `nlm_result` which is documented in
+//'   the section "Newton-Type Algorithm for Nonlinear Optimization".
 //'
 //' @name multivariate-optimization
 //'
@@ -343,18 +389,22 @@ Rcpp::List nlm3_rcpp(const Rcpp::NumericVector& init, const Rcpp::Function& f,
 //' row_apply(X, f = function(x) { sum(x^2) })
 //' col_apply(X, f = function(x) { sum(x^2) })
 //'
-//' @name mat_apply
+//' @return
+//' `mat_apply` returns a matrix. `row_apply` and `col_apply` return a vector.
+//' See section "Apply" of the package vignette for details.
+//'
+//' @name matrix_apply
 //'
 //' @export
 // [[Rcpp::export(name = "mat_apply")]]
 Rcpp::NumericMatrix mat_apply_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Function& f);
 
-//' @name mat_apply
+//' @name matrix_apply
 //' @export
 // [[Rcpp::export(name = "row_apply")]]
 Rcpp::NumericVector row_apply_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Function& f);
 
-//' @name mat_apply
+//' @name matrix_apply
 //' @export
 // [[Rcpp::export(name = "col_apply")]]
 Rcpp::NumericVector col_apply_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Function& f);
@@ -380,6 +430,11 @@ Rcpp::NumericVector col_apply_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Fun
 //' X = matrix(1:12 / 6, nrow = 4, ncol = 3)
 //' f = function(x) { x < 1 }
 //' which0(X, f)
+//'
+//' @return
+//' A matrix with two columns. Each row contains a row and column index
+//' corresponding to an element of \eqn{X} that matches the criteria of \eqn{f}.
+//' See section "Which" of the package vignette for details.
 //'
 //' @export
 // [[Rcpp::export(name = "which0")]]
@@ -465,6 +520,10 @@ Rcpp::IntegerMatrix which_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Functio
 //' outer1_matvec(X, f, a)
 //' outer2_matvec(X, Y, f, b)
 //'
+//' @return
+//' `outer1` and `outer2` return a matrix. `outer1_matvec` and `outer2_matvec`
+//' return a vector. See section "Outer" of the package vignette for details.
+//'
 //' @name outer
 //'
 //' @export
@@ -523,6 +582,10 @@ Rcpp::NumericVector outer2_matvec_rcpp(const Rcpp::NumericMatrix& X,
 //' init = rep(0, n)
 //' solve_cg(f, b, init, args)
 //'
+//' @return
+//' A list with the form of a `solve_cg_result` described in section "Conjugate
+//' Gradient" of the package vignette.
+//'
 //' @export
 // [[Rcpp::export(name = "solve_cg")]]
 Rcpp::List solve_cg_rcpp(const Rcpp::Function& l,
@@ -531,8 +594,25 @@ Rcpp::List solve_cg_rcpp(const Rcpp::Function& l,
 
 //' Arguments
 //'
-//' Get an arguments list for internal methods with defaults set. These can
-//' be adjusted and passed to their respective function.
+//' Get an arguments list for internal methods with the default settings. This
+//' object can be adjusted and passed to the respective function.
+//'
+//' @return
+//' An argument list corresponding to the specified function. The elements of
+//' the list are named and supplied with default values. See the package
+//' vignette for further details.
+//'
+//' - `findroot_args` is documented in the section "Root-Finding".
+//' - `optimize_args` is documented in the section "Univariate Optimization".
+//' - `integrate_args` is documented in the section "Integration".
+//' - `cg_args` is documented in the section "Conjugate Gradient".
+//' - `bfgs_args` is documented in the section "BFGS".
+//' - `lbfgsb_args` is documented in the section "L-BFGS-B".
+//' - `neldermead_args`is documented in the section "Nelder-Mead".
+//' - `nlm_args` is documented in the section "Newton-Type Algorithm for
+//'   Nonlinear Optimization".
+//' - `richardson_args` is documented in the section "Richardson
+//'   Extrapolated Finite Differences".
 //'
 //' @name args
 //' @export

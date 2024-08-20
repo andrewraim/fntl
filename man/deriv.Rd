@@ -36,6 +36,13 @@ forward difference, and \code{2} for backward difference.}
 
 \item{args}{List of additional arguments from the function \code{richardson_args}.}
 }
+\value{
+\code{fd_deriv1} and \code{fd_deriv2} return a single numeric value corresponding to
+the first and second derivative via finite differences. \code{deriv1} and
+\code{deriv2} return a list with the form of a \code{richardson_result} described in
+section "Richardson Extrapolated Finite Differences" of the package
+vignette.
+}
 \description{
 Numerical Derivatives via Finite Differences
 }

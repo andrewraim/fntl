@@ -13,6 +13,10 @@ gradient0(f, x, args)
 
 \item{args}{List of additional arguments from the function \code{richardson_args}.}
 }
+\value{
+A list with the form of a \code{gradient_result} described in section "Gradient"
+of the package vignette.
+}
 \description{
 Numerical Gradient Vector
 }

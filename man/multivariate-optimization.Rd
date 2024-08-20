@@ -45,6 +45,22 @@ nlm3(init, f, args)
 
 \item{h}{Hessian function of \eqn{f}.}
 }
+\value{
+A list with results corresponding to the specified function. See the
+package vignette for further details.
+\itemize{
+\item \code{cg1} and \code{cg2} return a \code{cg_result} which is documented in the section
+"Conjugate Gradient".
+\item \code{bfgs1} and \code{bfgs2} return a \code{bfgs_result} which is documented in the
+section "BFGS".
+\item \code{lbfgsb1} and \code{lbfgsb2} return a \code{lbfgsb_result} which is documented in
+the section "L-BFGS-B".
+\item \code{neldermead} returns a \code{neldermead_result} which is documented in
+the section "Nelder-Mead".
+\item \code{nlm1}, \code{nlm2}, and \code{nlm3} return a \code{nlm_result} which is documented in
+the section "Newton-Type Algorithm for Nonlinear Optimization".
+}
+}
 \description{
 Multivariate Optimization
 }

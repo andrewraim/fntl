@@ -27,6 +27,10 @@ on the context, rows \eqn{x} and \eqn{y} are both rows of \eqn{X}, or
 
 \item{a}{A scalar vector.}
 }
+\value{
+\code{outer1} and \code{outer2} return a matrix. \code{outer1_matvec} and \code{outer2_matvec}
+return a vector. See section "Outer" of the package vignette for details.
+}
 \description{
 Compute "outer" matrices and matrix-vector products based on a function
 that operators on pairs of rows. See details.

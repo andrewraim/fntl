@@ -11,6 +11,11 @@ which0(X, f)
 
 \item{f}{A predicate to apply to each element of \eqn{X}.}
 }
+\value{
+A matrix with two columns. Each row contains a row and column index
+corresponding to an element of \eqn{X} that matches the criteria of \eqn{f}.
+See section "Which" of the package vignette for details.
+}
 \description{
 Matrix Which Function
 }
