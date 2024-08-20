@@ -7,7 +7,7 @@ Authors@R:
 Description:
     Provides a 'C++' API for routinely used numerical tools such as integration,
     root-finding, and optimization, where function arguments are given as
-    lambdas. This facilitates `Rcpp` programming, enabling the development of
+    lambdas. This facilitates 'Rcpp' programming, enabling the development of
     'R'-like code in 'C++' where functions can be defined on the fly and use
     variables in the surrounding environment.
 License: MIT + file LICENSE
