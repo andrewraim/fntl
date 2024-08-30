@@ -20,3 +20,4 @@ Rcpp::List solve_cg_ex(Rcpp::NumericVector b)
     auto out = fntl::solve_cg(l, b);
     return Rcpp::wrap(out);
 }
+

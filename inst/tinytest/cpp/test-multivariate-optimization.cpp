@@ -8,11 +8,10 @@ Rcpp::List neldermead_mle(const Rcpp::NumericVector& x)
 	args.fnscale = -1.0;
 
 	const fntl::dfv& loglik =
-	[&](const Rcpp::NumericVector& par) {
+	[&](const Rcpp::NumericVector& par) -> double {
 		double mu = par(0);
 		double sigma2 = std::exp(par(1)); // Transform to non-negative
-		double out = Rcpp::sum(Rcpp::dnorm(x, mu, std::sqrt(sigma2), true));
-		return out;
+		return Rcpp::sum(Rcpp::dnorm(x, mu, std::sqrt(sigma2), true));
 	};
 
 	const Rcpp::NumericVector& init = Rcpp::NumericVector::create(0, 0);
@@ -27,11 +26,10 @@ Rcpp::List lbfgsb_mle(const Rcpp::NumericVector& x)
 	args.fnscale = -1.0;
 
 	const fntl::dfv& loglik =
-	[&](const Rcpp::NumericVector& par) {
+	[&](const Rcpp::NumericVector& par) -> double {
 		double mu = par(0);
 		double sigma2 = std::exp(par(1)); // Transform to non-negative
-		double out = Rcpp::sum(Rcpp::dnorm(x, mu, std::sqrt(sigma2), true));
-		return out;
+		return Rcpp::sum(Rcpp::dnorm(x, mu, std::sqrt(sigma2), true));
 	};
 
 	const Rcpp::NumericVector& init = Rcpp::NumericVector::create(0, 0);
@@ -46,11 +44,10 @@ Rcpp::List bfgs_mle(const Rcpp::NumericVector& x)
 	args.fnscale = -1.0;
 
 	const fntl::dfv& loglik =
-	[&](const Rcpp::NumericVector& par) {
+	[&](const Rcpp::NumericVector& par) -> double {
 		double mu = par(0);
 		double sigma2 = std::exp(par(1)); // Transform to non-negative
-		double out = Rcpp::sum(Rcpp::dnorm(x, mu, std::sqrt(sigma2), true));
-		return out;
+		return Rcpp::sum(Rcpp::dnorm(x, mu, std::sqrt(sigma2), true));
 	};
 
 	const Rcpp::NumericVector& init = Rcpp::NumericVector::create(0, 0);
@@ -65,11 +62,10 @@ Rcpp::List cg_mle(const Rcpp::NumericVector& x)
 	args.fnscale = -1.0;
 
 	const fntl::dfv& loglik =
-	[&](const Rcpp::NumericVector& par) {
+	[&](const Rcpp::NumericVector& par) -> double {
 		double mu = par(0);
 		double sigma2 = std::exp(par(1)); // Transform to non-negative
-		double out = Rcpp::sum(Rcpp::dnorm(x, mu, std::sqrt(sigma2), true));
-		return out;
+		return Rcpp::sum(Rcpp::dnorm(x, mu, std::sqrt(sigma2), true));
 	};
 
 	const Rcpp::NumericVector& init = Rcpp::NumericVector::create(0, 0);
@@ -84,15 +80,13 @@ Rcpp::List nlm_mle(const Rcpp::NumericVector& x)
 	args.fnscale = -1.0;
 
 	const fntl::dfv& loglik =
-	[&](const Rcpp::NumericVector& par) {
+	[&](const Rcpp::NumericVector& par) -> double {
 		double mu = par(0);
 		double sigma2 = std::exp(par(1)); // Transform to non-negative
-		double out = Rcpp::sum(Rcpp::dnorm(x, mu, std::sqrt(sigma2), true));
-		return out;
+		return Rcpp::sum(Rcpp::dnorm(x, mu, std::sqrt(sigma2), true));
 	};
 
 	const Rcpp::NumericVector& init = Rcpp::NumericVector::create(0, 0);
 	const auto& out = fntl::nlm(init, loglik, args);
 	return Rcpp::wrap(out);
 }
-

@@ -7,3 +7,4 @@
 int computeGCD(int a, int b) {
     return boost::math::gcd(a, b);
 }
+

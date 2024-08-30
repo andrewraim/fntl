@@ -53,3 +53,4 @@ Rcpp::NumericVector timing2_ex(unsigned int R, const Rcpp::IntegerVector& n_leve
 
 	return out;
 }
+

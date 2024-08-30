@@ -27,3 +27,4 @@ Rcpp::List bfgs_ex(Rcpp::NumericVector x0)
         Rcpp::Named("analytical") = Rcpp::wrap(out2)
     );
 }
+

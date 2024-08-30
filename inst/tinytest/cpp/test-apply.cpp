@@ -30,7 +30,7 @@ Rcpp::NumericMatrix mat_pow(const Rcpp::NumericMatrix& x, double exponent = 2)
 Rcpp::NumericVector row_sum(const Rcpp::NumericMatrix& x)
 {
 	std::function<double(const Rcpp::NumericVector&)> f =
-	[&](const Rcpp::NumericVector& x) {
+	[&](const Rcpp::NumericVector& x) -> double {
 		return Rcpp::sum(x);
 	};
 
@@ -41,7 +41,7 @@ Rcpp::NumericVector row_sum(const Rcpp::NumericMatrix& x)
 Rcpp::NumericVector col_sum(const Rcpp::NumericMatrix& x)
 {
 	std::function<double(const Rcpp::NumericVector&)> f =
-	[&](const Rcpp::NumericVector& x) {
+	[&](const Rcpp::NumericVector& x) -> double {
 		return Rcpp::sum(x);
 	};
 

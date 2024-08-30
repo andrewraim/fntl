@@ -76,6 +76,12 @@ library(tidyverse)
 set.seed(1234)
 ```
 
+::: {.callout-important title="$\dagger$Important"}
+Users should read @sec-inferring-return carefully. It describes a
+seemingly innocuous way of coding lambdas that can lead to crashing R. This can
+be difficult to troubleshoot but is easily avoided once we are aware.
+:::
+
 # Disclaimer and Acknowledgments {-}
 
 This document is released to inform interested parties of ongoing research and
@@ -456,7 +462,7 @@ Functions making use of an `error_action` typically also return a status code
 as in @sec-status, which can be inspected by the caller if an exception is not
 thrown.
 
-## Inferring Return Types
+## Inferring Return Types$^\dagger$ {#sec-inferring-return}
 
 @sec-intro mentioned that the return type of a lambda does not necessarily need
 to be specified in its interface. However, we must be vigilant when allowing

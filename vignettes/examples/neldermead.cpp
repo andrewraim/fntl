@@ -4,9 +4,8 @@
 // [[Rcpp::export]]
 Rcpp::List neldermead_ex(Rcpp::NumericVector x0)
 {
-    fntl::dfv f = [](Rcpp::NumericVector x) {
-		double out = Rcpp::sum(Rcpp::pow(x, 2)) - 1;
-        return out;
+    fntl::dfv f = [](Rcpp::NumericVector x) -> double {
+		return Rcpp::sum(Rcpp::pow(x, 2)) - 1;
     };
 
     auto out = fntl::neldermead(x0, f);

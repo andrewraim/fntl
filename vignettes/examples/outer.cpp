@@ -18,3 +18,4 @@ Rcpp::List outer_ex(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
         Rcpp::Named("out4") = fntl::outer_matvec(X, Y, f, b)
     );
 }
+

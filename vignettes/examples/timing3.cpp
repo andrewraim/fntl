@@ -25,7 +25,7 @@ Rcpp::NumericVector timing3_ex(unsigned int R, const Rcpp::IntegerVector& n_leve
 			}
 
 			// Loglikelihood function. Call vectorized dbinom in R
-			const fntl::dfv& loglik = [&](const Rcpp::NumericVector& par) {
+			const fntl::dfv& loglik = [&](const Rcpp::NumericVector& par) -> double {
 			    Rcpp::Function dbinom_r("dbinom");
 				const Rcpp::NumericVector& pr = Rcpp::plogis(par(0) + par(1) * x);
     			const Rcpp::NumericVector& ll = dbinom_r(y, Rcpp::Named("size") = 1,
@@ -52,3 +52,4 @@ Rcpp::NumericVector timing3_ex(unsigned int R, const Rcpp::IntegerVector& n_leve
 
 	return out;
 }
+

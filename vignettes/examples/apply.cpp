@@ -5,7 +5,7 @@
 Rcpp::List apply_ex(Rcpp::NumericMatrix X)
 {
     fntl::dfd f = [](double x) { return std::pow(x, 2); };
-    fntl::dfv g = [](Rcpp::NumericVector x) {
+    fntl::dfv g = [](Rcpp::NumericVector x) -> double {
     	return Rcpp::sum(x);
     };
 

@@ -1,6 +1,6 @@
 Package: fntl
 Title: Numerical Tools for 'Rcpp' and Lambda Functions
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: 
     person("Andrew M.", "Raim", email = "andrew.raim@gmail.com",
         role = c("aut", "cre"), comment = c(ORCID = "0000-0002-4440-2330"))
