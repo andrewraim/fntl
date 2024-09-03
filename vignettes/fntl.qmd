@@ -395,7 +395,7 @@ function is based on a post from [StackOverflow][to-underlying-url].]
 
 ```{cpp}
 fntl::integrate_status status = fntl::integrate_status::OK;  // Define a status
-int err = to_underlying(status);                            // status to int
+int err = to_underlying(status);                             // status to int
 status1 = fntl::integrate_status(err);                       // int to status
 ```
 
@@ -483,8 +483,9 @@ Rcpp::List crash_ex(Rcpp::NumericVector x0)
 ```
 
 The issue appears to be that `Rcpp::sum` does not necessarily return a
-`double` - the expected result of a `fntl::dfv` - but something else that can
-be readily converted to a `double`.
+`double` - the expected result of a `fntl::dfv` - but something else that
+normally produces a `double` behind the scenes when needed. Some contextual
+information may be missing so that the conversion does not occur.
 
 One way to address this is to specify that `double` is the return type of the
 lambda.
@@ -506,8 +507,8 @@ fntl::dfv f = [](Rcpp::NumericVector x) {
 ## R Functions as Lambdas
 
 Although not a primary intended use of the `fntl` package, it is possible to
-use it with R functions. This is accomplished by wrapping an `Rcpp::Function`
-into a lambda. This will incur the usual overhead of calling R code from C++,
+use R functions as inputs. This is accomplished by wrapping an `Rcpp::Function`
+in a lambda. This will incur the usual overhead of calling R code from C++,
 but may be useful for testing or in situations where the overhead is a small
 proportion of the run time.
 
@@ -3083,7 +3084,7 @@ f = function(x) { x > 0 & x < 0.5 }
 which(f(X), arr.ind = TRUE) - 1
 ```
 
-# References
+# References {-}
 
 ::: {#refs}
 :::
