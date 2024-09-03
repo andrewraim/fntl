@@ -64,8 +64,6 @@ filters:
   - include-code-files
 execute:
   eval: true
-mainfont: Latin Modern Roman
-sansfont: Latin Modern Roman
 ---
 
 ```{r}

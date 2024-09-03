@@ -1,3 +1,10 @@
+% By default, titles and headers get rendered in a sans serif font while the
+% rest of the document is serif. This subtle shift is a little bit jarring to
+% me. The following line changes the sans serif font to be the serif font. It
+% avoids assumptions about which fonts are installed (which might affect
+% portability).
+\renewcommand{\sfdefault}{\rmdefault}
+
 % Math operators
 \DeclareMathOperator{\E}{E}
 \DeclareMathOperator{\Prob}{P}
