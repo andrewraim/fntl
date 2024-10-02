@@ -55,4 +55,3 @@ Rcpp::Matrix<RTYPE> mat_apply(const Rcpp::Matrix<RTYPE>& X,
 }
 
 #endif
-

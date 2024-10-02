@@ -58,7 +58,7 @@ inline optimize_result optimize_brent(const dfd& f, double lower,
 
 		if (iter % report_period == 0) {
 			Rprintf("iter %d  [%g, %g]  f(%g) = %g  err: %g\n",
-				iter, a, b, x, fx, std::fabs(x - m));
+				iter, a, b, x, fnscale*fx, std::fabs(x - m));
 		}
 
 		double p = 0;
@@ -142,7 +142,7 @@ inline optimize_result optimize_brent(const dfd& f, double lower,
 
 	optimize_result out;
 	out.par = x;
-	out.value = fx;
+	out.value = fnscale * fx;
 	out.iter = iter;
 	out.tol = fabs(x - m);
 	out.status = status;
@@ -160,4 +160,3 @@ inline optimize_result optimize_brent(const dfd& f, double lower, double upper)
 }
 
 #endif
-

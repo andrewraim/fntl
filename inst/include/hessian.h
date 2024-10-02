@@ -42,4 +42,3 @@ inline hessian_result hessian(const dfv& f,
 }
 
 #endif
-

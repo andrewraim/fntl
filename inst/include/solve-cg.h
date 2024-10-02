@@ -53,4 +53,3 @@ inline cg_result solve_cg(const vfv& l, const Rcpp::NumericVector& b)
 }
 
 #endif
-

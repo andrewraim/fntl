@@ -98,4 +98,3 @@ inline findroot_result findroot_bisect(const dfd& f, double lower, double upper)
 }
 
 #endif
-

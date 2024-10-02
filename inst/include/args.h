@@ -518,4 +518,3 @@ inline richardson_args::operator SEXP() const
 }
 
 #endif
-

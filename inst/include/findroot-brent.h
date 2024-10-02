@@ -154,4 +154,3 @@ inline findroot_result findroot_brent(const dfd& f, double lower, double upper)
 }
 
 #endif
-

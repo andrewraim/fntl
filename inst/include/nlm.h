@@ -284,4 +284,3 @@ inline nlm_result nlm(const Rcpp::NumericVector& init, const dfv& f)
 }
 
 #endif
-

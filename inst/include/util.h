@@ -35,4 +35,3 @@ inline std::string paste(const Rcpp::StringVector& x, const std::string& delim)
 }
 
 #endif
-

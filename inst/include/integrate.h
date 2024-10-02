@@ -198,4 +198,3 @@ inline integrate_result integrate(const dfd& f, double lower,
 }
 
 #endif
-

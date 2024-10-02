@@ -68,4 +68,3 @@ inline richardson_result fd_deriv(const dfd& f, double x,
 }
 
 #endif
-

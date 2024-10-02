@@ -41,4 +41,3 @@ Rcpp::IntegerMatrix which(const Rcpp::Matrix<RTYPE>& X,
 }
 
 #endif
-

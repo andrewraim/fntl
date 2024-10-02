@@ -153,4 +153,3 @@ inline bfgs_result bfgs(const Rcpp::NumericVector& init, const dfv& f)
 }
 
 #endif
-

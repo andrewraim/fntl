@@ -192,4 +192,3 @@ inline lbfgsb_result lbfgsb(const Rcpp::NumericVector& init,
 }
 
 #endif
-

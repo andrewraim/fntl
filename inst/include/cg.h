@@ -148,4 +148,3 @@ inline cg_result cg(const Rcpp::NumericVector& init, const dfv& f)
 }
 
 #endif
-

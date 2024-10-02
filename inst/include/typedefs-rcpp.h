@@ -18,4 +18,3 @@ typedef std::function<Rcpp::NumericMatrix(const Rcpp::NumericVector&)> mfv;
 }
 
 #endif
-

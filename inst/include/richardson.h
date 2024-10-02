@@ -90,4 +90,3 @@ inline richardson_result richardson(const dfd& f)
 }
 
 #endif
-

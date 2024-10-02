@@ -88,7 +88,7 @@ inline optimize_result goldensection(const dfd& f, double lower,
 
 	optimize_result out;
 	out.par = (upper + lower) / 2;
-	out.value = fnscale * f(out.par);
+	out.value = f(out.par);
 	out.iter = iter;
 	out.tol = delta;
 	out.status = status;
@@ -107,4 +107,3 @@ inline optimize_result goldensection(const dfd& f, double lower,
 }
 
 #endif
-

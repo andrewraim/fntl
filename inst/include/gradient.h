@@ -39,4 +39,3 @@ inline gradient_result gradient(const dfv& f,
 }
 
 #endif
-

@@ -121,4 +121,3 @@ inline neldermead_result neldermead(const Rcpp::NumericVector& init,
 }
 
 #endif
-

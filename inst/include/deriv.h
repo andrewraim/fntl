@@ -68,4 +68,3 @@ inline richardson_result deriv(const dfv& f, const Rcpp::NumericVector& x,
 }
 
 #endif
-

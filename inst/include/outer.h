@@ -96,4 +96,3 @@ inline Rcpp::NumericVector outer_matvec(const Rcpp::NumericMatrix& X,
 }
 
 #endif
-

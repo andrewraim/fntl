@@ -91,4 +91,3 @@ inline richardson_result deriv2(const dfv& f,
 }
 
 #endif
-

@@ -109,4 +109,3 @@ enum class richardson_status : unsigned int {
 }
 
 #endif
-

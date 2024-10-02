@@ -90,3 +90,68 @@ Rcpp::List nlm_mle(const Rcpp::NumericVector& x)
 	const auto& out = fntl::nlm(init, loglik, args);
 	return Rcpp::wrap(out);
 }
+
+// [[Rcpp::export]]
+Rcpp::List neldermead_norm2(const Rcpp::NumericVector& a)
+{
+	const fntl::dfv& f =
+	[&](const Rcpp::NumericVector& x) -> double {
+		return Rcpp::sum(Rcpp::pow(x - a, 2));
+	};
+
+	Rcpp::NumericVector init(a.size(), 0);
+	const auto& out = fntl::neldermead(init, f);
+	return Rcpp::wrap(out);
+}
+
+// [[Rcpp::export]]
+Rcpp::List lbfgsb_norm2(const Rcpp::NumericVector& a)
+{
+	const fntl::dfv& f =
+	[&](const Rcpp::NumericVector& x) -> double {
+		return Rcpp::sum(Rcpp::pow(x - a, 2));
+	};
+
+	Rcpp::NumericVector init(a.size(), 0);
+	const auto& out = fntl::lbfgsb(init, f);
+	return Rcpp::wrap(out);
+}
+
+// [[Rcpp::export]]
+Rcpp::List bfgs_norm2(const Rcpp::NumericVector& a)
+{
+	const fntl::dfv& f =
+	[&](const Rcpp::NumericVector& x) -> double {
+		return Rcpp::sum(Rcpp::pow(x - a, 2));
+	};
+
+	Rcpp::NumericVector init(a.size(), 0);
+	const auto& out = fntl::bfgs(init, f);
+	return Rcpp::wrap(out);
+}
+
+// [[Rcpp::export]]
+Rcpp::List cg_norm2(const Rcpp::NumericVector& a)
+{
+	const fntl::dfv& f =
+	[&](const Rcpp::NumericVector& x) -> double {
+		return Rcpp::sum(Rcpp::pow(x - a, 2));
+	};
+
+	Rcpp::NumericVector init(a.size(), 0);
+	const auto& out = fntl::cg(init, f);
+	return Rcpp::wrap(out);
+}
+
+// [[Rcpp::export]]
+Rcpp::List nlm_norm2(const Rcpp::NumericVector& a)
+{
+	const fntl::dfv& f =
+	[&](const Rcpp::NumericVector& x) -> double {
+		return Rcpp::sum(Rcpp::pow(x - a, 2));
+	};
+
+	Rcpp::NumericVector init(a.size(), 0);
+	const auto& out = fntl::nlm(init, f);
+	return Rcpp::wrap(out);
+}

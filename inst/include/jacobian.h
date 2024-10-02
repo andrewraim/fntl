@@ -48,4 +48,3 @@ inline jacobian_result jacobian(const vfv& f, const Rcpp::NumericVector& x,
 }
 
 #endif
-
