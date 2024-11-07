@@ -3084,6 +3084,281 @@ f = function(x) { x > 0 & x < 0.5 }
 which(f(X), arr.ind = TRUE) - 1
 ```
 
+# Truncated Distributions
+
+Density, quantiles, cumulative distribution function (CDF), and variate
+generation for a univariate distribution truncated to the interval $(a , b]$,
+given density $f$, CDF $F$, and quantile function $F^{-}$ of an untruncated
+distribution. Originally adapted from the `rtruncated` function in the
+`LearnBayes` package [@LearnBayes].
+
+The density $g$ of the truncated distribution is
+<!-- -->
+$$
+g(x) = \frac{f(x)}{F(b) - F(a)} \textrm{I}(a < x \leq b).
+$$
+<!-- -->
+The CDF $G$ of the truncated distribution is
+<!-- -->
+$$
+G(x) = \frac{F(x) - F(a)}{F(b) - F(a)} \textrm{I}(a < x \leq b).
+$$
+<!-- -->
+The quantile function $G^{-}$ of the truncated distribution is
+<!-- -->
+$$
+G^{-}(\phi) = F^{-}\Big( \{ F(b) - F(a) \} \phi + F(a) \Big).
+$$
+<!-- -->
+Draws are generated from the truncated distribution via the inverse CDF method
+as $X = G^{-}(U)$ where $U \sim \text{Uniform}(0, 1)$. Some precautions are
+taken computationally to avoid loss of precision. Computations are kept on the
+log-scale internally accommodate very small probabilities. Probabilities based
+on the CDF are considered using both lower and upper orientations to aid with
+small tail probabilities.
+
+**Typedefs**
+
+The following typedefs are utilized specifically in this section.
+
+```{cpp}
+typedef std::function<double(double,bool)> density;       // <1>
+typedef std::function<double(double,bool,bool)> cdf;      // <2>
+typedef std::function<double(double,bool,bool)> quantile; // <3>
+```
+1. A density whose arguments are: (1) the argument `x` for which to evaluate
+   the density and (2) a boolean `log` that determines whether the value is
+   returned on the log-scale.
+2. A CDF whose arguments are: (1) the argument `x` for which to evaluate
+   the CDF, (2) a boolean `lower` that determines whether lower-tail
+   probability $\Prob(X \leq x)$ is to be computed, and (3) a boolean `log`
+   that determines whether the value is returned on the log-scale.
+3. A quantile function whose arguments are: (1) the argument `p` for which to
+   compute quantiles, (2) a boolean `lower` that determines whether `p` is
+   interpreted as `p` (if `true`) or `1 - p` (if `false`), and (3) a boolean
+   `log` that determines `p` is assumed to be on the log-scale (if `true`).
+
+## Density
+
+**Functions**
+
+Primary location of source code is the file [inst/include/trunc.h][trunc-h].
+The following functions operate on scalar arguments.
+
+[trunc-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/trunc.h
+
+```{cpp}
+double d_trunc(
+	double x,                      // <1>
+	double lo,                     // <2>
+	double hi,                     // <3>
+	const density& f,              // <4>
+	const cdf& F,                  // <5>
+	bool log = false               // <6>
+)
+
+Rcpp::NumericVector d_trunc(
+	const Rcpp::NumericVector& x,  // <1>
+	const Rcpp::NumericVector& lo, // <2>
+	const Rcpp::NumericVector& hi, // <3>
+	const density& f,              // <4>
+	const cdf& F,                  // <5>
+	bool log = false               // <6>
+)
+```
+1. Argument of density and CDF.
+2. Lower limit.
+3. Upper limit.
+4. Function that computes density of untruncated distribution.
+5. Function that computes CDF of untruncated distribution.
+6. Boolean; if `true`, probabilities $p$ are given as $\log(p)$.
+
+When `x`, `lo` and `hi` are specified as vectors, they must be the same length.
+
+**Example**
+
+Compute density of the $\text{Beta}(2,5)$ distribution truncated to the
+interval $(0.5, 0.95]$.A C++ function with Rcpp interface is defined in the
+file `examples/d_trunc.cpp`.
+
+```{.cpp include="examples/d_trunc.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/d_trunc.cpp")
+x = seq(0, 1, length.out = 30)
+d_trunc_ex(x, shape1 = 2, shape2 = 5, lo = 0.5, hi = 0.95)
+```
+
+## CDF
+
+**Functions**
+
+Primary location of source code is the file [inst/include/trunc.h][trunc-h].
+The following functions operate on scalar arguments.
+
+[trunc-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/trunc.h
+
+```{cpp}
+double p_trunc(
+	double x,              // <1>
+	double lo,             // <2>
+	double hi,             // <3>
+	const cdf& F,          // <4>
+	bool lower = true,     // <5>
+	bool log = false       // <6>
+)
+
+Rcpp::NumericVector p_trunc(
+	const Rcpp::NumericVector& x,  // <1>
+	const Rcpp::NumericVector& lo, // <2>
+	const Rcpp::NumericVector& hi, // <3>
+	const cdf& F,                  // <4>
+	bool lower = true,             // <5>
+	bool log = false               // <6>
+)
+```
+1. Argument of CDF.
+2. Lower limit.
+3. Upper limit.
+4. Function that specifies CDF of untruncated distribution.
+5. Boolean; if `true`, probabilities are $\Prob(X \leq x)$, otherwise
+   $\Prob(X > x)$.
+6. Boolean; if `true`, probabilities $p$ are given as $\log(p)$.
+
+When `x`, `lo` and `hi` are specified as vectors, they must be the same length.
+
+**Example**
+
+Compute CDF of the $\text{Beta}(2,5)$ distribution truncated to the
+interval $(0.5, 0.95]$.A C++ function with Rcpp interface is defined in the
+file `examples/p_trunc.cpp`.
+
+```{.cpp include="examples/p_trunc.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/p_trunc.cpp")
+x = seq(0, 1, length.out = 30)
+p_trunc_ex(x, shape1 = 2, shape2 = 5, lo = 0.5, hi = 0.95)
+```
+
+
+## Quantile
+
+**Functions**
+
+Primary location of source code is the file [inst/include/trunc.h][trunc-h].
+The following functions operate on scalar arguments.
+
+[trunc-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/trunc.h
+
+```{cpp}
+double q_trunc(
+	double p,              // <1>
+	double lo,             // <2>
+	double hi,             // <3>
+	const cdf& F,          // <4>
+	const quantile& Finv,  // <5>
+	bool lower = true,     // <6>
+	bool log = false       // <7>
+)
+
+Rcpp::NumericVector q_trunc(
+	const Rcpp::NumericVector& p,  // <1>
+	const Rcpp::NumericVector& lo, // <2>
+	const Rcpp::NumericVector& hi, // <3>
+	const cdf& F,                  // <4>
+	const quantile& Finv,          // <5>
+	bool lower = true,             // <6>
+	bool log = false               // <7>
+)
+```
+1. Probability argument.
+2. Lower limit.
+3. Upper limit.
+4. Function that specifies CDF of untruncated distribution.
+5. Function that computes quantiles of untruncated distribution.
+6. Boolean; if `true`, probabilities are $\Prob(X \leq x)$, otherwise
+   $\Prob(X > x)$.
+7. Boolean; if `true`, probabilities $p$ are given as $\log(p)$.
+
+When `x`, `lo` and `hi` are specified as vectors, they must be the same length.
+
+**Example**
+
+Compute CDF of the $\text{Beta}(2,5)$ distribution truncated to the
+interval $(0.5, 0.95]$.A C++ function with Rcpp interface is defined in the
+file `examples/q_trunc.cpp`.
+
+```{.cpp include="examples/q_trunc.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/q_trunc.cpp")
+p = seq(0, 1, length.out = 30)
+q_trunc_ex(p, shape1 = 2, shape2 = 5, lo = 0.5, hi = 0.95)
+```
+
+## Variate Generation
+
+**Functions**
+
+Primary location of source code is the file [inst/include/trunc.h][trunc-h].
+The following functions operate on scalar arguments.
+
+[trunc-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/trunc.h
+
+```{cpp}
+double r_trunc(
+	double lo,             // <2>
+	double hi,             // <3>
+	const cdf& F,          // <4>
+	const quantile& Finv   // <5>
+)
+
+Rcpp::NumericVector r_trunc(
+	unsigned int n,                // <1>
+	const Rcpp::NumericVector& lo, // <2>
+	const Rcpp::NumericVector& hi, // <3>
+	const cdf& F,                  // <4>
+	const quantile& Finv           // <5>
+)
+
+```
+1. Number of desired draws.
+2. Lower limit.
+3. Upper limit.
+4. Function that specifies CDF of untruncated distribution.
+5. Function that computes quantiles of untruncated distribution.
+
+When `lo` and `hi` are specified as vectors, they must be the same length.
+
+The following are analogous functions for some of the arguments are vectors,
+for convenience.
+
+**Example**
+
+Draw from the $\text{Beta}(2,5)$ distribution truncated to the interval
+$(0.5, 0.95]$.A C++ function with Rcpp interface is defined in the file
+`examples/rtrunc.cpp`.
+
+```{.cpp include="examples/r_trunc.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/r_trunc.cpp")
+r_trunc_ex(n = 20, shape1 = 2, shape2 = 5, lo = 0.5, hi = 0.95)
+```
+
 # References {-}
 
 ::: {#refs}

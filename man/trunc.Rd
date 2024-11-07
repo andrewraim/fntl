@@ -57,18 +57,17 @@ shape2 = 2
 lo = 0.5
 hi = 0.7
 
+# Density, CDF, and quantile function for untruncated distribution
 ff = function(x, log) { dbeta(x, shape1, shape2, log = log) }
 FF = function(x, lower, log) { pbeta(x, shape1, shape2, lower.tail = lower, log = log) }
 FFinv = function(x, lower, log) { qbeta(x, shape1, shape2, lower.tail = lower, log = log) }
 
-# The density (untruncated and truncated)
+# Compare truncated and untruncated densities
 xseq = seq(0, 1, length.out = m)
 lo_vec = rep(lo, m)
 hi_vec = rep(hi, m)
 f0seq = ff(xseq, log = FALSE)
 fseq = d_trunc(xseq, lo_vec, hi_vec, ff, FF)
-
-# Compare truncated and untruncated densities
 data.frame(x = xseq, f = fseq, f0 = f0seq) \%>\%
     ggplot() +
     geom_line(aes(xseq, fseq)) +
@@ -77,13 +76,11 @@ data.frame(x = xseq, f = fseq, f0 = f0seq) \%>\%
     ylab("Density") +
     theme_minimal()
 
-# Generate draws
+# Compare truncated densities and empirical density of generated draws
 n = 100000
 lo_vec = rep(lo, n)
 hi_vec = rep(hi, n)
 x = r_trunc(n = n, lo_vec, hi = hi_vec, FF, FFinv)
-
-# Compare truncated densities and empirical density of draws
 hist(x, probability = TRUE, breaks = 15)
 points(xseq, fseq)
 
