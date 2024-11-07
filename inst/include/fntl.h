@@ -21,6 +21,7 @@
 #include "optimize-brent.h"
 #include "outer.h"
 #include "solve-cg.h"
+#include "trunc.h"
 #include "typedefs.h"
 #include "typedefs-rcpp.h"
 #include "util.h"

@@ -27,6 +27,10 @@ namespace fntl {
 
 typedef std::function<double(double)> dfd;
 
+typedef std::function<double(double,bool)> density;
+typedef std::function<double(double,bool,bool)> cdf;
+typedef std::function<double(double,bool,bool)> quantile;
+
 static const double mach_eps = std::numeric_limits<double>::epsilon();
 static const double mach_eps_2r = sqrt(mach_eps);
 static const double mach_eps_4r = std::pow(mach_eps, 0.25);

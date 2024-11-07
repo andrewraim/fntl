@@ -489,3 +489,66 @@ Rcpp::List deriv2_rcpp(const Rcpp::Function& f, const Rcpp::NumericVector& x,
 	const auto& out = fntl::deriv2(ff, x, i, j, cargs, ctype);
 	return Rcpp::wrap(out);
 }
+
+Rcpp::NumericVector d_trunc_rcpp(const Rcpp::NumericVector& x,
+	const Rcpp::NumericVector& lo, const Rcpp::NumericVector& hi,
+	const Rcpp::Function& f, const Rcpp::Function& F, bool log)
+{
+	const fntl::density& ff = [&](double x, bool log) {
+		const Rcpp::NumericVector& fx = f(x, log);
+		return fx(0);
+	};
+
+	const fntl::cdf& FF = [&](double x, bool lower, bool log) {
+		const Rcpp::NumericVector& Fx = F(x, lower, log);
+		return Fx(0);
+	};
+
+	return fntl::d_trunc(x, lo, hi, ff, FF, log);
+}
+
+Rcpp::NumericVector p_trunc_rcpp(const Rcpp::NumericVector& x,
+	const Rcpp::NumericVector& lo, const Rcpp::NumericVector& hi,
+	const Rcpp::Function& F, bool lower, bool log)
+{
+	const fntl::cdf& FF = [&](double x, bool lower, bool log) {
+		const Rcpp::NumericVector& Fx = F(x, lower, log);
+		return Fx(0);
+	};
+
+	return fntl::p_trunc(x, lo, hi, FF, lower, log);
+}
+
+Rcpp::NumericVector q_trunc_rcpp(const Rcpp::NumericVector& p,
+	const Rcpp::NumericVector& lo, const Rcpp::NumericVector& hi,
+	const Rcpp::Function& F, const Rcpp::Function& Finv, bool lower, bool log)
+{
+	const fntl::cdf& FF = [&](double x, bool lower, bool log) {
+		const Rcpp::NumericVector& Fx = F(x, lower, log);
+		return Fx(0);
+	};
+
+	const fntl::quantile& FFinv = [&](double x, bool lower, bool log) {
+		const Rcpp::NumericVector& Finvx = Finv(x, lower, log);
+		return Finvx(0);
+	};
+
+	return fntl::q_trunc(p, lo, hi, FF, FFinv, lower, log);
+}
+
+Rcpp::NumericVector r_trunc_rcpp(unsigned int n, const Rcpp::NumericVector& lo,
+	const Rcpp::NumericVector& hi, const Rcpp::Function& F,
+	const Rcpp::Function& Finv)
+{
+	const fntl::cdf& FF = [&](double x, bool lower, bool log) {
+		const Rcpp::NumericVector& Fx = F(x, lower, log);
+		return Fx(0);
+	};
+
+	const fntl::quantile& FFinv = [&](double x, bool lower, bool log) {
+		const Rcpp::NumericVector& Finvx = Finv(x, lower, log);
+		return Finvx(0);
+	};
+
+	return fntl::r_trunc(n, lo, hi, FF, FFinv);
+}
