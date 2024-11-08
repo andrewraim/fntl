@@ -3087,12 +3087,10 @@ which(f(X), arr.ind = TRUE) - 1
 # Truncated Distributions
 
 Density, quantiles, cumulative distribution function (CDF), and variate
-generation for a univariate distribution truncated to the interval $(a , b]$,
-given density $f$, CDF $F$, and quantile function $F^{-}$ of an untruncated
-distribution. Originally adapted from the `rtruncated` function in the
-`LearnBayes` package [@LearnBayes].
-
-The density $g$ of the truncated distribution is
+generation for a univariate distribution truncated to the interval $(a , b]$.
+Suppose $f$, $F$, and $F^{-}$ are the density, CDF, and quantile function of
+the untruncated distribution, respectively. The density $g$ of the truncated
+distribution is
 <!-- -->
 $$
 g(x) = \frac{f(x)}{F(b) - F(a)} \textrm{I}(a < x \leq b).
@@ -3114,8 +3112,11 @@ Draws are generated from the truncated distribution via the inverse CDF method
 as $X = G^{-}(U)$ where $U \sim \text{Uniform}(0, 1)$. Some precautions are
 taken computationally to avoid loss of precision. Computations are kept on the
 log-scale internally accommodate very small probabilities. Probabilities based
-on the CDF are considered using both lower and upper orientations to aid with
-small tail probabilities.
+on the CDF are considered using both the form $\Prob(X \leq x)$ and its
+complement to aid with small probabilities far into the tails.
+
+This functions in this section were originally adapted from the `rtruncated`
+function in the `LearnBayes` package [@LearnBayes].
 
 **Typedefs**
 
@@ -3178,7 +3179,7 @@ When `x`, `lo` and `hi` are specified as vectors, they must be the same length.
 **Example**
 
 Compute density of the $\text{Beta}(2,5)$ distribution truncated to the
-interval $(0.5, 0.95]$.A C++ function with Rcpp interface is defined in the
+interval $(0.5, 0.95]$. A C++ function with Rcpp interface is defined in the
 file `examples/d_trunc.cpp`.
 
 ```{.cpp include="examples/d_trunc.cpp"}
@@ -3233,7 +3234,7 @@ When `x`, `lo` and `hi` are specified as vectors, they must be the same length.
 **Example**
 
 Compute CDF of the $\text{Beta}(2,5)$ distribution truncated to the
-interval $(0.5, 0.95]$.A C++ function with Rcpp interface is defined in the
+interval $(0.5, 0.95]$. A C++ function with Rcpp interface is defined in the
 file `examples/p_trunc.cpp`.
 
 ```{.cpp include="examples/p_trunc.cpp"}
@@ -3292,7 +3293,7 @@ When `x`, `lo` and `hi` are specified as vectors, they must be the same length.
 **Example**
 
 Compute CDF of the $\text{Beta}(2,5)$ distribution truncated to the
-interval $(0.5, 0.95]$.A C++ function with Rcpp interface is defined in the
+interval $(0.5, 0.95]$. A C++ function with Rcpp interface is defined in the
 file `examples/q_trunc.cpp`.
 
 ```{.cpp include="examples/q_trunc.cpp"}
@@ -3346,7 +3347,7 @@ for convenience.
 **Example**
 
 Draw from the $\text{Beta}(2,5)$ distribution truncated to the interval
-$(0.5, 0.95]$.A C++ function with Rcpp interface is defined in the file
+$(0.5, 0.95]$. A C++ function with Rcpp interface is defined in the file
 `examples/rtrunc.cpp`.
 
 ```{.cpp include="examples/r_trunc.cpp"}
