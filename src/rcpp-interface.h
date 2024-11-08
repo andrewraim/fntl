@@ -600,7 +600,7 @@ Rcpp::List solve_cg_rcpp(const Rcpp::Function& l,
 //'
 //' @param n Number of draws.
 //' @param x Vector of quantiles.
-//' @param x Vector of probabilities.
+//' @param p Vector of probabilities.
 //' @param lo Vector of lower limits.
 //' @param hi Vector of upper limits.
 //' @param f Density function with form `f(x, log)`.
@@ -642,13 +642,13 @@ Rcpp::List solve_cg_rcpp(const Rcpp::Function& l,
 //'	    geom_line(aes(xseq, f0seq), lty = 2) +
 //'	    xlab("x") +
 //'	    ylab("Density") +
-//'	    theme_minimal()
+//'     theme_minimal()
 //'
 //' # Compare truncated densities and empirical density of generated draws
 //' n = 100000
 //' lo_vec = rep(lo, n)
 //' hi_vec = rep(hi, n)
-//' x = r_trunc(n = n, lo_vec, hi = hi_vec, FF, FFinv)
+//' x = r_trunc(n = n, lo_vec, hi_vec, FF, FFinv)
 //' hist(x, probability = TRUE, breaks = 15)
 //' points(xseq, fseq)
 //'

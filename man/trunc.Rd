@@ -17,7 +17,7 @@ q_trunc(p, lo, hi, F, Finv, lower = TRUE, log = FALSE)
 r_trunc(n, lo, hi, F, Finv)
 }
 \arguments{
-\item{x}{Vector of probabilities.}
+\item{x}{Vector of quantiles.}
 
 \item{lo}{Vector of lower limits.}
 
@@ -32,6 +32,8 @@ numeric and \code{lower} and \code{log} are logical.}
 
 \item{lower}{logical; if \code{TRUE}, probabilities are \eqn{P(X \leq x)};
 otherwise, \eqn{P(X > x)}.}
+
+\item{p}{Vector of probabilities.}
 
 \item{Finv}{Quantile function with signature \code{Finv(x, lower, log)}, where
 \code{x} is numeric and \code{lower} and \code{log} are logical.}
@@ -80,7 +82,7 @@ data.frame(x = xseq, f = fseq, f0 = f0seq) \%>\%
 n = 100000
 lo_vec = rep(lo, n)
 hi_vec = rep(hi, n)
-x = r_trunc(n = n, lo_vec, hi = hi_vec, FF, FFinv)
+x = r_trunc(n = n, lo_vec, hi_vec, FF, FFinv)
 hist(x, probability = TRUE, breaks = 15)
 points(xseq, fseq)
 

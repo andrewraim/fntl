@@ -70,6 +70,7 @@ inline double q_trunc(double p, double lo, double hi, const cdf& F,
 	const quantile& Finv, bool lower = true, bool log = false)
 {
 	double lpp = log ? p : std::log(p);
+	lpp = lower ? lpp : log_sub2_exp(0, lpp);
 
 	double lpa = F(lo, true, true);
 	double lpb = F(hi, true, true);
@@ -81,8 +82,22 @@ inline double q_trunc(double p, double lo, double hi, const cdf& F,
 
 	double lpr = std::max(lp, clp);
 
-	double lq = log_add2_exp(lpa, lpp + lpr);
-	return Finv(lq, lower, true);
+	double lq;
+	if (std::isinf(lpp) || std::isinf(lpr)) {
+		lq = lpa;
+	} else {
+		lq = log_add2_exp(lpa, lpp + lpr);
+	}
+
+	// Protect against log-probabilities greater than zero, which can happen
+	// numerically (assuming there are no mistakes).
+	lq = std::min(lq, 0.0);
+
+	double out = Finv(lq, true, true);
+
+	// Protect against quantiles outside of the support, which can happen
+	// numerically (assuming there are no mistakes).
+	return std::max(std::min(out, hi), lo);
 }
 
 inline double r_trunc(double lo, double hi, const cdf& F,
