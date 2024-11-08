@@ -433,6 +433,70 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// d_trunc_rcpp
+Rcpp::NumericVector d_trunc_rcpp(const Rcpp::NumericVector& x, const Rcpp::NumericVector& lo, const Rcpp::NumericVector& hi, const Rcpp::Function& f, const Rcpp::Function& F, bool log);
+RcppExport SEXP _fntl_d_trunc_rcpp(SEXP xSEXP, SEXP loSEXP, SEXP hiSEXP, SEXP fSEXP, SEXP FSEXP, SEXP logSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type lo(loSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type hi(hiSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::Function& >::type f(fSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::Function& >::type F(FSEXP);
+    Rcpp::traits::input_parameter< bool >::type log(logSEXP);
+    rcpp_result_gen = Rcpp::wrap(d_trunc_rcpp(x, lo, hi, f, F, log));
+    return rcpp_result_gen;
+END_RCPP
+}
+// p_trunc_rcpp
+Rcpp::NumericVector p_trunc_rcpp(const Rcpp::NumericVector& x, const Rcpp::NumericVector& lo, const Rcpp::NumericVector& hi, const Rcpp::Function& F, bool lower, bool log);
+RcppExport SEXP _fntl_p_trunc_rcpp(SEXP xSEXP, SEXP loSEXP, SEXP hiSEXP, SEXP FSEXP, SEXP lowerSEXP, SEXP logSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type lo(loSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type hi(hiSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::Function& >::type F(FSEXP);
+    Rcpp::traits::input_parameter< bool >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< bool >::type log(logSEXP);
+    rcpp_result_gen = Rcpp::wrap(p_trunc_rcpp(x, lo, hi, F, lower, log));
+    return rcpp_result_gen;
+END_RCPP
+}
+// q_trunc_rcpp
+Rcpp::NumericVector q_trunc_rcpp(const Rcpp::NumericVector& p, const Rcpp::NumericVector& lo, const Rcpp::NumericVector& hi, const Rcpp::Function& F, const Rcpp::Function& Finv, bool lower, bool log);
+RcppExport SEXP _fntl_q_trunc_rcpp(SEXP pSEXP, SEXP loSEXP, SEXP hiSEXP, SEXP FSEXP, SEXP FinvSEXP, SEXP lowerSEXP, SEXP logSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type lo(loSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type hi(hiSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::Function& >::type F(FSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::Function& >::type Finv(FinvSEXP);
+    Rcpp::traits::input_parameter< bool >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< bool >::type log(logSEXP);
+    rcpp_result_gen = Rcpp::wrap(q_trunc_rcpp(p, lo, hi, F, Finv, lower, log));
+    return rcpp_result_gen;
+END_RCPP
+}
+// r_trunc_rcpp
+Rcpp::NumericVector r_trunc_rcpp(unsigned int n, const Rcpp::NumericVector& lo, const Rcpp::NumericVector& hi, const Rcpp::Function& F, const Rcpp::Function& Finv);
+RcppExport SEXP _fntl_r_trunc_rcpp(SEXP nSEXP, SEXP loSEXP, SEXP hiSEXP, SEXP FSEXP, SEXP FinvSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< unsigned int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type lo(loSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type hi(hiSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::Function& >::type F(FSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::Function& >::type Finv(FinvSEXP);
+    rcpp_result_gen = Rcpp::wrap(r_trunc_rcpp(n, lo, hi, F, Finv));
+    return rcpp_result_gen;
+END_RCPP
+}
 // findroot_args_rcpp
 Rcpp::List findroot_args_rcpp();
 RcppExport SEXP _fntl_findroot_args_rcpp() {
@@ -556,6 +620,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_fntl_outer1_matvec_rcpp", (DL_FUNC) &_fntl_outer1_matvec_rcpp, 3},
     {"_fntl_outer2_matvec_rcpp", (DL_FUNC) &_fntl_outer2_matvec_rcpp, 4},
     {"_fntl_solve_cg_rcpp", (DL_FUNC) &_fntl_solve_cg_rcpp, 4},
+    {"_fntl_d_trunc_rcpp", (DL_FUNC) &_fntl_d_trunc_rcpp, 6},
+    {"_fntl_p_trunc_rcpp", (DL_FUNC) &_fntl_p_trunc_rcpp, 6},
+    {"_fntl_q_trunc_rcpp", (DL_FUNC) &_fntl_q_trunc_rcpp, 7},
+    {"_fntl_r_trunc_rcpp", (DL_FUNC) &_fntl_r_trunc_rcpp, 5},
     {"_fntl_findroot_args_rcpp", (DL_FUNC) &_fntl_findroot_args_rcpp, 0},
     {"_fntl_optimize_args_rcpp", (DL_FUNC) &_fntl_optimize_args_rcpp, 0},
     {"_fntl_integrate_args_rcpp", (DL_FUNC) &_fntl_integrate_args_rcpp, 0},

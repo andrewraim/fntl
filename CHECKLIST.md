@@ -23,5 +23,5 @@ When adding or modifying a function, make sure the following have been updated:
 - Function should have appropriate sections in the vignette. This should
   include at least one example in `vignettes/examples`
 
-- Consider adding a standalone example to `inst/examples-cpp`
+- Add tests to `inst/tinytest`.
 

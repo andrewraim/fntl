@@ -592,6 +592,123 @@ Rcpp::List solve_cg_rcpp(const Rcpp::Function& l,
 	const Rcpp::NumericVector& b, const Rcpp::NumericVector& init,
 	const Rcpp::List& args);
 
+//' Functions for Truncated Distributions
+//'
+//' Density, CDF, quantile, and drawing functions for a univariate distribution
+//' with density \eqn{f}, cdf, \eqn{F}, and quantile function \eqn{F^{-}}
+//' truncated to the interval \eqn{[a ,b]}.
+//'
+//' @param n Number of draws.
+//' @param x Vector of quantiles.
+//' @param p Vector of probabilities.
+//' @param lo Vector of lower limits.
+//' @param hi Vector of upper limits.
+//' @param f Density function with form `f(x, log)`.
+//' @param F CDF function with signature `F(x, lower, log)`, where `x` is
+//' numeric and `lower` and `log` are logical.
+//' @param Finv Quantile function with signature `Finv(x, lower, log)`, where
+//' `x` is numeric and `lower` and `log` are logical.
+//' @param lower logical; if `TRUE`, probabilities are \eqn{P(X \leq x)};
+//' otherwise, \eqn{P(X > x)}.
+//' @param log logical; if `TRUE`, probabilities are given on log-scale.
+//'
+//' @return Vector with results.
+//' `d_trunc` computes the density, `r_trunc` generates random deviates,
+//' `p_trunc` computes the CDF, and `q_trunc` computes quantiles.
+//'
+//' @examples
+//' library(tidyverse)
+//'
+//' m = 100  ## Length of sequence for density, CDF, etc
+//' shape1 = 5
+//' shape2 = 2
+//' lo = 0.5
+//' hi = 0.7
+//'
+//' # Density, CDF, and quantile function for untruncated distribution
+//' ff = function(x, log) { dbeta(x, shape1, shape2, log = log) }
+//' FF = function(x, lower, log) { pbeta(x, shape1, shape2, lower.tail = lower, log = log) }
+//' FFinv = function(x, lower, log) { qbeta(x, shape1, shape2, lower.tail = lower, log = log) }
+//'
+//' # Compare truncated and untruncated densities
+//' xseq = seq(0, 1, length.out = m)
+//' lo_vec = rep(lo, m)
+//' hi_vec = rep(hi, m)
+//' f0seq = ff(xseq, log = FALSE)
+//' fseq = d_trunc(xseq, lo_vec, hi_vec, ff, FF)
+//' data.frame(x = xseq, f = fseq, f0 = f0seq) %>%
+//'     ggplot() +
+//'	    geom_line(aes(xseq, fseq)) +
+//'	    geom_line(aes(xseq, f0seq), lty = 2) +
+//'	    xlab("x") +
+//'	    ylab("Density") +
+//'     theme_minimal()
+//'
+//' # Compare truncated densities and empirical density of generated draws
+//' n = 100000
+//' lo_vec = rep(lo, n)
+//' hi_vec = rep(hi, n)
+//' x = r_trunc(n = n, lo_vec, hi_vec, FF, FFinv)
+//' hist(x, probability = TRUE, breaks = 15)
+//' points(xseq, fseq)
+//'
+//' # Compare empirical CDF of draws with CDF function
+//' Femp = ecdf(x)
+//' lo_vec = rep(lo, m)
+//' hi_vec = rep(hi, m)
+//' Fseq = p_trunc(xseq, lo_vec, hi_vec, FF)
+//' data.frame(x = xseq, FF = Fseq) %>%
+//'     mutate(F0 = Femp(x)) %>%
+//'     ggplot() +
+//'     geom_line(aes(xseq, FF), lwd = 1.2) +
+//'     geom_line(aes(xseq, F0), col = "orange") +
+//'     xlab("x") +
+//'     ylab("Probability") +
+//'     theme_minimal()
+//'
+//' # Compare empirical quantiles of draws with quantile function
+//' pseq = seq(0, 1, length.out = m)
+//' lo_vec = rep(lo, m)
+//' hi_vec = rep(hi, m)
+//' Finvseq = q_trunc(pseq, lo_vec, hi_vec, FF, FFinv)
+//' Finvemp = quantile(x, prob = pseq)
+//' data.frame(p = pseq, Finv = Finvseq, Finvemp = Finvemp) %>%
+//'	    ggplot() +
+//'	    geom_line(aes(pseq, Finv), lwd = 1.2) +
+//'	    geom_line(aes(pseq, Finvemp), col = "orange") +
+//'	    xlab("p") +
+//'	    ylab("Quantile") +
+//'	    theme_minimal()
+//'
+//' @name trunc
+//' @export
+// [[Rcpp::export(name = "d_trunc")]]
+Rcpp::NumericVector d_trunc_rcpp(const Rcpp::NumericVector& x,
+	const Rcpp::NumericVector& lo, const Rcpp::NumericVector& hi,
+	const Rcpp::Function& f, const Rcpp::Function& F, bool log = false);
+
+//' @name trunc
+//' @export
+// [[Rcpp::export(name = "p_trunc")]]
+Rcpp::NumericVector p_trunc_rcpp(const Rcpp::NumericVector& x,
+	const Rcpp::NumericVector& lo, const Rcpp::NumericVector& hi,
+	const Rcpp::Function& F, bool lower = true, bool log = false);
+
+//' @name trunc
+//' @export
+// [[Rcpp::export(name = "q_trunc")]]
+Rcpp::NumericVector q_trunc_rcpp(const Rcpp::NumericVector& p,
+	const Rcpp::NumericVector& lo, const Rcpp::NumericVector& hi,
+	const Rcpp::Function& F, const Rcpp::Function& Finv, bool lower = true,
+	bool log = false);
+
+//' @name trunc
+//' @export
+// [[Rcpp::export(name = "r_trunc")]]
+Rcpp::NumericVector r_trunc_rcpp(unsigned int n, const Rcpp::NumericVector& lo,
+	const Rcpp::NumericVector& hi, const Rcpp::Function& F,
+	const Rcpp::Function& Finv);
+
 //' Arguments
 //'
 //' Get an arguments list for internal methods with the default settings. This
