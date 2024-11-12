@@ -3140,13 +3140,14 @@ typedef std::function<double(double,bool,bool)> quantile; // <3>
    the density and (2) a boolean `log` that determines whether the value is
    returned on the log-scale.
 2. A CDF whose arguments are: (1) the argument `x` for which to evaluate
-   the CDF, (2) a boolean `lower` that determines whether lower-tail
+   the CDF, (2) a boolean `lower` that determines whether the lower-tail
    probability $\Prob(X \leq x)$ is to be computed, and (3) a boolean `log`
    that determines whether the value is returned on the log-scale.
 3. A quantile function whose arguments are: (1) the argument `p` for which to
    compute quantiles, (2) a boolean `lower` that determines whether `p` is
    interpreted as `p` (if `true`) or `1 - p` (if `false`), and (3) a boolean
-   `log` that determines `p` is assumed to be on the log-scale (if `true`).
+   `log` that determines whether `p` is assumed to be on the log-scale (if
+   `true`).
 
 ## Density
 
