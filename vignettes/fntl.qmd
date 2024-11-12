@@ -3086,11 +3086,13 @@ which(f(X), arr.ind = TRUE) - 1
 
 # Truncated Distributions
 
-Density, quantiles, cumulative distribution function (CDF), and variate
-generation for a univariate distribution truncated to the interval $(a , b]$.
-Suppose $f$, $F$, and $F^{-}$ are the density, CDF, and quantile function of
-the untruncated distribution, respectively. The density $g$ of the truncated
-distribution is
+Functions to support a univariate distribution truncated to the interval
+$(a , b]$. Operations include variate generation, the density function, the
+quantile function, and the cumulative distribution function (CDF). Suppose
+$f$, $F$, and $F^{-}$ are the density, CDF, and quantile
+function, respectively, of an untruncated distribution.
+
+The density $g$ of the truncated distribution is
 <!-- -->
 $$
 g(x) = \frac{f(x)}{F(b) - F(a)} \textrm{I}(a < x \leq b).
@@ -3114,6 +3116,13 @@ taken computationally to avoid loss of precision. Computations are kept on the
 log-scale internally accommodate very small probabilities. Probabilities based
 on the CDF are considered using both the form $\Prob(X \leq x)$ and its
 complement to aid with small probabilities far into the tails.
+
+Special attention is needed for lower limits with a discrete distribution.
+For example, consider the $\text{Poisson}(\lambda)$ distribution truncated to
+$[1,10]$. Taking $(a, b]$ with $a = 1$ and $b = 10$ excludes the lower limit 1,
+which is not desired. Instead, the correct truncation is achieved with
+$a = a_0 - \epsilon$, where $a_0$ is the lower limit of interest (e.g., 1) and
+$\epsilon$ is a small positive number (e.g., $10^{-5}$).
 
 This functions in this section were originally adapted from the `rtruncated`
 function in the `LearnBayes` package [@LearnBayes].

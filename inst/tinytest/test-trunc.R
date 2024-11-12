@@ -99,7 +99,7 @@ expect_equal(q_beta_trunc(1, shape1, shape2, lo, hi), hi)
 qq = q_beta_trunc(0.5, shape1, shape2, lo, hi)
 expect_true(lo < qq &&  qq < hi)
 
-run_checks = function(m, shape1, shape2, lo, hi) {
+run_beta_checks = function(m, shape1, shape2, lo, hi) {
 	# Compare truncated density and CDF with empirical density of generated draws
 	x = r_beta_trunc(n = 500000, shape1, shape2, lo, hi)
 
@@ -132,8 +132,49 @@ run_checks = function(m, shape1, shape2, lo, hi) {
 	expect_equal(qq_fun, qq_emp, tolerance = 1e-2)
 }
 
-run_checks(m = 20, shape1 = 5, shape2 = 2, lo = 0, hi = 1)
-run_checks(m = 20, shape1 = 5, shape2 = 2, lo = 0, hi = 0.5)
-run_checks(m = 20, shape1 = 5, shape2 = 2, lo = 0.5, hi = 1)
-run_checks(m = 20, shape1 = 5, shape2 = 2, lo = 0, hi = 0.05)
-run_checks(m = 20, shape1 = 5, shape2 = 2, lo = 0.95, hi = 1)
+run_beta_checks(m = 20, shape1 = 5, shape2 = 2, lo = 0, hi = 1)
+run_beta_checks(m = 20, shape1 = 5, shape2 = 2, lo = 0, hi = 0.5)
+run_beta_checks(m = 20, shape1 = 5, shape2 = 2, lo = 0.5, hi = 1)
+run_beta_checks(m = 20, shape1 = 5, shape2 = 2, lo = 0, hi = 0.05)
+run_beta_checks(m = 20, shape1 = 5, shape2 = 2, lo = 0.95, hi = 1)
+
+# Run some test with Poisson to make sure a discrete distribution also works
+
+
+run_pois_checks = function(m, lambda, lo, hi) {
+	# Compare truncated density and CDF with empirical density of generated draws
+	x = r_pois_trunc(n = 500000, lambda, lo, hi)
+
+	xseq = seq(ceiling(lo), floor(hi))
+	prob_emp = numeric(length(xseq))
+	prob_cdf = numeric(length(xseq))
+	prob_pdf = numeric(length(xseq))
+	for (i in seq_along(xseq)) {
+		v = xseq[i]
+		prob_emp[i] = mean(x == v)
+		prob_cdf[i] = p_pois_trunc(v, lambda, lo, hi) -
+			p_pois_trunc(v-1, lambda, lo, hi)
+		prob_pdf[i] = d_pois_trunc(v, lambda, lo, hi)
+	}
+	expect_equal(prob_cdf, prob_pdf)
+	expect_equal(prob_emp, prob_cdf, tolerance = 1e-2)
+
+	# Compare empirical quantiles of draws with quantile function
+	m = floor(hi) - ceiling(lo) + 1
+	pseq = seq(0, 1, length.out = m)
+	qq_emp = quantile(x, prob = pseq)
+	qq_fun = q_pois_trunc(pseq, lambda, lo, hi)
+	qq_fun = as.numeric(qq_fun)
+	qq_emp = as.numeric(qq_emp)
+	expect_equal(qq_fun, qq_emp, tolerance = 1e-2)
+}
+
+# Note that if we want to include an integer `a` at the lower bound, we need to
+# truncate at a value smaller than `a`. Therefore we subtract a small number
+# `eps`.
+eps = 1e-6
+run_pois_checks(lambda = 5, lo = 0 - eps, hi = 10)
+run_pois_checks(lambda = 5, lo = 0 - eps, hi = 5)
+run_pois_checks(lambda = 5, lo = 5 - eps, hi = 10)
+run_pois_checks(lambda = 5, lo = 0 - eps, hi = 0)
+run_pois_checks(lambda = 5, lo = 14 - eps, hi = 14)
