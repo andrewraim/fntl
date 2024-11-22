@@ -63,7 +63,7 @@ callout-icon: false
 filters:
   - include-code-files
 execute:
-  eval: true
+  eval: false
 ---
 
 ```{r}
@@ -984,10 +984,10 @@ the step size $h$; however, it requires more evaluations of $f$. A general
 discussion of Richardson extrapolation is given in Section 9.6 of
 @QuarteroniSaccoSaleri2007.
 
-Taking the function $g(h)$ to be one of finite difference approximations 
-in \eqref{eqn:finite-differences1}--\eqref{eqn:finite-differences3}, $h > 0$ to
-be an initial step size, and $\delta \in (0,1)$ to be a reduction factor, the
-method computes a table of values
+Taking the function $g(h)$ to be one of finite difference approximations
+(symmetric, forward, or backward), $h > 0$ to be an initial step size, and
+$\delta \in (0,1)$ to be a reduction factor, the method computes a table of
+values
 <!-- -->
 \begin{align*}
 A_{mq} = 
