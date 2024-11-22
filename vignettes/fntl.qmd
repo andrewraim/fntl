@@ -63,7 +63,7 @@ callout-icon: false
 filters:
   - include-code-files
 execute:
-  eval: false
+  eval: true
 ---
 
 ```{r}
@@ -817,6 +817,12 @@ Hessian. The latter three make use of Richardson extrapolation.
 
 ## Finite Differences {#sec-fd-deriv}
 
+<!--
+For some reason, references `@sec-fd-deriv` have not been working. A workaround
+is to instead write `[@sec-fd-deriv]`. It's not clear to me what the issue is
+or why only this tag seems to be affected ...
+-->
+
 Compute the first and second derivatives of
 $f : \mathbb{R}^n \rightarrow \mathbb{R}$ numerically at point $x$.
 Denote $e_i$ as the $i$th column of an $n \times n$ identity matrix.
@@ -979,7 +985,7 @@ h(x0)
 Compute the first and second derivatives of
 $f : \mathbb{R}^n \rightarrow \mathbb{R}$ numerically at point $x$ using
 Richardson extrapolation. This is typically more accurate than the simple
-finite differences in @sec-fd-deriv and does not require an informed choice of
+finite differences in [@sec-fd-deriv] and does not require an informed choice of
 the step size $h$; however, it requires more evaluations of $f$. A general
 discussion of Richardson extrapolation is given in Section 9.6 of
 @QuarteroniSaccoSaleri2007.
@@ -1019,8 +1025,8 @@ numerical precision are suggested in Section 5.7 of @PressEtAl2007; similar
 considerations for halting criteria are considered in the Julia package
 [Richardson.jl][richardson-jl].
 
-Taking $n = 0$ produces finite differences described in @sec-fd-deriv using the
-initial step size $h$ as the perturbation. Here the achieved tolerance is
+Taking $n = 0$ produces finite differences described in [@sec-fd-deriv] using
+the initial step size $h$ as the perturbation. Here the achieved tolerance is
 reported as infinite.
 
 [richardson-jl]: https://github.com/JuliaMath/Richardson.jl
@@ -1078,7 +1084,7 @@ richardson_result deriv2(
 6. Type of finite difference.
 
 The functions `deriv` and `deriv2` compute first and second derivatives,
-respectively. The enum class `fd_type` is described in @sec-fd-deriv.
+respectively. The enum class `fd_type` is described in [@sec-fd-deriv].
 
 
 **Optional Arguments**
@@ -1154,7 +1160,7 @@ enum class richardson_status : unsigned int {
 
 Compute first and second derivatives of $f(x) = \sin(b^\top x)$ at
 $x_0 = (1/2, \ldots, 1/2)$ with $b = (1, \ldots, n)$. This is a continuation of
-the example in @sec-fd-deriv. Let us again define the point $x_0$.
+the example in [@sec-fd-deriv]. Let us again define the point $x_0$.
 
 ```{r}
 n = 3
@@ -1245,7 +1251,7 @@ gradient_result gradient(
 2. Point at which to compute the gradient.
 3. Optional arguments.
 4. Type of finite difference to use. See the definition of `fd_types` in
-   @sec-fd-deriv.
+   [@sec-fd-deriv].
 
 The arguments in `args` are applied to each coordinate of the gradient.
 
@@ -1339,7 +1345,7 @@ jacobian_result jacobian(
 2. Point at which to take the Jacobian.
 3. Optional arguments.
 4. Type of finite difference to use. See the definition of `fd_types` in
-   @sec-fd-deriv.
+   [@sec-fd-deriv].
 
 **Result**
 
@@ -1454,7 +1460,7 @@ hessian_result hessian(
 2. Point $x$ at which Hessian is taken.
 3. Optional arguments.
 4. Type of finite difference to use. See the definition of `fd_types` in
-   @sec-fd-deriv.
+   [@sec-fd-deriv].
 
 **Result**
 
