@@ -394,7 +394,7 @@ inline richardson_args::richardson_args(SEXP obj)
 }
 
 /*
-* Conversation operators to SEXP objects
+* Conversion operators to SEXP objects
 */
 
 inline findroot_args::operator SEXP() const
