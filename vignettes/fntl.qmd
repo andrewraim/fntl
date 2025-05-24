@@ -154,7 +154,7 @@ packing and unpacking can hinder performance; on the other hand,
 performance while submerged in C++ is free of this overhead. The Rcpp API
 provides general C++ classes for vectors, matrices, lists, and other routinely
 used objects from R. Additional Rcpp extension packages have been developed to
-provide APIs with more application-specific classes; for example, RcppArmadillo
+provide APIs with more application-specific classes; for example, `RcppArmadillo`
 [@EddelbuettelSanderson2014] exposes the API from Armadillo for numerical
 matrix operations.
 
@@ -670,6 +670,49 @@ clutter of const references. However, the `fntl` package makes frequent use of
 const references in both the API and internal implementation. It is recommended
 that users consider consider which of the three - by-value, by-reference, or
 by-const-reference - is most appropriate for their application in actual usage.
+
+## Using RcppArmadillo
+
+The `RcppArmadillo` package [@EddelbuettelSanderson2014] greatly facilitates
+numerical matrix operations in C++. While the `RcppArmadillo` API is not used
+in the `fntl` interface, `fntl` users may want to make use of the
+`RcppArmadillo` in their code. To use `RcppArmadillo` in code with `fntl`,
+ensure that `RcppArmadillo.h` is included before `fntl.h`.
+
+Consider an example of maximizing the likelihood
+
+$$
+L(\sigma^2) \propto (\sigma^2)^{-n/2}
+\exp\left\{ -\frac{1}{2 \sigma^2} (y - \mu)^\top (y - \mu) \right\},
+$$
+
+where $y = (y_1, \ldots, y_n)$ and $\mu = (\mu_1, \ldots, \mu_n)$ are fixed.
+The following example carries this out by maximizing $\log L(\sigma^2)$ using
+Brent's algorithm.
+
+```{.cpp include="examples/arma.cpp"}
+```
+
+If we change the code to include `fntl.h` before `RcppArmadillo.h`, the
+following error is produced by the compiler.
+
+```
+#error "The file 'Rcpp.h' should not be included. Please correct to include
+only 'RcppArmadillo.h'."
+```
+
+The issue is resolved by including `RcppArmadillo.h` before `fntl.h`, as shown
+in the display. We may compile and invoke this function as usual.
+
+```{r}
+# Generate data
+n = 200
+mu = numeric(n)
+y = rnorm(n, mu, sqrt(2))
+
+Rcpp::sourceCpp("examples/arma.cpp")
+arma_example(y, mu)
+```
 
 # Integration {#sec-integrate}
 
