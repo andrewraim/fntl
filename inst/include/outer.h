@@ -43,7 +43,7 @@ inline Rcpp::NumericMatrix outer(const Rcpp::NumericMatrix& X,
 	return out;
 }
 
-inline Rcpp::List outer_triplet(const Rcpp::NumericMatrix& X,
+inline mat_triplet_result outer_triplet(const Rcpp::NumericMatrix& X,
 	const dfvv& f, const dfvv& g, bool one_based = false)
 {
 	unsigned int n = X.nrow();
@@ -64,16 +64,17 @@ inline Rcpp::List outer_triplet(const Rcpp::NumericMatrix& X,
 		}
 	}
 
-	return Rcpp::List::create(
-		Rcpp::Named("i") = ii,
-		Rcpp::Named("j") = jj,
-		Rcpp::Named("x") = vv,
-		Rcpp::Named("m") = n,
-		Rcpp::Named("n") = n
-	);
+	mat_triplet_result out;
+	out.i = ii;
+	out.j = jj;
+	out.x = vv;
+	out.m = n;
+	out.n = n;
+	out.one_based = one_based;
+	return out;
 }
 
-inline Rcpp::List outer_triplet(const Rcpp::NumericMatrix& X,
+inline mat_triplet_result outer_triplet(const Rcpp::NumericMatrix& X,
 	const Rcpp::NumericMatrix& Y, const dfvv& f, const dfvv& g,
 	bool one_based = false)
 {
@@ -96,13 +97,14 @@ inline Rcpp::List outer_triplet(const Rcpp::NumericMatrix& X,
 		}
 	}
 
-	return Rcpp::List::create(
-		Rcpp::Named("i") = ii,
-		Rcpp::Named("j") = jj,
-		Rcpp::Named("x") = vv,
-		Rcpp::Named("m") = m,
-		Rcpp::Named("n") = n
-	);
+	mat_triplet_result out;
+	out.i = ii;
+	out.j = jj;
+	out.x = vv;
+	out.m = m;
+	out.n = n;
+	out.one_based = one_based;
+	return out;
 }
 
 inline Rcpp::NumericVector outer_matvec(const Rcpp::NumericMatrix& X,

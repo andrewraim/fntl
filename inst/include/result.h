@@ -168,6 +168,18 @@ struct richardson_result
 	operator SEXP() const;
 };
 
+struct mat_triplet_result
+{
+	std::vector<unsigned int> i;
+	std::vector<unsigned int> j;
+	std::vector<double> x;
+	unsigned int m;
+	unsigned int n;
+	bool one_based;
+
+	operator SEXP() const;
+};
+
 }
 
 #include <Rcpp.h>
@@ -350,6 +362,18 @@ inline richardson_result::operator SEXP() const
 		Rcpp::Named("err") = err,
 		Rcpp::Named("iter") = iter,
 		Rcpp::Named("status") = to_underlying(status)
+	);
+}
+
+inline mat_triplet_result::operator SEXP() const
+{
+	return Rcpp::List::create(
+		Rcpp::Named("i") = i,
+		Rcpp::Named("j") = j,
+		Rcpp::Named("x") = x,
+		Rcpp::Named("m") = m,
+		Rcpp::Named("n") = n,
+		Rcpp::Named("one_based") = one_based
 	);
 }
 

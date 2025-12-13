@@ -2903,14 +2903,14 @@ Rcpp::NumericMatrix outer(
 	const dfvv& f                  // <3>
 )
 
-Rcpp::List outer_triplet(
+mat_triplet_result outer_triplet(
 	const Rcpp::NumericMatrix& X,  // <1>
 	const dfvv& f,                 // <3>
 	const dfvv& g,                 // <5>
 	bool one_based = false         // <6>
 )
 
-Rcpp::List outer_triplet(
+mat_triplet_result outer_triplet(
 	const Rcpp::NumericMatrix& X,  // <1>
 	const Rcpp::NumericMatrix& Y,  // <2>
 	const dfvv& f,                 // <3>
@@ -2924,6 +2924,30 @@ Rcpp::List outer_triplet(
 4. An Rcpp vector object of dimension $n$.
 5. Indicator function $g(\vec{x}, \vec{y})$ which determines whether to include each triplet in the output.
 6. If `true`, one-based indices are returned in triplet representation. Otherwise, zero-based indices are returned.
+
+**Result**
+
+```{cpp}
+struct mat_triplet_result
+{
+	std::vector<unsigned int> i;  // <1>
+	std::vector<unsigned int> j;  // <2>
+	std::vector<double> x;        // <3>
+	unsigned int m;               // <4>
+	unsigned int n;               // <5>
+	bool one_based;               // <6>
+
+	operator SEXP() const;        // <7>
+};
+```
+
+1. Vector of integers which represent row indices for triplets.
+2. Vector of integers which represent column indices for triplets.
+3. Vector of numerical values of elements for triplets.
+4. Number of rows in the matrix.
+5. Number of columns in the matrix.
+6. If `true`, row and column indices are one-based; otherwise they are zero-based.
+7. Conversion operator to `Rcpp::List`.
 
 **Example**
 
