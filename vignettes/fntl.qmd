@@ -311,7 +311,7 @@ There are a number of points to note in this example.
 5. The integrand `f` is defined as a `dfd`; this is a typedef in `fntl`
    which is a shorthand for `std::function<double(double)>`.
 
-6. The last line shows the `integrate_result` being wrapped into an Rcpp `List`
+6. The last line shows the `integrate_result` being wrapped into an `Rcpp::List`
    so that it becomes an R list when returned to R.
 
 7. The `status` code is a value from the `integrate_status` enum class. Here it
@@ -341,7 +341,7 @@ mechanisms may be found in the [Rcpp Extending][rcpp-extend] vignette.]
 [rcpp-extend]: https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-extending.pdf
 
 ```{cpp}
-// Create args and export to a List
+// Create args and export to a list
 fntl::integrate_args args0;
 Rcpp::List x = Rcpp::wrap(args0);
 
@@ -1409,7 +1409,7 @@ The `SEXP` conversion operator produces the following representation of
 
 **Example**
 
-Compute the Jacobian of $f(\vec{x}) = [f_1(\vec{x}), \ldots, f_5(\vec{x})]$, $f_i(\vec{x}) = \sum_{j=1}^i \sin(x_j)$, at the point $\vec{x} = (1,2,3,4,5)$. To obtain the resulting value as an $m \times n$ matrix, we apply the List conversion operator to the result. A C++ function with Rcpp interface is defined in the file `examples/jacobian.cpp`.
+Compute the Jacobian of $f(\vec{x}) = [f_1(\vec{x}), \ldots, f_5(\vec{x})]$, $f_i(\vec{x}) = \sum_{j=1}^i \sin(x_j)$, at the point $\vec{x} = (1,2,3,4,5)$. To obtain the resulting value as an $m \times n$ matrix, we apply the `Rcpp::List` conversion operator to the result. A C++ function with Rcpp interface is defined in the file `examples/jacobian.cpp`.
 
 ```{.cpp include="examples/jacobian.cpp"}
 ```
@@ -1509,7 +1509,7 @@ struct hessian_result
 **Example**
 
 Compute the Hessian of $f(\vec{x}) = \sum_{i=1}^n \sin(x_i)$ at $\vec{x} = (1, 2)$. To
-obtain the resulting value as an $n \times n$ matrix, we apply the List conversion operator to the result. A C++ function with Rcpp interface is defined in the file `examples/hessian.cpp`.
+obtain the resulting value as an $n \times n$ matrix, we apply the `Rcpp::List` conversion operator to the result. A C++ function with Rcpp interface is defined in the file `examples/hessian.cpp`.
 
 ```{.cpp include="examples/hessian.cpp"}
 ```
