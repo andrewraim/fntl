@@ -417,6 +417,45 @@ Rcpp::NumericVector outer2_matvec_rcpp(const Rcpp::NumericMatrix& X,
 	return fntl::outer_matvec(X, Y, ff, a);
 }
 
+Rcpp::List outer1_triplet_rcpp(const Rcpp::NumericMatrix& X,
+	const Rcpp::Function& f, const Rcpp::Function& g)
+{
+	const fntl::dfvv& ff =
+	[&](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y) {
+		const Rcpp::NumericVector& fxy = f(x, y);
+		return fxy(0);
+	};
+
+	const fntl::bfvv& gg =
+	[&](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y) {
+		const Rcpp::NumericVector& gxy = g(x, y);
+		return gxy(0);
+	};
+
+	const auto& out = fntl::outer_triplet(X, ff, gg);
+	return Rcpp::wrap(out);
+}
+
+Rcpp::List outer2_triplet_rcpp(const Rcpp::NumericMatrix& X,
+	const Rcpp::NumericMatrix& Y, const Rcpp::Function& f,
+	const Rcpp::Function& g)
+{
+	const fntl::dfvv& ff =
+	[&](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y) {
+		const Rcpp::NumericVector& fxy = f(x, y);
+		return fxy(0);
+	};
+
+	const fntl::bfvv& gg =
+	[&](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y) {
+		const Rcpp::NumericVector& gxy = g(x, y);
+		return gxy(0);
+	};
+
+	const auto& out = fntl::outer_triplet(X, Y, ff, gg);
+	return Rcpp::wrap(out);
+}
+
 Rcpp::List solve_cg_rcpp(const Rcpp::Function& l,
 	const Rcpp::NumericVector& b, const Rcpp::NumericVector& init,
 	const Rcpp::List& args)

@@ -43,6 +43,67 @@ inline Rcpp::NumericMatrix outer(const Rcpp::NumericMatrix& X,
 	return out;
 }
 
+inline mat_triplet_result outer_triplet(const Rcpp::NumericMatrix& X,
+	const dfvv& f, const dfvv& g)
+{
+	unsigned int n = X.nrow();
+
+	std::vector<unsigned int> ii;
+	std::vector<unsigned int> jj;
+	std::vector<double> vv;
+
+	for (unsigned int j = 0; j < n; j++) {
+		for (unsigned int i = 0; i <= j; i++) {
+			double val = f(X.row(i), X.row(j));
+			bool ind = g(X.row(i), X.row(j));
+			if (ind) {
+				ii.push_back(i);
+				jj.push_back(j);
+				vv.push_back(val);
+			}
+		}
+	}
+
+	mat_triplet_result out;
+	out.i = ii;
+	out.j = jj;
+	out.x = vv;
+	out.m = n;
+	out.n = n;
+	return out;
+}
+
+inline mat_triplet_result outer_triplet(const Rcpp::NumericMatrix& X,
+	const Rcpp::NumericMatrix& Y, const dfvv& f, const dfvv& g)
+{
+	unsigned int m = X.nrow();
+	unsigned int n = Y.nrow();
+
+	std::vector<unsigned int> ii;
+	std::vector<unsigned int> jj;
+	std::vector<double> vv;
+
+	for (unsigned int j = 0; j < n; j++) {
+		for (unsigned int i = 0; i < m; i++) {
+			double val = f(X.row(i), Y.row(j));
+			bool ind = g(X.row(i), Y.row(j));
+			if (ind) {
+				ii.push_back(i);
+				jj.push_back(j);
+				vv.push_back(val);
+			}
+		}
+	}
+
+	mat_triplet_result out;
+	out.i = ii;
+	out.j = jj;
+	out.x = vv;
+	out.m = m;
+	out.n = n;
+	return out;
+}
+
 inline Rcpp::NumericVector outer_matvec(const Rcpp::NumericMatrix& X,
 	const dfvv& f, const Rcpp::NumericVector& a)
 {

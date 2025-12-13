@@ -447,12 +447,20 @@ Rcpp::IntegerMatrix which_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Functio
 //'
 //' @param X A numerical matrix.
 //' @param Y A numerical matrix.
-//' @param f Function \eqn{f(x, y)} that operates on a pair of rows. Depending
-//' on the context, rows \eqn{x} and \eqn{y} are both rows of \eqn{X}, or
-//' \eqn{x} is a row from \eqn{X} and \eqn{y} is a row from from \eqn{Y}.
+//' @param f Function \eqn{f(x, y)} that operates on a pair of rows and
+//' returns an element for the result.
+//' @param g Function \eqn{g(x, y)} that operates on a pair of rows and returns
+//' a logical value; if `TRUE`, the corresponding output of `f` is placed into
+//' the result. Otherwise, the corresponding output of `f` is omitted from the
+//' result.
 //' @param a A scalar vector.
 //'
 //' @details
+//' Functions \eqn{f(x,y)} and \eqn{g(x,y)} operate on pairs of rows. In the
+//' functions with prefix `outer1`, \eqn{x} and \eqn{y} are pairs of rows of
+//' \eqn{X}. In the functions with prefix `outer2`, \eqn{x} is a row from
+//' \eqn{X} and \eqn{y} is a row from from \eqn{Y}.
+//'
 //' The `outer1` function computes the \eqn{n \times n} symmetric matrix
 //'
 //' \deqn{
@@ -507,6 +515,13 @@ Rcpp::IntegerMatrix which_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Functio
 //' \end{bmatrix}.
 //' }
 //'
+//' The `outer_triplet1` and `outer_triplet2` operations are analogous to
+//' `outer1` and `outer2`, respectively, except return sparse matrices in
+//' triplet form. The triplet variants take an additional argument `g`, a
+//' function $g(x_i, y_j)$ that returns `TRUE` if the result is to be stored
+//' in the result and `FALSE` otherwise. The argument `g` can be used for
+//' sparseness.
+//'
 //' @examples
 //' set.seed(1234)
 //' f = function(x,y) { sum( (x - y)^2 ) }
@@ -522,7 +537,9 @@ Rcpp::IntegerMatrix which_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Functio
 //'
 //' @return
 //' `outer1` and `outer2` return a matrix. `outer1_matvec` and `outer2_matvec`
-//' return a vector. See section "Outer" of the package vignette for details.
+//' return a vector. `outer1_triplet` and `outer2_triplet` return a list with
+//' a sparse matrix (triplet) representation. See section "Outer" of the
+//' package vignette for details.
 //'
 //' @name outer
 //'
@@ -549,6 +566,19 @@ Rcpp::NumericVector outer1_matvec_rcpp(const Rcpp::NumericMatrix& X,
 Rcpp::NumericVector outer2_matvec_rcpp(const Rcpp::NumericMatrix& X,
 	const Rcpp::NumericMatrix& Y, const Rcpp::Function& f,
 	const Rcpp::NumericVector& a);
+
+//' @name outer
+//' @export
+// [[Rcpp::export(name = "outer1_triplet")]]
+Rcpp::List outer1_triplet_rcpp(const Rcpp::NumericMatrix& X,
+	const Rcpp::Function& f, const Rcpp::Function& g);
+
+//' @name outer
+//' @export
+// [[Rcpp::export(name = "outer2_triplet")]]
+Rcpp::List outer2_triplet_rcpp(const Rcpp::NumericMatrix& X,
+	const Rcpp::NumericMatrix& Y, const Rcpp::Function& f,
+	const Rcpp::Function& g);
 
 //' Iteratively Solve a Linear System with Conjugate Gradient
 //'

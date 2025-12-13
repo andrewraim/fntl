@@ -6,6 +6,8 @@
 \alias{outer2}
 \alias{outer1_matvec}
 \alias{outer2_matvec}
+\alias{outer1_triplet}
+\alias{outer2_triplet}
 \title{Outer Matrix}
 \usage{
 outer1(X, f)
@@ -15,27 +17,42 @@ outer2(X, Y, f)
 outer1_matvec(X, f, a)
 
 outer2_matvec(X, Y, f, a)
+
+outer1_triplet(X, f, g)
+
+outer2_triplet(X, Y, f, g)
 }
 \arguments{
 \item{X}{A numerical matrix.}
 
-\item{f}{Function \eqn{f(x, y)} that operates on a pair of rows. Depending
-on the context, rows \eqn{x} and \eqn{y} are both rows of \eqn{X}, or
-\eqn{x} is a row from \eqn{X} and \eqn{y} is a row from from \eqn{Y}.}
+\item{f}{Function \eqn{f(x, y)} that operates on a pair of rows and
+returns an element for the result.}
 
 \item{Y}{A numerical matrix.}
 
 \item{a}{A scalar vector.}
+
+\item{g}{Function \eqn{g(x, y)} that operates on a pair of rows and returns
+a logical value; if \code{TRUE}, the corresponding output of \code{f} is placed into
+the result. Otherwise, the corresponding output of \code{f} is omitted from the
+result.}
 }
 \value{
 \code{outer1} and \code{outer2} return a matrix. \code{outer1_matvec} and \code{outer2_matvec}
-return a vector. See section "Outer" of the package vignette for details.
+return a vector. \code{outer1_triplet} and \code{outer2_triplet} return a list with
+a sparse matrix (triplet) representation. See section "Outer" of the
+package vignette for details.
 }
 \description{
 Compute "outer" matrices and matrix-vector products based on a function
 that operators on pairs of rows. See details.
 }
 \details{
+Functions \eqn{f(x,y)} and \eqn{g(x,y)} operate on pairs of rows. In the
+functions with prefix \code{outer1}, \eqn{x} and \eqn{y} are pairs of rows of
+\eqn{X}. In the functions with prefix \code{outer2}, \eqn{x} is a row from
+\eqn{X} and \eqn{y} is a row from from \eqn{Y}.
+
 The \code{outer1} function computes the \eqn{n \times n} symmetric matrix
 
 \deqn{
@@ -89,6 +106,13 @@ a_1 \cr
 a_n \cr
 \end{bmatrix}.
 }
+
+The \code{outer_triplet1} and \code{outer_triplet2} operations are analogous to
+\code{outer1} and \code{outer2}, respectively, except return sparse matrices in
+triplet form. The triplet variants take an additional argument \code{g}, a
+function $g(x_i, y_j)$ that returns \code{TRUE} if the result is to be stored
+in the result and \code{FALSE} otherwise. The argument \code{g} can be used for
+sparseness.
 }
 \examples{
 set.seed(1234)
