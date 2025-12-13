@@ -12,15 +12,18 @@ affiliations:
 format:
   pdf:
     fontsize: 12pt
+    mathspec: true
     indent: false
     toc: true
     number-sections: true
     colorlinks: true
     link-citations: true
     prompt: false
+    fig-pos: H
     include-in-header:
       text: |
         \usepackage{common}
+pdf-engine: pdflatex
 vignette: >
   %\VignetteIndexEntry{fntl}
   %\VignetteEncoding{UTF-8}
@@ -58,7 +61,7 @@ geometry:
   - top=0.75in
   - bottom=1.00in
 code-block-bg: "#FAFAFA"
-code-block-border-left: "#008CFF"
+code-block-border-left: "#B2DEED"
 callout-icon: false
 filters:
   - include-code-files
@@ -410,15 +413,12 @@ follows, which are used throughout the present document.
 typedef function<double(double)> dfd;
 typedef function<double(const NumericVector&)> dfv;
 typedef function<double(const NumericVector&, const NumericVector&)> dfvv;
+typedef function<bool(const NumericVector&, const NumericVector&)> bfvv;
 typedef function<NumericVector(const NumericVector&)> vfv;
 typedef function<NumericMatrix(const NumericVector&)> mfv;
 ```
 
-Type names are intended to convey argument and return types as briefly as
-possible. Symbols to the right of `f` represent arguments while those to the
-left represent the return type; in particular, `d` is **d**ouble, `v` is
-numeric **v**ector, and `m` is numeric **m**atrix. For example, a `dfvv`
-takes two vectors and returns a double.
+Type names are intended to convey argument and return types as briefly as possible. Symbols to the right of `f` represent arguments while those to the left represent the return type; in particular, `d` is **d**ouble, `b` is **b**ool, `v` is numeric **v**ector, and `m` is numeric **m**atrix. For example, a `dfvv` takes two vectors and returns a double.
 
 The namespace `std` for `function` and `Rcpp` for `NumericVector` and
 `NumericMatrix` have been omitted in the display so that statements each fit on
@@ -556,19 +556,7 @@ print(out$value)
 
 ## Performance Illustration
 
-To illustrate performance characteristics, let us consider a brief simulation
-of the relationship between mean-squared error (MSE) and sample size
-in a logistic regression, suppose $Y_i \sim \text{Ber}(p_i)$ are independent
-with $p_i = \text{logit}^{-1}(\beta_0 + \beta_1 x_i)$. Data-generating values of
-the coefficients are taken to be $\beta_0 = 0$ and $\beta_1 = 1$, respectively.
-We take $R$ draws of $(y_1, \ldots, y_n)$ and compute the MLE
-$\hat{\beta}^{(r)} = (\hat{\beta}_0^{(r)}, \hat{\beta}_1^{(r)})$
-for the $r$th draw using the L-BFGS-B optimization method. The MSE associated
-with sample size $n$ is computed as
-$\text{MSE}_n = \frac{1}{R} \sum_{r=1}^R \lVert \hat{\beta}^{(r)} - \beta \rVert^2$;
-this is computed for sample sizes $n \in \{ 100, 200, 500, 1000, 10000 \}$.
-We describe four versions of the code; to see the implementations, refer to the
-corresponding source files in the `examples` folder.
+To illustrate performance characteristics, let us consider a brief simulation of the relationship between mean-squared error (MSE) and sample size in a logistic regression, suppose $Y_i \sim \text{Ber}(p_i)$ are independent with $p_i = \text{logit}^{-1}(\beta_0 + \beta_1 x_i)$. Data-generating values of the coefficients are taken to be $\beta_0 = 0$ and $\beta_1 = 1$, respectively. We take $R$ draws of $(y_1, \ldots, y_n)$ and compute the MLE $\hat{\vec{\beta}}^{(r)} = (\hat{\vec{\beta}}_0^{(r)}, \hat{\vec{\beta}}_1^{(r)})$ for the $r$th draw using the L-BFGS-B optimization method. The MSE associated with sample size $n$ is computed as $\text{MSE}_n = \frac{1}{R} \sum_{r=1}^R \lVert \hat{\vec{\beta}}^{(r)} - \vec{\beta} \rVert^2$; this is computed for sample sizes $n \in \{ 100, 200, 500, 1000, 10000 \}$. We describe four versions of the code; to see the implementations, refer to the corresponding source files in the `examples` folder.
 
 ```{r}
 #| eval: false
@@ -683,10 +671,10 @@ Consider an example of maximizing the likelihood
 
 $$
 L(\sigma^2) \propto (\sigma^2)^{-n/2}
-\exp\left\{ -\frac{1}{2 \sigma^2} (y - \mu)^\top (y - \mu) \right\},
+\exp\left\{ -\frac{1}{2 \sigma^2} (\vec{y} - \vec{\mu})^\top (\vec{y} - \vec{\mu}) \right\},
 $$
 
-where $y = (y_1, \ldots, y_n)$ and $\mu = (\mu_1, \ldots, \mu_n)$ are fixed.
+where $\vec{y} = (y_1, \ldots, y_n)$ and $\vec{\mu} = (\mu_1, \ldots, \mu_n)$ are fixed.
 The following example carries this out by maximizing $\log L(\sigma^2)$ using
 Brent's algorithm.
 
@@ -867,20 +855,20 @@ or why only this tag seems to be affected ...
 -->
 
 Compute the first and second derivatives of
-$f : \mathbb{R}^n \rightarrow \mathbb{R}$ numerically at point $x$.
-Denote $e_i$ as the $i$th column of an $n \times n$ identity matrix.
+$f : \mathbb{R}^n \rightarrow \mathbb{R}$ numerically at point $\vec{x}$.
+Denote $\vec{e}_i$ as the $i$th column of an $n \times n$ identity matrix.
 First derivatives in the $i$th coordinate are computed as
 <!-- -->
 \begin{align*}
-&\frac{\partial f(x)}{\partial x_i} \approx \frac{
-f(x + h e_i) - f(x - h e_i)
+&\frac{\partial f(\vec{x})}{\partial x_i} \approx \frac{
+f(\vec{x} + h \vec{e}_i) - f(\vec{x} - h \vec{e}_i)
 }{2h}, \\
 %
-&\frac{\partial f(x)}{\partial x_i} \approx 
-\frac{ f(x + h e_i) - f(x) }{h}, \\
+&\frac{\partial f(\vec{x})}{\partial x_i} \approx 
+\frac{ f(\vec{x} + h \vec{e}_i) - f(\vec{x}) }{h}, \\
 %
-&\frac{\partial f(x)}{\partial x_i} \approx 
-\frac{ f(x) - f(x - h e_i) }{h},
+&\frac{\partial f(\vec{x})}{\partial x_i} \approx 
+\frac{ f(\vec{x}) - f(\vec{x} - h \vec{e}_i) }{h},
 \end{align*}
 <!-- -->
 for given $h > 0$ using symmetric, forward, or backward differences
@@ -888,27 +876,27 @@ respectively. Second derivatives in the $i$th and $j$th coordinate, with
 $i, j \in \{ 1 \ldots, n\}$, are computed as
 <!-- -->
 \begin{align*}
-&\frac{\partial^2 f(x)}{\partial x_i x_j} \approx
+&\frac{\partial^2 f(\vec{x})}{\partial x_i x_j} \approx
 \frac{
-f(x + h_i e_i + h_j e_j) - f(x + h_i e_i - h_j e_j) - f(x - h_i e_i + h_j e_j) +
-f(x - h_i e_i - h_j e_j)
+f(\vec{x} + h_i \vec{e}_i + h_j \vec{e}_j) - f(\vec{x} + h_i \vec{e}_i - h_j \vec{e}_j) - f(\vec{x} - h_i \vec{e}_i + h_j \vec{e}_j) +
+f(\vec{x} - h_i \vec{e}_i - h_j \vec{e}_j)
 }{4 h_i h_j}, \\
 %
-&\frac{\partial^2 f(x)}{\partial x_i x_j} \approx
+&\frac{\partial^2 f(\vec{x})}{\partial \vec{x}_i \vec{x}_j} \approx
 \frac{
-f(x + h_i e_i + 2 h_j e_j) - f(x + h e_i) - f(x + h_j e_j) + f(x)
+f(\vec{x} + h_i \vec{e}_i + 2 h_j \vec{e}_j) - f(\vec{x} + h \vec{e}_i) - f(\vec{x} + h_j \vec{e}_j) + f(\vec{x})
 }{ h_i h_j}, \\
 %
-&\frac{\partial^2 f(x)}{\partial x_i x_j} \approx
+&\frac{\partial^2 f(\vec{x})}{\partial x_i x_j} \approx
 \frac{
-f(x) - f(x - h_i e_i) - f(x - h_j e_j) + f(x - h_i e_i - h_j e_j)
+f(\vec{x}) - f(\vec{x} - h_i \vec{e}_i) - f(\vec{x} - h_j \vec{e}_j) + f(\vec{x} - h_i \vec{e}_i - h_j \vec{e}_j)
 }{h_i h_j},
 \end{align*}
 <!-- -->
 for given $h_1 > 0$ and $h_2 > 0$
 using symmetric, forward, or backward differences respectively.
 The accuracy of these derivatives depends on the nature of the function $f$ at
-$x$ and the choice of $h$. See Section 5.7 of @PressEtAl2007 for discussion.
+$\vec{x}$ and the choice of $h$. See Section 5.7 of @PressEtAl2007 for discussion.
 
 **Function**
 
@@ -935,8 +923,8 @@ double fd_deriv2(
 	const fd_types& fd_type = fd_types::SYMMETRIC  // <7>
 )
 ```
-1. Function $d$ to differentiate.
-2. Point $x$ at which derivative is taken.
+1. Function $f$ to differentiate.
+2. Point $\vec{x}$ at which derivative is taken.
 3. First coordinate to differentiate.
 4. Second coordinate to differentiate.
 5. Step size in the first coordinate.
@@ -957,13 +945,11 @@ enum class fd_types : unsigned int {
 
 **Example**
 
-Compute the first and second derivatives of $f(x) = \sin(b^\top x)$ at
-$x_0 = (1/2, \ldots, 1/2)$ where $b = (1, \ldots, n)$. The gradient and Hessian
-are given in closed-form by
+Compute the first and second derivatives of $f(\vec{x}) = \sin(\vec{b}^\top \vec{x})$ at $\vec{x}_0 = (1/2, \ldots, 1/2)$ where $\vec{b} = (1, \ldots, n)$. The gradient and Hessian are given in closed-form by
 <!-- -->
 \begin{align*}
-&\frac{\partial f(x)}{\partial x} = b \cos(b^\top x), \\
-&\frac{\partial^2 f(x)}{\partial x \partial x^\top} = -b b^\top \sin(b^\top x).
+&\frac{\partial f(\vec{x})}{\partial \vec{x}} = \vec{b} \cos(\vec{b}^\top \vec{x}), \\
+&\frac{\partial^2 f(\vec{x})}{\partial \vec{x} \partial \vec{x}^\top} = -\vec{b} \vec{b}^\top \sin(\vec{b}^\top \vec{x}).
 \end{align*}
 <!-- -->
 Let us first prepare the problem in R.
@@ -1026,7 +1012,7 @@ h(x0)
 ## Richardson Extrapolated Finite Differences {#sec-deriv}
 
 Compute the first and second derivatives of
-$f : \mathbb{R}^n \rightarrow \mathbb{R}$ numerically at point $x$ using
+$f : \mathbb{R}^n \rightarrow \mathbb{R}$ numerically at point $\vec{x}$ using
 Richardson extrapolation. This is typically more accurate than the simple
 finite differences in [@sec-fd-deriv] and does not require an informed choice of
 the step size $h$; however, it requires more evaluations of $f$. A general
@@ -1201,9 +1187,7 @@ enum class richardson_status : unsigned int {
 
 **Example**
 
-Compute first and second derivatives of $f(x) = \sin(b^\top x)$ at
-$x_0 = (1/2, \ldots, 1/2)$ with $b = (1, \ldots, n)$. This is a continuation of
-the example in [@sec-fd-deriv]. Let us again define the point $x_0$.
+This is a continuation of the example in [@sec-fd-deriv]. Compute first and second derivatives of $f(\vec{x}) = \sin(\vec{b}^\top \vec{x})$ at $\vec{x}_0 = (1/2, \ldots, 1/2)$ with $\vec{b} = (1, \ldots, n)$. Let us again define the point $\vec{x}_0$.
 
 ```{r}
 n = 3
@@ -1259,12 +1243,12 @@ print(out3)
 The gradient of $f : \mathbb{R}^n \rightarrow \mathbb{R}$:
 <!-- -->
 $$
-\frac{\partial f(x)}{\partial x}
+\frac{\partial f(\vec{x})}{\partial \vec{x}}
 =
 \left[
-\frac{\partial f(x)}{\partial x_1},
+\frac{\partial f(\vec{x})}{\partial x_1},
 \ldots,
-\frac{\partial f(x)}{\partial x_n}
+\frac{\partial f(\vec{x})}{\partial x_n}
 \right].
 $$
 <!-- -->
@@ -1290,7 +1274,7 @@ gradient_result gradient(
 	const fd_types& fd_type = fd_types::SYMMETRIC  // <4>
 )
 ```
-1. Function to take the gradient of.
+1. Function whose gradient is to be computed.
 2. Point at which to compute the gradient.
 3. Optional arguments.
 4. Type of finite difference to use. See the definition of `fd_types` in
@@ -1328,8 +1312,7 @@ those in `gradient_result`.
 
 **Example**
 
-Compute the gradient of $f(x) = x^\top x$. A C++ function with Rcpp interface
-is defined in the file `examples/gradient.cpp`.
+Compute the gradient of $f(\vec{x}) = \vec{x}^\top \vec{x}$. A C++ function with Rcpp interface is defined in the file `examples/gradient.cpp`.
 
 ```{.cpp include="examples/gradient.cpp"}
 ```
@@ -1353,12 +1336,12 @@ numDeriv::grad(f, x = 1:4)
 The Jacobian of $f : \mathbb{R}^n \rightarrow \mathbb{R}^m$:
 <!-- -->
 $$
-\frac{\partial f(x)}{\partial x}
+\frac{\partial f(\vec{x})}{\partial \vec{x}}
 =
 \begin{bmatrix}
-\frac{\partial f_1(x)}{\partial x_1} & \cdots & \frac{\partial f_1(x)}{\partial x_n} \\
+\frac{\partial f_1(\vec{x})}{\partial x_1} & \cdots & \frac{\partial f_1(\vec{x})}{\partial x_n} \\
 \vdots & \ddots & \vdots \\
-\frac{\partial f_m(x)}{\partial x_1} & \cdots & \frac{\partial f_m(x)}{\partial x_n}
+\frac{\partial f_m(\vec{x})}{\partial x_1} & \cdots & \frac{\partial f_m(\vec{x})}{\partial x_n}
 \end{bmatrix}.
 $$
 <!-- -->
@@ -1384,7 +1367,7 @@ jacobian_result jacobian(
 	const fd_types& fd_type = fd_types::SYMMETRIC // <4>
 )
 ```
-1. Function to obtain the Jacobian of
+1. Function whose Jacobian is to be computed.
 2. Point at which to take the Jacobian.
 3. Optional arguments.
 4. Type of finite difference to use. See the definition of `fd_types` in
@@ -1426,11 +1409,7 @@ The `SEXP` conversion operator produces the following representation of
 
 **Example**
 
-Compute the Jacobian of $f(x) = [f_1(x), \ldots, f_5(x)]$,
-$f_i(x) = \sum_{j=1}^i \sin(x_j)$, at the point $x = (1,2,3,4,5)$. To obtain
-the resulting value as an $m \times n$ matrix, we apply the List conversion
-operator to the result. A C++ function with Rcpp interface is defined in the
-file `examples/jacobian.cpp`.
+Compute the Jacobian of $f(\vec{x}) = [f_1(\vec{x}), \ldots, f_5(\vec{x})]$, $f_i(\vec{x}) = \sum_{j=1}^i \sin(x_j)$, at the point $\vec{x} = (1,2,3,4,5)$. To obtain the resulting value as an $m \times n$ matrix, we apply the List conversion operator to the result. A C++ function with Rcpp interface is defined in the file `examples/jacobian.cpp`.
 
 ```{.cpp include="examples/jacobian.cpp"}
 ```
@@ -1457,15 +1436,15 @@ Compute the Hessian of $f : \mathbb{R}^n \rightarrow \mathbb{R}$ numerically
 at point $x$:
 <!-- -->
 $$
-\frac{\partial^2 f(x)}{\partial x \partial x^\top} =
+\frac{\partial^2 f(\vec{x})}{\partial \vec{x} \partial \vec{x}^\top} =
 \begin{bmatrix}
-\frac{\partial^2 f(x)}{\partial x_1 \partial x_1} &
+\frac{\partial^2 f(\vec{x})}{\partial x_1 \partial x_1} &
 \cdots &
-\frac{\partial^2 f(x)}{\partial x_1 \partial x_n} \\
+\frac{\partial^2 f(\vec{x})}{\partial x_1 \partial x_n} \\
 \vdots & \ddots & \vdots \\
-\frac{\partial^2 f(x)}{\partial x_n \partial x_1} &
+\frac{\partial^2 f(\vec{x})}{\partial x_n \partial x_1} &
 \cdots &
-\frac{\partial^2 f(x)}{\partial x_n \partial x_n}
+\frac{\partial^2 f(\vec{x})}{\partial x_n \partial x_n}
 \end{bmatrix}.
 $$
 <!-- -->
@@ -1500,7 +1479,7 @@ hessian_result hessian(
 )
 ```
 1. Function $f$ for which Hessian is to be computed.
-2. Point $x$ at which Hessian is taken.
+2. Point $\vec{x}$ at which Hessian is taken.
 3. Optional arguments.
 4. Type of finite difference to use. See the definition of `fd_types` in
    [@sec-fd-deriv].
@@ -1529,10 +1508,8 @@ struct hessian_result
 
 **Example**
 
-Compute the Hessian of $f(x) = \sum_{i=1}^n \sin(x_i)$ at $x = (1, 2)$. To
-obtain the resulting value as an $n \times n$ matrix, we apply the List
-conversion operator to the result. A C++ function with Rcpp interface is
-defined in the file `examples/hessian.cpp`.
+Compute the Hessian of $f(\vec{x}) = \sum_{i=1}^n \sin(x_i)$ at $\vec{x} = (1, 2)$. To
+obtain the resulting value as an $n \times n$ matrix, we apply the List conversion operator to the result. A C++ function with Rcpp interface is defined in the file `examples/hessian.cpp`.
 
 ```{.cpp include="examples/hessian.cpp"}
 ```
@@ -1770,7 +1747,7 @@ struct optimize_args
 
 
 ```
-1. Scaling factor to be applied to the value of $f(x)$ during optimization. Use
+1. Scaling factor to be applied to the value of $f(\vec{x})$ during optimization. Use
    `-1` to implement maximization rather than minimization.
 2. Tolerance $\epsilon$ for convergence.
 3. The maximum number of iterations.
@@ -1926,8 +1903,7 @@ print(out)
 
 # Multivariate Optimization {#sec-optim}
 
-This section presents methods to minimize a function
-$f : \mathbb{R}^n \rightarrow \mathbb{R}$ from a given starting value $x_0$.
+This section presents methods to minimize a function $f : \mathbb{R}^n \rightarrow \mathbb{R}$ from a given starting value $\vec{x}_0$.
 
 ## Nelder-Mead
 
@@ -2039,9 +2015,7 @@ enum class neldermead_status : unsigned int {
 
 **Example**
 
-Minimize the function $f(x) = \sum_{i=1}^n x_i^2 - 1$ for $n = 2$. Take
-$x_0 = (1,-1)$ as the initial value. A C++ function with Rcpp interface is
-defined in the file `examples/neldermead.cpp`.
+Minimize the function $f(\vec{x}) = \sum_{i=1}^n x_i^2 - 1$ for $n = 2$. Take $\vec{x}_0 = (1,-1)$ as the initial value. A C++ function with Rcpp interface is defined in the file `examples/neldermead.cpp`.
 
 ```{.cpp include="examples/neldermead.cpp"}
 ```
@@ -2056,11 +2030,7 @@ print(out)
 
 ## BFGS
 
-Minimization using the BFGS (Broyden-Fletcher-Goldfarb-Shanno)
-algorithm [@Nash1990]. Relies on evaluation of $f$ and its gradient
-$g(x) = \frac{\partial f(x)}{\partial x}$ but not the Hessian. This function
-directly calls [vmmin][vmmin-src], the C function that gets invoked when
-using the [optim][Roptim-src] R function with `method = "BFGS"`.
+Minimization using the BFGS (Broyden-Fletcher-Goldfarb-Shanno) algorithm [@Nash1990]. Relies on evaluation of $f$ and its gradient $g(\vec{x}) = \frac{\partial f(\vec{x})}{\partial \vec{x}}$ but not the Hessian. This function directly calls [vmmin][vmmin-src], the C function that gets invoked when using the [optim][Roptim-src] R function with `method = "BFGS"`.
 
 [vmmin-src]: https://github.com/r-devel/r-svn/blob/62dd8b09461d5d1313f4722d9d63abb463a9e42d/src/include/R_ext/Applic.h#L67
 [Roptim-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/optim.R
@@ -2098,7 +2068,7 @@ bfgs_result bfgs(
 ```
 1. Initial value for optimization variable.
 2. Function $f$ to minimize.
-3. Gradient function $g(x) = \frac{\partial f(x)}{\partial x}$.
+3. Gradient function $g(\vec{x}) = \frac{\partial f(\vec{x})}{\partial \vec{x}}$.
 4. Additional arguments.
 
 Forms with the $g$ argument omitted compute the gradient using finite
@@ -2184,10 +2154,7 @@ enum class bfgs_status : unsigned int {
 
 **Example**
 
-Maximize the function $f(x) = \exp(-x^\top x)$. First use the default
-numerical gradient, then use an explicitly coded the gradient function
-$g(x) = -2 x \exp(-x^\top x)$. A C++ function with Rcpp interface is defined in
-the file `examples/bfgs.cpp`.
+Maximize the function $f(\vec{x}) = \exp(-\vec{x}^\top \vec{x})$. First use the default numerical gradient, then use an explicitly coded the gradient function $g(\vec{x}) = -2 \vec{x} \exp(-\vec{x}^\top \vec{x})$. A C++ function with Rcpp interface is defined in the file `examples/bfgs.cpp`.
 
 ```{.cpp include="examples/bfgs.cpp"}
 ```
@@ -2205,7 +2172,7 @@ print(out$analytical)
 
 Minimization using the L-BFGS-B (Limited memory
 Broyden-Fletcher-Goldfarb-Shanno) algorithm [@ByrdEtAl1995]. Relies on
-evaluation of $f$ and its gradient $g(x) = \frac{\partial f(x)}{\partial x}$
+evaluation of $f$ and its gradient $g(\vec{x}) = \frac{\partial f(\vec{x})}{\partial \vec{x}}$
 but not the Hessian. This function directly calls [lbfgsb][lbfgsb-src], the C
 function that gets invoked when using the [optim][Roptim-src] R function with
 `method = "L-BFGS-B"`.
@@ -2246,7 +2213,7 @@ lbfgsb_result lbfgsb(
 ```
 1. Initial value for optimization variable.
 2. Function $f$ to minimize.
-3. Gradient function $g(x) = \frac{\partial f(x)}{\partial x}$.
+3. Gradient function $g(\vec{x}) = \frac{\partial f(\vec{x})}{\partial \vec{x}}$.
 4. Additional arguments.
 
 Forms with the $g$ argument omitted compute the gradient using finite
@@ -2348,10 +2315,7 @@ enum class lbfgsb_status : unsigned int {
 
 **Example**
 
-Maximize the function $f(x) = \exp(-x^\top x)$. First use the default
-numerical gradient, then use explicitly coded gradient function
-$g(x) = -2 x \exp(-x^\top x)$. A C++ function with Rcpp interface is defined in
-the file `examples/lbfgsb.cpp`.
+Maximize the function $f(\vec{x}) = \exp(-\vec{x}^\top \vec{x})$. First use the default numerical gradient, then use explicitly coded gradient function $g(\vec{x}) = -2 \vec{x} \exp(-\vec{x}^\top \vec{x})$. A C++ function with Rcpp interface is defined in the file `examples/lbfgsb.cpp`.
 
 ```{.cpp include="examples/lbfgsb.cpp"}
 ```
@@ -2367,11 +2331,7 @@ print(out$analytical)
 
 ## Conjugate Gradient {#sec-cg}
 
-Minimization using the conjugate gradient algorithm
-[@FletcherReeves1964; @Nash1990]. Relies on evaluation of $f$ and its gradient
-$g(x) = \frac{\partial f(x)}{\partial x}$ but not the Hessian. This function
-directly calls [cgmin][cgmin-src], the C function that gets invoked when
-using the [optim][Roptim-src] R function with `method = "CG"`.
+Minimization using the conjugate gradient algorithm [@FletcherReeves1964; @Nash1990]. Relies on evaluation of $f$ and its gradient $g(\vec{x}) = \frac{\partial f(\vec{x})}{\partial \vec{x}}$ but not the Hessian. This function directly calls [cgmin][cgmin-src], the C function that gets invoked when using the [optim][Roptim-src] R function with `method = "CG"`.
 
 [cgmin-src]: https://github.com/r-devel/r-svn/blob/62dd8b09461d5d1313f4722d9d63abb463a9e42d/src/include/R_ext/Applic.h#L75
 [Roptim-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/optim.R
@@ -2409,7 +2369,7 @@ cg_result cg(
 ```
 1. Initial value for optimization variable.
 2. Function $f$ to minimize.
-3. Gradient function $g(x) = \frac{\partial f(x)}{\partial x}$.
+3. Gradient function $g(\vec{x}) = \frac{\partial f(\vec{x})}{\partial \vec{x}}$.
 4. Additional arguments.
 
 Forms with the $g$ argument omitted compute the gradient using finite
@@ -2498,10 +2458,7 @@ enum class cg_status : unsigned int {
 
 **Example**
 
-Maximize the function $f(x) = \exp(-x^\top x)$. First use the default
-numerical gradient, then use an explicitly coded the gradient function
-$g(x) = -2 x \exp(-x^\top x)$. A C++ function with Rcpp interface is defined in
-the file `examples/cg.cpp`.
+Maximize the function $f(\vec{x}) = \exp(-\vec{x}^\top \vec{x})$. First use the default numerical gradient, then use an explicitly coded the gradient function $g(\vec{x}) = -2 \vec{x} \exp(-\vec{x}^\top \vec{x})$. A C++ function with Rcpp interface is defined in the file `examples/cg.cpp`.
 
 ```{.cpp include="examples/cg.cpp"}
 ```
@@ -2522,10 +2479,7 @@ Minimization using the Newton-type algorithm underlying the
 [optif9][optif9-src] within the R API. The implementation of `optif9` is based
 on @DennisSchnabel1983.
 
-The gradient $g(x) = \frac{\partial f(x)}{\partial x}$ and Hessian 
-$h(x) = \frac{\partial^2 f(x)}{\partial x \partial x^\top}$ may be provided
-explicitly if available. When the gradient and/or Hessian are not
-specified, numerical approximations are used by `optif9`.
+The gradient $g(\vec{x}) = \frac{\partial f(\vec{x})}{\partial \vec{x}}$ and Hessian $h(\vec{x}) = \frac{\partial^2 f(\vec{x})}{\partial \vec{x} \partial \vec{x}^\top}$ may be provided explicitly if available. When the gradient and/or Hessian are not specified, numerical approximations are used by `optif9`.
 
 [optif9-src]: https://github.com/r-devel/r-svn/blob/62dd8b09461d5d1313f4722d9d63abb463a9e42d/src/include/R_ext/Applic.h#L136
 [nlm-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/nlm.R
@@ -2712,12 +2666,7 @@ See the manual page for `nlm` for more detail about these statuses.
 
 **Example**
 
-Maximize the function $f(x) = \exp(-x^\top x)$. The associated gradient and
-Hessian functions are $g(x) = -2 f(x) x$ and 
-$h(x) = (4 x x^\top - 2 I) f(x)$, respectively. Consider three calls: first
-with a numerical gradient and Hessian, then with explicitly coded gradient, and
-finally with both explicitly coded gradient and Hessian. A C++ function with
-Rcpp interface is defined in the file `examples/nlm.cpp`.
+Maximize the function $f(\vec{x}) = \exp(-\vec{x}^\top \vec{x})$. The associated gradient and Hessian functions are $g(\vec{x}) = -2 f(\vec{x}) \vec{x}$ and $h(\vec{x}) = (4 \vec{x} \vec{x}^\top - 2 \vec{I}) f(\vec{x})$, respectively. Consider three calls: first with a numerical gradient and Hessian, then with explicitly coded gradient, and finally with both explicitly coded gradient and Hessian. A C++ function with Rcpp interface is defined in the file `examples/nlm.cpp`.
 
 ```{.cpp include="examples/nlm.cpp"}
 ```
@@ -2740,15 +2689,15 @@ This section presents several matrix operations based on a lambda function.
 ## Apply
 
 Apply a function to the elements, rows, or columns of an $m \times n$ matrix.
-Suppose $X \in \mathbb{R}^{m \times n}$ is a matrix with rows
-$x_{1 \bullet}, \ldots, x_{m \bullet}$ and columns
-$x_{\bullet 1}, \ldots, x_{\bullet n}$.
+Suppose $\vec{X} \in \mathbb{R}^{m \times n}$ is a matrix with rows
+$\vec{x}_{1 \ast}, \ldots, \vec{x}_{m \ast}$ and columns
+$\vec{x}_{\ast 1}, \ldots, \vec{x}_{\ast n}$.
 
 The function `mat_apply` is an elementwise application of
 $f : \mathbb{R} \rightarrow \mathbb{R}$ which computes
 <!-- -->
 $$
-\text{\texttt{mat\_apply}}(X, f)
+\text{\texttt{mat\_apply}}(\vec{X}, f)
 = \begin{bmatrix}
 f(x_{11}) & \cdots & f(x_{1n}) \\
 \vdots & \ddots & \vdots \\
@@ -2760,16 +2709,16 @@ The function `row_apply` is a rowwise application of
 $g : \mathbb{R}^n \rightarrow \mathbb{R}$ which computes
 <!-- -->
 $$
-\text{\texttt{row\_apply}}(X, g)
-= \big( g(x_{1 \bullet}), \ldots, g(x_{m \bullet}) \big).
+\text{\texttt{row\_apply}}(\vec{X}, g)
+= \big( g(\vec{x}_{1 \ast}), \ldots, g(\vec{x}_{m \ast}) \big).
 $$
 <!-- -->
 The function `col_apply` is a columnwise application of
 $h : \mathbb{R}^m \rightarrow \mathbb{R}$ which computes
 <!-- -->
 $$
-\text{\texttt{col\_apply}}(X, h)
-= \big( h(x_{\bullet 1}), \ldots, h(x_{\bullet n}) \big).
+\text{\texttt{col\_apply}}(\vec{X}, h)
+= \big( h(\vec{x}_{\ast 1}), \ldots, h(\vec{x}_{\ast n}) \big).
 $$
 <!-- -->
 The above replicate the behavior of following R calls, respectively.
@@ -2853,28 +2802,27 @@ print(out)
 Construct a matrix from a real-valued function of two arguments. Or carry out a
 matrix multiplication without explicitly constructing the matrix.
 
-Suppose $f(x,x') : \mathbb{R}^d \times \mathbb{R}^d \rightarrow \mathbb{R}$ and
-$X \in \mathbb{R}^{n \times d}$ is a matrix with rows $x_1, \ldots, x_n$. Also
-let $a = [a_1 \cdots a_n]^\top$ be a fixed vector. The `outer` operation
+Suppose $f(\vec{x},\vec{x}') : \mathbb{R}^d \times \mathbb{R}^d \rightarrow \mathbb{R}$ and
+$\vec{X} \in \mathbb{R}^{n \times d}$ is a matrix with rows $\vec{x}_1, \ldots, \vec{x}_n$. Also let $\vec{a} = [a_1 \cdots a_n]^\top$ be a fixed vector. The `outer` operation
 computes the $n \times n$ symmetric matrix
 <!-- -->
 $$
-\text{\texttt outer}(X, f) =
+\text{\texttt outer}(\vec{X}, f) =
 \begin{bmatrix}
-f(x_1, x_1) & \cdots & f(x_1, x_n) \\
+f(\vec{x}_1, \vec{x}_1) & \cdots & f(\vec{x}_1, \vec{x}_n) \\
 \vdots & \ddots & \vdots \\
-f(x_n, x_1) & \cdots & f(x_n, x_n) \\
+f(\vec{x}_n, \vec{x}_1) & \cdots & f(\vec{x}_n, \vec{x}_n) \\
 \end{bmatrix}
 $$
 <!-- -->
 and the `outer_matvec` operation computes the $n$-dimensional vector
 <!-- -->
 $$
-\text{\texttt outer\_matvec}(X, f, a) =
+\text{\texttt outer\_matvec}(\vec{X}, f, \vec{a}) =
 \begin{bmatrix}
-f(x_1, x_1) & \cdots & f(x_1, x_n) \\
+f(\vec{x}_1, \vec{x}_1) & \cdots & f(\vec{x}_1, \vec{x}_n) \\
 \vdots & \ddots & \vdots \\
-f(x_n, x_1) & \cdots & f(x_n, x_n) \\
+f(\vec{x}_n, \vec{x}_1) & \cdots & f(\vec{x}_n, \vec{x}_n) \\
 \end{bmatrix}
 \begin{bmatrix}
 a_1 \\
@@ -2883,29 +2831,29 @@ a_n \\
 \end{bmatrix}.
 $$
 
-Now suppose $f(x,y) : \mathbb{R}^{d_1} \times \mathbb{R}^{d_2} \rightarrow \mathbb{R}$,
-$X \in \mathbb{R}^{m \times d_1}$ is a matrix with rows $x_1, \ldots, x_m$,
-$Y \in \mathbb{R}^{n \times d_2}$ is a matrix with rows $y_1, \ldots, y_n$,
-and $a = [a_1 \cdots a_n]^\top$ is a fixed vector. The `outer` operation
+Now suppose $f(\vec{x},\vec{y}) : \mathbb{R}^{d_1} \times \mathbb{R}^{d_2} \rightarrow \mathbb{R}$,
+$\vec{X} \in \mathbb{R}^{m \times d_1}$ is a matrix with rows $\vec{x}_1, \ldots, \vec{x}_m$,
+$\vec{Y} \in \mathbb{R}^{n \times d_2}$ is a matrix with rows $\vec{y}_1, \ldots, \vec{y}_n$,
+and $\vec{a} = [a_1 \cdots a_n]^\top$ is a fixed vector. The `outer` operation
 computes the $m \times n$ matrix
 <!-- -->
 $$
-\text{\texttt outer}(X, Y, f) =
+\text{\texttt outer}(\vec{X}, \vec{Y}, f) =
 \begin{bmatrix}
-f(x_1, y_1) & \cdots & f(x_1, y_n) \\
+f(\vec{x}_1, \vec{y}_1) & \cdots & f(\vec{x}_1, \vec{y}_n) \\
 \vdots & \ddots & \vdots \\
-f(x_m, y_1) & \cdots & f(x_m, y_n) \\
+f(\vec{x}_m, \vec{y}_1) & \cdots & f(\vec{x}_m, \vec{y}_n) \\
 \end{bmatrix}
 $$
 <!-- -->
 and the `outer_matvec` operation computes the $m$-dimensional vector
 <!-- -->
 $$
-\text{\texttt outer\_matvec}(X, Y, f, a) =
+\text{\texttt outer\_matvec}(\vec{X}, \vec{Y}, f, \vec{a}) =
 \begin{bmatrix}
-f(x_1, y_1) & \cdots & f(x_1, y_n) \\
+f(\vec{x}_1, \vec{y}_1) & \cdots & f(\vec{x}_1, \vec{y}_n) \\
 \vdots & \ddots & \vdots \\
-f(x_m, y_1) & \cdots & f(x_m, y_n) \\
+f(\vec{x}_m, \vec{y}_1) & \cdots & f(\vec{x}_m, \vec{y}_n) \\
 \end{bmatrix}
 \begin{bmatrix}
 a_1 \\
@@ -2913,8 +2861,10 @@ a_1 \\
 a_n \\
 \end{bmatrix}.
 $$
-
+<!-- -->
 The `outer` functions above replicate the behavior of the `outer` function in R.
+
+The functions $\text{\texttt outer\_triplet}(\vec{X}, f, g)$ and $\text{\texttt outer\_triplet}(\vec{X}, \vec{Y}, f, g)$ are analogous to the previously introduced $\text{\texttt outer}$ functions, but instead return a triplet representation consisting of the row index $i$, column index $j$, and value $v_{ij}$ of each element. The additional argument $g(\vec{x}_i, \vec{x}_i) : \mathbb{R}^d \times \mathbb{R}^d \rightarrow \{ 0, 1 \}$ is an indicator function for whether the corresponding $(i, j, v_{ij})$ triplet is included in the result. This can be used to construct sparse matrices and is especially useful when working with large matrices with relatively few nontrivial elements.
 
 **Functions**
 
@@ -2946,18 +2896,38 @@ Rcpp::NumericVector outer_matvec(
 	const dfvv& f,                 // <3>
 	const Rcpp::NumericVector& a   // <4>
 )
+
+Rcpp::NumericMatrix outer(
+	const Rcpp::NumericMatrix& X,  // <1>
+	const Rcpp::NumericMatrix& Y,  // <2>
+	const dfvv& f                  // <3>
+)
+
+Rcpp::List outer_triplet(
+	const Rcpp::NumericMatrix& X,  // <1>
+	const dfvv& f,                 // <3>
+	const dfvv& g,                 // <5>
+	bool one_based = false         // <6>
+)
+
+Rcpp::List outer_triplet(
+	const Rcpp::NumericMatrix& X,  // <1>
+	const Rcpp::NumericMatrix& Y,  // <2>
+	const dfvv& f,                 // <3>
+	const dfvv& g,                 // <5>
+	bool one_based = false         // <6>
+)
 ```
 1. An Rcpp matrix object of dimension $m \times d$.
 2. An Rcpp matrix object of dimension $n \times d$.
 3. Function $f$ to apply.
 4. An Rcpp vector object of dimension $n$.
+5. Indicator function $g(\vec{x}, \vec{y})$ which determines whether to include each triplet in the output.
+6. If `true`, one-based indices are returned in triplet representation. Otherwise, zero-based indices are returned.
 
 **Example**
 
-Compute the distance between pairs of rows of $X$, then compute the distance
-between each pairs of rows taken from $X$ and $Y$. Then multiply the respective
-matrices by $a = [1, \ldots, 1]$. A C++ function with Rcpp interface is defined
-in the file `examples/outer.cpp`.
+Compute the distance $(\vec{x},\vec{x}')$ between pairs of rows of $\vec{X}$, then compute the distance $f(\vec{x},\vec{y})$ between each pair of rows from $\vec{X}$ and $\vec{Y}$. Then multiply the respective matrices by $\vec{a} = [1, \ldots, 1]$. Lastly, construct triplet representations of the two distance matricesn where elements with absolute distance $|f(\vec{x},\vec{y})| \geq 2$ are omitted. A C++ function with Rcpp interface is defined in the file `examples/outer.cpp`.
 
 ```{.cpp include="examples/outer.cpp"}
 ```
@@ -2972,23 +2942,29 @@ Y = matrix(rnorm(6), n, d)
 a = rep(1, m)
 b = rep(1, n)
 out = outer_ex(X, Y, a, b)
-print(out)
+print(out[1:4])
+```
+
+Construct sparse matrices from each of the triplet results using the function `sparseMatrix` from the `Matrix` package [@Matrix]. The first matrix is to be interpreted as the lower triangular block of a symmetric matrix.
+
+```{r}
+#| message: false
+library(Matrix)
+sp1 = out[[5]]
+sp2 = out[[6]]
+sparseMatrix(sp1$i, sp1$j, x = sp1$x, dims = c(sp1$m, sp1$n), symmetric = T)
+sparseMatrix(sp2$i, sp2$j, x = sp2$x, dims = c(sp2$m, sp2$n), symmetric = F)
 ```
 
 ## Matrix-Free Linear Solve
 
-Solve a linear system $A x = b$ for symmetric positive definite
-$A \in \mathbb{R}^{n \times n}$ [@NocedalWright2006]. Here the operation $Ax$
-is specified through a function $\ell(x) = Ax$. This can be used to avoid
-explicit storage of large matrices when $A$ is sparse. The solution $x^*$ is
-found by minimizing the quadratic function
+Solve a linear system $\vec{A} \vec{x} = \vec{b}$ for symmetric positive definite $\vec{A} \in \mathbb{R}^{n \times n}$ [@NocedalWright2006]. Here the operation $\vec{A} \vec{x}$ is specified through a function $\ell(\vec{x}) = \vec{A} \vec{x}$. This can be used to avoid explicit storage of large matrices when $A$ is sparse. The solution $\vec{x}^*$ is found by minimizing the quadratic function
 <!-- -->
 $$
-f(x) = \frac{1}{2} x^\top \ell(x) - b^\top x,
+f(\vec{x}) = \frac{1}{2} \vec{x}^\top \ell(\vec{x}) - \vec{b}^\top \vec{x},
 $$
 <!-- -->
-so that $f'(x^*) = 0 \iff A x^* = b$. Minimization is carried out using the
-conjugate gradient method in @sec-cg.
+so that $f'(\vec{x}^*) = 0 \iff \vec{A} \vec{x}^* = \vec{b}$. Minimization is carried out using the conjugate gradient method in @sec-cg.
 
 **Functions**
 
@@ -3016,8 +2992,8 @@ cg_result solve_cg(
 )
 ```
 1. The function $\ell : \mathbb{R}^n \rightarrow \mathbb{R}^n$.
-2. The vector $b \in \mathbb{R}^{n}$.
-3. Initial value for $x$.
+2. The vector $\vec{b} \in \mathbb{R}^{n}$.
+3. Initial value for $\vec{x}$.
 4. Optional arguments to CG method.
 
 The routine checks that `l(init)` is an $n$-dimensional vector, but there is no
@@ -3028,11 +3004,7 @@ See @sec-cg for details on `cg_args` and `cg_result`.
 
 **Example**
 
-Solve the equation $Ax = b$ with $n \times n$ matrix $A$ having value 2 
-on the main diagonal and value 1 on the upper and lower diagonals; let
-$b = [1, \ldots, 1]$. The initial value for the solution is taken to be the
-default $x = 0$. A C++ function with Rcpp interface is defined in the file
-`examples/solve-cg.cpp`.
+Solve the equation $\vec{A} \vec{x} = \vec{b}$ with $n \times n$ matrix $\vec{A}$ having value $2$ on the main diagonal and value 1 on the upper and lower diagonals; let $\vec{b} = [1, \ldots, 1]$. The initial value for the solution is taken to be the default $\vec{x} = \vec{0}$. A C++ function with Rcpp interface is defined in the file `examples/solve-cg.cpp`.
 
 ```{.cpp include="examples/solve-cg.cpp"}
 ```
@@ -3060,14 +3032,14 @@ solve(A, b)
 ## Which
 
 Identify the indices of a matrix which satisfy a given indicator function.
-Specifically, let $X \in \mathbb{S}^{m \times n}$ be a matrix whose elements
+Specifically, let $\vec{X} \in \mathbb{S}^{m \times n}$ be a matrix whose elements
 are in the domain $\mathbb{S}$ which may be doubles, integers, or another
 Rcpp `Matrix` type. Let $f : \mathbb{S} \rightarrow \{0, 1\}$ be an indicator
-function and suppose $k$ of the $mn$ elements in $X$ satisfy the indicator.
+function and suppose $k$ of the $mn$ elements in $\vec{X}$ satisfy the indicator.
 The `which` operation produces a $k \times 2$ matrix
 <!-- -->
 $$
-\text{which}(X, f) =
+\text{which}(\vec{X}, f) =
 \begin{bmatrix}
 i_1 & j_1 \\
 \vdots & \vdots \\
@@ -3075,7 +3047,7 @@ i_k & j_k \\
 \end{bmatrix},
 $$
 <!-- -->
-where each pair $(i_\ell, j_\ell)$ are coordinates of an element in $X$ that
+where each pair $(i_\ell, j_\ell)$ are coordinates of an element in $\vec{X}$ that
 satisfies $f$. Indices $i_\ell$ and $j_\ell$ represent the row and column
 index, respectively. Indices are *zero-based* by default as they are primarily
 intended to be used in C++ code.
