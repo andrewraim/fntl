@@ -367,13 +367,15 @@ inline richardson_result::operator SEXP() const
 
 inline mat_triplet_result::operator SEXP() const
 {
+	Rcpp::IntegerVector ii(i.begin(), i.end());
+	Rcpp::IntegerVector jj(j.begin(), j.end());
+
 	return Rcpp::List::create(
-		Rcpp::Named("i") = i,
-		Rcpp::Named("j") = j,
+		Rcpp::Named("i") = ii + 1,
+		Rcpp::Named("j") = jj + 1,
 		Rcpp::Named("x") = x,
 		Rcpp::Named("m") = m,
-		Rcpp::Named("n") = n,
-		Rcpp::Named("one_based") = one_based
+		Rcpp::Named("n") = n
 	);
 }
 

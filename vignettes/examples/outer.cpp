@@ -11,7 +11,7 @@ Rcpp::List outer_ex(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
     };
 
     fntl::bfvv g = [&](Rcpp::NumericVector x, Rcpp::NumericVector y) {
-        return std::abs(f(x,y)) < 2.0;
+        return f(x,y) < 2.0;
     };
 
     return Rcpp::List::create(
@@ -19,8 +19,8 @@ Rcpp::List outer_ex(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
         Rcpp::Named("out2") = fntl::outer(X, Y, f),
         Rcpp::Named("out3") = fntl::outer_matvec(X, f, a),
         Rcpp::Named("out4") = fntl::outer_matvec(X, Y, f, b),
-        Rcpp::Named("out5") = fntl::outer_triplet(X, f, g, true),
-        Rcpp::Named("out6") = fntl::outer_triplet(X, Y, f, g, true)
+        Rcpp::Named("out5") = fntl::outer_triplet(X, f, g),
+        Rcpp::Named("out6") = fntl::outer_triplet(X, Y, f, g)
     );
 }
 

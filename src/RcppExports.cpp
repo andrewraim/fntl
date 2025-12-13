@@ -419,6 +419,33 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// outer1_triplet_rcpp
+Rcpp::List outer1_triplet_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Function& f, const Rcpp::Function& g);
+RcppExport SEXP _fntl_outer1_triplet_rcpp(SEXP XSEXP, SEXP fSEXP, SEXP gSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::Function& >::type f(fSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::Function& >::type g(gSEXP);
+    rcpp_result_gen = Rcpp::wrap(outer1_triplet_rcpp(X, f, g));
+    return rcpp_result_gen;
+END_RCPP
+}
+// outer2_triplet_rcpp
+Rcpp::List outer2_triplet_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::NumericMatrix& Y, const Rcpp::Function& f, const Rcpp::Function& g);
+RcppExport SEXP _fntl_outer2_triplet_rcpp(SEXP XSEXP, SEXP YSEXP, SEXP fSEXP, SEXP gSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::Function& >::type f(fSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::Function& >::type g(gSEXP);
+    rcpp_result_gen = Rcpp::wrap(outer2_triplet_rcpp(X, Y, f, g));
+    return rcpp_result_gen;
+END_RCPP
+}
 // solve_cg_rcpp
 Rcpp::List solve_cg_rcpp(const Rcpp::Function& l, const Rcpp::NumericVector& b, const Rcpp::NumericVector& init, const Rcpp::List& args);
 RcppExport SEXP _fntl_solve_cg_rcpp(SEXP lSEXP, SEXP bSEXP, SEXP initSEXP, SEXP argsSEXP) {
@@ -619,6 +646,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_fntl_outer2_rcpp", (DL_FUNC) &_fntl_outer2_rcpp, 3},
     {"_fntl_outer1_matvec_rcpp", (DL_FUNC) &_fntl_outer1_matvec_rcpp, 3},
     {"_fntl_outer2_matvec_rcpp", (DL_FUNC) &_fntl_outer2_matvec_rcpp, 4},
+    {"_fntl_outer1_triplet_rcpp", (DL_FUNC) &_fntl_outer1_triplet_rcpp, 3},
+    {"_fntl_outer2_triplet_rcpp", (DL_FUNC) &_fntl_outer2_triplet_rcpp, 4},
     {"_fntl_solve_cg_rcpp", (DL_FUNC) &_fntl_solve_cg_rcpp, 4},
     {"_fntl_d_trunc_rcpp", (DL_FUNC) &_fntl_d_trunc_rcpp, 6},
     {"_fntl_p_trunc_rcpp", (DL_FUNC) &_fntl_p_trunc_rcpp, 6},

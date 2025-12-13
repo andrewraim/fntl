@@ -44,7 +44,7 @@ inline Rcpp::NumericMatrix outer(const Rcpp::NumericMatrix& X,
 }
 
 inline mat_triplet_result outer_triplet(const Rcpp::NumericMatrix& X,
-	const dfvv& f, const dfvv& g, bool one_based = false)
+	const dfvv& f, const dfvv& g)
 {
 	unsigned int n = X.nrow();
 
@@ -57,8 +57,8 @@ inline mat_triplet_result outer_triplet(const Rcpp::NumericMatrix& X,
 			double val = f(X.row(i), X.row(j));
 			bool ind = g(X.row(i), X.row(j));
 			if (ind) {
-				ii.push_back(i + one_based);
-				jj.push_back(j + one_based);
+				ii.push_back(i);
+				jj.push_back(j);
 				vv.push_back(val);
 			}
 		}
@@ -70,13 +70,11 @@ inline mat_triplet_result outer_triplet(const Rcpp::NumericMatrix& X,
 	out.x = vv;
 	out.m = n;
 	out.n = n;
-	out.one_based = one_based;
 	return out;
 }
 
 inline mat_triplet_result outer_triplet(const Rcpp::NumericMatrix& X,
-	const Rcpp::NumericMatrix& Y, const dfvv& f, const dfvv& g,
-	bool one_based = false)
+	const Rcpp::NumericMatrix& Y, const dfvv& f, const dfvv& g)
 {
 	unsigned int m = X.nrow();
 	unsigned int n = Y.nrow();
@@ -90,8 +88,8 @@ inline mat_triplet_result outer_triplet(const Rcpp::NumericMatrix& X,
 			double val = f(X.row(i), Y.row(j));
 			bool ind = g(X.row(i), Y.row(j));
 			if (ind) {
-				ii.push_back(i + one_based);
-				jj.push_back(j + one_based);
+				ii.push_back(i);
+				jj.push_back(j);
 				vv.push_back(val);
 			}
 		}
@@ -103,7 +101,6 @@ inline mat_triplet_result outer_triplet(const Rcpp::NumericMatrix& X,
 	out.x = vv;
 	out.m = m;
 	out.n = n;
-	out.one_based = one_based;
 	return out;
 }
 

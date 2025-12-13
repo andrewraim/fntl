@@ -2906,16 +2906,14 @@ Rcpp::NumericMatrix outer(
 mat_triplet_result outer_triplet(
 	const Rcpp::NumericMatrix& X,  // <1>
 	const dfvv& f,                 // <3>
-	const dfvv& g,                 // <5>
-	bool one_based = false         // <6>
+	const dfvv& g                  // <5>
 )
 
 mat_triplet_result outer_triplet(
 	const Rcpp::NumericMatrix& X,  // <1>
 	const Rcpp::NumericMatrix& Y,  // <2>
 	const dfvv& f,                 // <3>
-	const dfvv& g,                 // <5>
-	bool one_based = false         // <6>
+	const dfvv& g                  // <5>
 )
 ```
 1. An Rcpp matrix object of dimension $m \times d$.
@@ -2923,7 +2921,6 @@ mat_triplet_result outer_triplet(
 3. Function $f$ to apply.
 4. An Rcpp vector object of dimension $n$.
 5. Indicator function $g(\vec{x}, \vec{y})$ which determines whether to include each triplet in the output.
-6. If `true`, one-based indices are returned in triplet representation. Otherwise, zero-based indices are returned.
 
 **Result**
 
@@ -2949,9 +2946,11 @@ struct mat_triplet_result
 6. If `true`, row and column indices are one-based; otherwise they are zero-based.
 7. Conversion operator to `Rcpp::List`.
 
+Indices in vectors `i` and `j` are zero-based in C++ so that their elements are in $\{0, \ldots, m-1 \}$ and $\{0, \ldots, n-1 \}$, respectively. If the struct is wrapped to an `Rcpp::List`, those indices are incremented by 1 to be one-based.
+
 **Example**
 
-Compute the distance $(\vec{x},\vec{x}')$ between pairs of rows of $\vec{X}$, then compute the distance $f(\vec{x},\vec{y})$ between each pair of rows from $\vec{X}$ and $\vec{Y}$. Then multiply the respective matrices by $\vec{a} = [1, \ldots, 1]$. Lastly, construct triplet representations of the two distance matricesn where elements with absolute distance $|f(\vec{x},\vec{y})| \geq 2$ are omitted. A C++ function with Rcpp interface is defined in the file `examples/outer.cpp`.
+Compute the distance $(\vec{x},\vec{x}')$ between pairs of rows of $\vec{X}$, then compute the distance $f(\vec{x},\vec{y})$ between each pair of rows from $\vec{X}$ and $\vec{Y}$. Then multiply the respective matrices by $\vec{a} = [1, \ldots, 1]$. Lastly, construct triplet representations of the two distance matricesn where elements with absolute distance $f(\vec{x},\vec{y}) \geq 2$ are omitted. A C++ function with Rcpp interface is defined in the file `examples/outer.cpp`.
 
 ```{.cpp include="examples/outer.cpp"}
 ```

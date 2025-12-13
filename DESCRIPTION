@@ -19,6 +19,7 @@ Depends:
     R (>= 4.3)
 Suggests: 
     knitr,
+    Matrix,
     numDeriv,
     rmarkdown,
     quarto,
