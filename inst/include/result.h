@@ -175,7 +175,6 @@ struct mat_triplet_result
 	std::vector<double> x;
 	unsigned int m;
 	unsigned int n;
-	bool one_based;
 
 	operator SEXP() const;
 };

@@ -44,7 +44,7 @@ inline Rcpp::NumericMatrix outer(const Rcpp::NumericMatrix& X,
 }
 
 inline mat_triplet_result outer_triplet(const Rcpp::NumericMatrix& X,
-	const dfvv& f, const dfvv& g)
+	const dfvv& f, const bfvv& g)
 {
 	unsigned int n = X.nrow();
 
@@ -74,7 +74,7 @@ inline mat_triplet_result outer_triplet(const Rcpp::NumericMatrix& X,
 }
 
 inline mat_triplet_result outer_triplet(const Rcpp::NumericMatrix& X,
-	const Rcpp::NumericMatrix& Y, const dfvv& f, const dfvv& g)
+	const Rcpp::NumericMatrix& Y, const dfvv& f, const bfvv& g)
 {
 	unsigned int m = X.nrow();
 	unsigned int n = Y.nrow();

@@ -724,7 +724,7 @@ These functions are based on two respective QUADPACK routines:
 [dqags-src]: https://www.netlib.org/quadpack/dqags.f
 [dqagi-src]: https://www.netlib.org/quadpack/dqagi.f
 
-## Function {.unlisted .unnumbered}
+## Functions {.unlisted}
 
 Source code is in the file [inst/include/integrate.h][integrate-h].
 
@@ -749,7 +749,7 @@ integrate_result integrate(
 3. Upper limit $b$ of integral; may be `R_PosInf`.
 4. Additional arguments.
 
-## Optional Arguments {.unlisted .unnumbered}
+## Optional Arguments {.unlisted}
 
 ```{cpp}
 struct integrate_args {
@@ -764,7 +764,7 @@ struct integrate_args {
 3. Absolute accuracy requested.
 4. If `true`, errors in `integrate` raise exceptions.
 
-## Result {.unlisted .unnumbered}
+## Result {.unlisted}
 
 ```{cpp}
 struct integrate_result {
@@ -801,7 +801,7 @@ those in `integrate_result`.
 
 : {tbl-colwidths="[15,30,55]"}
 
-## Status Codes {.unlisted .unnumbered}
+## Status Codes {.unlisted}
 
 ```{cpp}
 enum class integrate_status : int {
@@ -822,7 +822,7 @@ enum class integrate_status : int {
 6. the integral is probably divergent.
 7. the input is invalid.
 
-## Example {.unlisted .unnumbered}
+## Example {.unlisted}
 
 Compute the integral $\int_0^\infty e^{-x^2/2} dx$. A C++ function with Rcpp
 interface is defined in the file `examples/integrate.cpp`.
@@ -897,7 +897,7 @@ using symmetric, forward, or backward differences respectively.
 The accuracy of these derivatives depends on the nature of the function $f$ at
 $\vec{x}$ and the choice of $h$. See Section 5.7 of @PressEtAl2007 for discussion.
 
-### Function {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/fd-deriv.h][fd-deriv-h].
 
@@ -942,7 +942,7 @@ enum class fd_types : unsigned int {
 };
 ```
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Compute the first and second derivatives of $f(\vec{x}) = \sin(\vec{b}^\top \vec{x})$ at $\vec{x}_0 = (1/2, \ldots, 1/2)$ where $\vec{b} = (1, \ldots, n)$. The gradient and Hessian are given in closed-form by
 <!-- -->
@@ -1059,7 +1059,7 @@ reported as infinite.
 
 [richardson-jl]: https://github.com/JuliaMath/Richardson.jl
 
-### Function {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code are the files
 [inst/include/deriv.h][deriv-h],
@@ -1114,7 +1114,7 @@ richardson_result deriv2(
 The functions `deriv` and `deriv2` compute first and second derivatives,
 respectively. The enum class `fd_type` is described in [@sec-fd-deriv].
 
-### Optional Arguments {.unlisted .unnumbered}
+### Optional Arguments {.unlisted}
 
 ```{cpp}
 struct richardson_args
@@ -1141,7 +1141,7 @@ struct richardson_args
 7. Constructor from an `Rcpp::List`.
 8. Conversion operator to `Rcpp::List`.
 
-### Result {.unlisted .unnumbered}
+### Result {.unlisted}
 
 ```{cpp}
 struct richardson_result
@@ -1170,7 +1170,7 @@ The `SEXP` conversion operator produces the following representation of
 | `iter`   | `Rcpp::IntegerVector` | A scalar based on field `iter`.   |
 | `status` | `Rcpp::IntegerVector` | A scalar based on field `status`.   |
 
-### Status Codes {.unlisted .unnumbered}
+### Status Codes {.unlisted}
 
 ```{cpp}
 enum class richardson_status : unsigned int {
@@ -1183,7 +1183,7 @@ enum class richardson_status : unsigned int {
 2. Not converged within `maxiter` iterations.
 3. Early termination due to numerical precision.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 This is a continuation of the example in [@sec-fd-deriv]. Compute first and second derivatives of $f(\vec{x}) = \sin(\vec{b}^\top \vec{x})$ at $\vec{x}_0 = (1/2, \ldots, 1/2)$ with $\vec{b} = (1, \ldots, n)$. Let us again define the point $\vec{x}_0$.
 
@@ -1252,7 +1252,7 @@ $$
 <!-- -->
 Each coordinate is computed via `deriv` in @sec-deriv.
 
-### Function {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/gradient.h][gradient-h].
 
@@ -1280,7 +1280,7 @@ gradient_result gradient(
 
 The arguments in `args` are applied to each coordinate of the gradient.
 
-### Result {.unlisted .unnumbered}
+### Result {.unlisted}
 
 ```{cpp}
 struct gradient_result {
@@ -1308,7 +1308,7 @@ those in `gradient_result`.
 
 : {tbl-colwidths="[15,30,55]"}
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Compute the gradient of $f(\vec{x}) = \vec{x}^\top \vec{x}$. A C++ function with Rcpp interface is defined in the file `examples/gradient.cpp`.
 
@@ -1345,7 +1345,7 @@ $$
 <!-- -->
 Each coordinate is computed via `deriv` in @sec-deriv.
 
-### Function {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Source code is in the file [inst/include/jacobian.h][jacobian-h].
 
@@ -1371,7 +1371,7 @@ jacobian_result jacobian(
 4. Type of finite difference to use. See the definition of `fd_types` in
    [@sec-fd-deriv].
 
-### Result {.unlisted .unnumbered}
+### Result {.unlisted}
 
 ```{cpp}
 struct jacobian_result
@@ -1405,7 +1405,7 @@ The `SEXP` conversion operator produces the following representation of
 
 : {tbl-colwidths="[15,30,55]"}
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Compute the Jacobian of $f(\vec{x}) = [f_1(\vec{x}), \ldots, f_5(\vec{x})]$, $f_i(\vec{x}) = \sum_{j=1}^i \sin(x_j)$, at the point $\vec{x} = (1,2,3,4,5)$. To obtain the resulting value as an $m \times n$ matrix, we apply the `Rcpp::List` conversion operator to the result. A C++ function with Rcpp interface is defined in the file `examples/jacobian.cpp`.
 
@@ -1455,7 +1455,7 @@ for external use [@WritingRExtensions, Section 6].
 
 [fdhess-src]: https://github.com/r-devel/r-svn/blob/5c0e367225ec0ed9e1a95864302a6311708533ee/src/include/R_ext/Applic.h#L131
 
-### Function {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/hessian.h][hessian-h].
 
@@ -1481,7 +1481,7 @@ hessian_result hessian(
 4. Type of finite difference to use. See the definition of `fd_types` in
    [@sec-fd-deriv].
 
-### Result {.unlisted .unnumbered}
+### Result {.unlisted}
 
 The result is an $n \times n$ Hessian matrix.
 
@@ -1503,7 +1503,7 @@ struct hessian_result
 4. The row and column dimension.
 5. Conversion operator to `Rcpp::List`.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Compute the Hessian of $f(\vec{x}) = \sum_{i=1}^n \sin(x_i)$ at $\vec{x} = (1, 2)$. To
 obtain the resulting value as an $n \times n$ matrix, we apply the `Rcpp::List` conversion operator to the result. A C++ function with Rcpp interface is defined in the file `examples/hessian.cpp`.
@@ -1543,7 +1543,7 @@ faster and is used in `uniroot`. This implementation of Brent's method is based
 on the ALGOL code in Section 4.6 of @Brent1973. The two functions use a common
 arguments struct, results struct, and status codes, which are given below.
 
-## Optional Arguments {.unlisted .unnumbered}
+## Optional Arguments {.unlisted}
 
 ```{cpp}
 struct findroot_args {
@@ -1563,7 +1563,7 @@ struct findroot_args {
 5. Constructor from an `Rcpp::List`.
 6. Conversion operator to `Rcpp::List`.
 
-## Result {.unlisted .unnumbered}
+## Result {.unlisted}
 
 ```{cpp}
 struct findroot_result {
@@ -1600,7 +1600,7 @@ those in `findroot_result`.
 
 : {tbl-colwidths="[15,30,55]"}
 
-## Status Codes {.unlisted .unnumbered}
+## Status Codes {.unlisted}
 
 ```{cpp}
 enum class findroot_status : unsigned int {
@@ -1619,7 +1619,7 @@ enum class findroot_status : unsigned int {
 This algorithm successively shrinks the starting interval and terminates when
 the absolute difference is smaller than a tolerance $\epsilon$.
 
-### Function {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/findroot-bisect.h][findroot-bisect-h].
 
@@ -1644,7 +1644,7 @@ findroot_result findroot_bisect(
 3. Upper limit $b$ of search interval. Must be finite.
 4. Additional arguments.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Find the root of the function $f(x) = x^2 - 1$ on $[0,10]$. A C++ function with
 Rcpp interface is defined in the file `examples/findroot-bisect.cpp`.
@@ -1665,7 +1665,7 @@ print(out)
 The algorithm successively shrinks the starting interval and terminates when
 the absolute difference is smaller than a tolerance $\epsilon$.
 
-### Function {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/findroot-brent.h][findroot-brent-h].
 
@@ -1690,7 +1690,7 @@ findroot_result findroot_brent(
 3. Upper limit $b$ of search space.
 4. Additional arguments.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Find the root of the function $f(x) = x^2 - 1$ on $[0,10]$. A C++ function with
 Rcpp interface is defined in the file `examples/findroot-brent.cpp`.
@@ -1725,7 +1725,7 @@ which are given below.
 [optimize-src]: https://github.com/r-devel/r-svn/blob/5521fa62273d38f50e7e963337d74ec2f223c532/src/library/stats/src/optimize.c#L94
 [Roptimize-src]: https://github.com/r-devel/r-svn/blob/5521fa62273d38f50e7e963337d74ec2f223c532/src/library/stats/R/nlm.R#L35
 
-## Optional Arguments {.unlisted .unnumbered}
+## Optional Arguments {.unlisted}
 
 ```{cpp}
 struct optimize_args
@@ -1753,7 +1753,7 @@ struct optimize_args
 7. Constructor from an `Rcpp::List`.
 8. Conversion operator to `Rcpp::List`.
 
-## Result {.unlisted .unnumbered}
+## Result {.unlisted}
 
 ```{cpp}
 struct optimize_result
@@ -1791,7 +1791,7 @@ those in `optimize_result`.
 
 : {tbl-colwidths="[15,30,55]"}
 
-## Status Codes {.unlisted .unnumbered}
+## Status Codes {.unlisted}
 
 ```{cpp}
 enum class optimize_status : unsigned int {
@@ -1809,7 +1809,7 @@ enum class optimize_status : unsigned int {
 The algorithm successively shrinks the starting interval and terminates when
 $\delta = b - a$ is smaller than a given tolerance $\epsilon$.
 
-### Function {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/goldensection.h][goldensection-h].
 
@@ -1834,7 +1834,7 @@ optimize_result goldensection(
 2. Upper limit $b$ of search space.
 4. Additional arguments.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Maximize the function $f(x) = \exp(-x)$ on $[0,1]$. A C++ function with Rcpp
 interface is defined in the file `examples/goldensection.cpp`.
@@ -1856,7 +1856,7 @@ This algorithm successively shrinks the starting interval and terminates when
 $\delta = |x - m|$ is smaller than a tolerance $\epsilon$, where
 $m = (a + b) / 2$ is the midpoint of the current $[a, b]$.
 
-### Function {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/optimize-brent.h][optimize-brent-h].
 
@@ -1881,7 +1881,7 @@ optimize_result optimize_brent(
 2. Upper limit $b$ of search space.
 4. Additional arguments.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Maximize the function $f(x) = \exp(-x)$ on $[0,1]$. A C++ function with Rcpp
 interface is defined in the file `examples/optimize-brent.cpp`.
@@ -1911,7 +1911,7 @@ gradient or Hessian [@NelderMead1965]. This function directly calls
 [nmmin-src]: https://github.com/r-devel/r-svn/blob/62dd8b09461d5d1313f4722d9d63abb463a9e42d/src/include/R_ext/Applic.h#L71
 [Roptim-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/optim.R
 
-### Function {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/neldermead.h][neldermead-h].
 
@@ -1933,7 +1933,7 @@ neldermead_result neldermead(
 2. Function $f$ to minimize.
 3. Additional arguments.
 
-### Optional Arguments {.unlisted .unnumbered}
+### Optional Arguments {.unlisted}
 
 ```{cpp}
 struct neldermead_args
@@ -1965,7 +1965,7 @@ struct neldermead_args
 10. Constructor from an `Rcpp::List`.
 11. Conversion operator to `Rcpp::List`.
 
-### Result {.unlisted .unnumbered}
+### Result {.unlisted}
 
 ```{cpp}
 struct neldermead_result {
@@ -1996,7 +1996,7 @@ those in `neldermead_result`.
 
 : {tbl-colwidths="[15,30,55]"}
 
-### Status Codes {.unlisted .unnumbered}
+### Status Codes {.unlisted}
 
 ```{cpp}
 enum class neldermead_status : unsigned int {
@@ -2009,7 +2009,7 @@ enum class neldermead_status : unsigned int {
 2. Not converged within `maxiter` iterations.
 3. Degeneracy of the Nelder–Mead simplex.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Minimize the function $f(\vec{x}) = \sum_{i=1}^n x_i^2 - 1$ for $n = 2$. Take $\vec{x}_0 = (1,-1)$ as the initial value. A C++ function with Rcpp interface is defined in the file `examples/neldermead.cpp`.
 
@@ -2031,7 +2031,7 @@ Minimization using the BFGS (Broyden-Fletcher-Goldfarb-Shanno) algorithm [@Nash1
 [vmmin-src]: https://github.com/r-devel/r-svn/blob/62dd8b09461d5d1313f4722d9d63abb463a9e42d/src/include/R_ext/Applic.h#L67
 [Roptim-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/optim.R
 
-### Function {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/bfgs.h][bfgs-h].
 
@@ -2070,7 +2070,7 @@ bfgs_result bfgs(
 Forms with the $g$ argument omitted compute the gradient using finite
 differences, via the `gradient` method in [@sec-gradient].
 
-### Optional Arguments {.unlisted .unnumbered}
+### Optional Arguments {.unlisted}
 
 ```{cpp}
 struct bfgs_args {
@@ -2103,7 +2103,7 @@ struct bfgs_args {
 10. Constructor from an `Rcpp::List`.
 11. Conversion operator to `Rcpp::List`.
 
-### Result {.unlisted .unnumbered}
+### Result {.unlisted}
 
 ```{cpp}
 struct bfgs_result {
@@ -2137,7 +2137,7 @@ those in `bfgs_result`.
 
 : {tbl-colwidths="[15,30,55]"}
 
-### Status Codes {.unlisted .unnumbered}
+### Status Codes {.unlisted}
 
 ```{cpp}
 enum class bfgs_status : unsigned int {
@@ -2148,7 +2148,7 @@ enum class bfgs_status : unsigned int {
 1. OK.
 2. iteration limit maxit had been reached.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Maximize the function $f(\vec{x}) = \exp(-\vec{x}^\top \vec{x})$. First use the default numerical gradient, then use an explicitly coded the gradient function $g(\vec{x}) = -2 \vec{x} \exp(-\vec{x}^\top \vec{x})$. A C++ function with Rcpp interface is defined in the file `examples/bfgs.cpp`.
 
@@ -2176,7 +2176,7 @@ function that gets invoked when using the [optim][Roptim-src] R function with
 [lbfgsb-src]: https://github.com/r-devel/r-svn/blob/62dd8b09461d5d1313f4722d9d63abb463a9e42d/src/include/R_ext/Applic.h#L79
 [Roptim-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/optim.R
 
-### Function {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/lbfgsb.h][lbfgsb-h].
 
@@ -2215,7 +2215,7 @@ lbfgsb_result lbfgsb(
 Forms with the $g$ argument omitted compute the gradient using finite
 differences, via the `gradient` method in [@sec-gradient].
 
-### Optional Arguments {.unlisted .unnumbered}
+### Optional Arguments {.unlisted}
 
 ```{cpp}
 struct lbfgsb_args {
@@ -2257,7 +2257,7 @@ struct lbfgsb_args {
 13. Constructor from an `Rcpp::List`.
 14. Conversion operator to `Rcpp::List`.
 
-### Result {.unlisted .unnumbered}
+### Result {.unlisted}
 
 ```{cpp}
 struct lbfgsb_result {
@@ -2294,7 +2294,7 @@ those in `lbfgsb_result`.
 
 : {tbl-colwidths="[15,30,55]"}
 
-### Status Codes {.unlisted .unnumbered}
+### Status Codes {.unlisted}
 
 ```{cpp}
 enum class lbfgsb_status : unsigned int {
@@ -2309,7 +2309,7 @@ enum class lbfgsb_status : unsigned int {
 3. algorithm reported a warning.
 4. algorithm reported an error.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Maximize the function $f(\vec{x}) = \exp(-\vec{x}^\top \vec{x})$. First use the default numerical gradient, then use explicitly coded gradient function $g(\vec{x}) = -2 \vec{x} \exp(-\vec{x}^\top \vec{x})$. A C++ function with Rcpp interface is defined in the file `examples/lbfgsb.cpp`.
 
@@ -2332,7 +2332,7 @@ Minimization using the conjugate gradient algorithm [@FletcherReeves1964; @Nash1
 [cgmin-src]: https://github.com/r-devel/r-svn/blob/62dd8b09461d5d1313f4722d9d63abb463a9e42d/src/include/R_ext/Applic.h#L75
 [Roptim-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/optim.R
 
-### Function {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/cg.h][cg-h].
 
@@ -2371,7 +2371,7 @@ cg_result cg(
 Forms with the $g$ argument omitted compute the gradient using finite
 differences, via the `gradient` method in [@sec-gradient].
 
-### Optional Arguments {.unlisted .unnumbered}
+### Optional Arguments {.unlisted}
 
 ```{cpp}
 
@@ -2407,7 +2407,7 @@ struct cg_args
 10. Constructor from an `Rcpp::List`.
 11. Conversion operator to `Rcpp::List`.
 
-### Result {.unlisted .unnumbered}
+### Result {.unlisted}
 
 ```{cpp}
 struct cg_result {
@@ -2441,7 +2441,7 @@ those in `cg_result`.
 
 : {tbl-colwidths="[15,30,55]"}
 
-### Status Codes {.unlisted .unnumbered}
+### Status Codes {.unlisted}
 
 ```{cpp}
 enum class cg_status : unsigned int {
@@ -2452,7 +2452,7 @@ enum class cg_status : unsigned int {
 1. OK.
 2. iteration limit maxit had been reached.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Maximize the function $f(\vec{x}) = \exp(-\vec{x}^\top \vec{x})$. First use the default numerical gradient, then use an explicitly coded the gradient function $g(\vec{x}) = -2 \vec{x} \exp(-\vec{x}^\top \vec{x})$. A C++ function with Rcpp interface is defined in the file `examples/cg.cpp`.
 
@@ -2480,7 +2480,7 @@ The gradient $g(\vec{x}) = \frac{\partial f(\vec{x})}{\partial \vec{x}}$ and Hes
 [optif9-src]: https://github.com/r-devel/r-svn/blob/62dd8b09461d5d1313f4722d9d63abb463a9e42d/src/include/R_ext/Applic.h#L136
 [nlm-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/nlm.R
 
-### Function {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/nlm.h][nlm-h].
 
@@ -2533,7 +2533,7 @@ nlm_result nlm(
 4. Hessian of $f$.
 5. Additional arguments.
 
-### Optional Arguments {.unlisted .unnumbered}
+### Optional Arguments {.unlisted}
 
 ```{cpp}
 struct nlm_args
@@ -2602,7 +2602,7 @@ to a vector of $n$ ones to match the default in `nlm`. Similarly, if `stepmax`
 is given as the default infinity value, it is transformed internally to match
 the default value in `nlm`.
 
-### Result {.unlisted .unnumbered}
+### Result {.unlisted}
 
 ```{cpp}
 struct nlm_result
@@ -2638,7 +2638,7 @@ those in `nlm_result`.
 
 : {tbl-colwidths="[15,30,55]"}
 
-### Status Codes {.unlisted .unnumbered}
+### Status Codes {.unlisted}
 
 ```{cpp}
 enum class nlm_status : unsigned int {
@@ -2660,7 +2660,7 @@ enum class nlm_status : unsigned int {
 
 See the manual page for `nlm` for more detail about these statuses.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Maximize the function $f(\vec{x}) = \exp(-\vec{x}^\top \vec{x})$. The associated gradient and Hessian functions are $g(\vec{x}) = -2 f(\vec{x}) \vec{x}$ and $h(\vec{x}) = (4 \vec{x} \vec{x}^\top - 2 \vec{I}) f(\vec{x})$, respectively. Consider three calls: first with a numerical gradient and Hessian, then with explicitly coded gradient, and finally with both explicitly coded gradient and Hessian. A C++ function with Rcpp interface is defined in the file `examples/nlm.cpp`.
 
@@ -2726,7 +2726,7 @@ apply(X, 1, f)
 apply(X, 2, f)
 ```
 
-### Functions {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/apply.h][apply-h].
 
@@ -2775,7 +2775,7 @@ apply operation. As an example, suppose `X` is an object of type `NumericMatrix`
 
 [rcpp-matrices-src]: https://dirk.eddelbuettel.com/code/rcpp/html/instantiation_8h.html
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Compute the square of each element of a matrix, then its rowwise sums, then its
 columnwise sums. A C++ function with Rcpp interface is defined in the file
@@ -2860,7 +2860,7 @@ The `outer` functions above replicate the behavior of the `outer` function in R.
 
 The functions $\text{\texttt outer\_triplet}(\vec{X}, f, g)$ and $\text{\texttt outer\_triplet}(\vec{X}, \vec{Y}, f, g)$ are analogous to the previously introduced $\text{\texttt outer}$ functions, but instead return a triplet representation consisting of the row index $i$, column index $j$, and value $v_{ij}$ of each element. The additional argument $g(\vec{x}_i, \vec{x}_i) : \mathbb{R}^d \times \mathbb{R}^d \rightarrow \{ 0, 1 \}$ is an indicator function for whether the corresponding $(i, j, v_{ij})$ triplet is included in the result. This can be used to construct sparse matrices and is especially useful when working with large matrices with relatively few nontrivial elements.
 
-### Functions {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/outer.h][outer-h].
 
@@ -2900,14 +2900,14 @@ Rcpp::NumericMatrix outer(
 mat_triplet_result outer_triplet(
 	const Rcpp::NumericMatrix& X,  // <1>
 	const dfvv& f,                 // <3>
-	const dfvv& g                  // <5>
+	const bfvv& g                  // <5>
 )
 
 mat_triplet_result outer_triplet(
 	const Rcpp::NumericMatrix& X,  // <1>
 	const Rcpp::NumericMatrix& Y,  // <2>
 	const dfvv& f,                 // <3>
-	const dfvv& g                  // <5>
+	const bfvv& g                  // <5>
 )
 ```
 1. An Rcpp matrix object of dimension $m \times d$.
@@ -2916,7 +2916,7 @@ mat_triplet_result outer_triplet(
 4. An Rcpp vector object of dimension $n$.
 5. Indicator function $g(\vec{x}, \vec{y})$ which determines whether to include each triplet in the output.
 
-### Result {.unlisted .unnumbered}
+### Result {.unlisted}
 
 ```{cpp}
 struct mat_triplet_result
@@ -2926,9 +2926,8 @@ struct mat_triplet_result
 	std::vector<double> x;        // <3>
 	unsigned int m;               // <4>
 	unsigned int n;               // <5>
-	bool one_based;               // <6>
 
-	operator SEXP() const;        // <7>
+	operator SEXP() const;        // <6>
 };
 ```
 
@@ -2937,12 +2936,11 @@ struct mat_triplet_result
 3. Vector of numerical values of elements for triplets.
 4. Number of rows in the matrix.
 5. Number of columns in the matrix.
-6. If `true`, row and column indices are one-based; otherwise they are zero-based.
-7. Conversion operator to `Rcpp::List`.
+6. Conversion operator to `Rcpp::List`.
 
 Indices in vectors `i` and `j` are zero-based in C++ so that their elements are in $\{0, \ldots, m-1 \}$ and $\{0, \ldots, n-1 \}$, respectively. If the struct is wrapped to an `Rcpp::List`, those indices are incremented by 1 to be one-based.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Compute the distance $(\vec{x},\vec{x}')$ between pairs of rows of $\vec{X}$, then compute the distance $f(\vec{x},\vec{y})$ between each pair of rows from $\vec{X}$ and $\vec{Y}$. Then multiply the respective matrices by $\vec{a} = [1, \ldots, 1]$. Lastly, construct triplet representations of the two distance matricesn where elements with absolute distance $f(\vec{x},\vec{y}) \geq 2$ are omitted. A C++ function with Rcpp interface is defined in the file `examples/outer.cpp`.
 
@@ -2973,7 +2971,7 @@ sparseMatrix(sp1$i, sp1$j, x = sp1$x, dims = c(sp1$m, sp1$n), symmetric = T)
 sparseMatrix(sp2$i, sp2$j, x = sp2$x, dims = c(sp2$m, sp2$n), symmetric = F)
 ```
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Recompute one of the sparse matrices from the previous example, but this time convert to an Armadillo sparse matrix in C++; this object is returned as an R sparse matrix via `RcppArmadillo`. A C++ function with Rcpp interface is defined in the file `examples/outer-sp.cpp`.
 
@@ -2997,7 +2995,7 @@ $$
 <!-- -->
 so that $f'(\vec{x}^*) = 0 \iff \vec{A} \vec{x}^* = \vec{b}$. Minimization is carried out using the conjugate gradient method in @sec-cg.
 
-### Functions {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/solve_cg.h][solve_cg-h].
 
@@ -3033,7 +3031,7 @@ matrix.
 
 See @sec-cg for details on `cg_args` and `cg_result`.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Solve the equation $\vec{A} \vec{x} = \vec{b}$ with $n \times n$ matrix $\vec{A}$ having value $2$ on the main diagonal and value 1 on the upper and lower diagonals; let $\vec{b} = [1, \ldots, 1]$. The initial value for the solution is taken to be the default $\vec{x} = \vec{0}$. A C++ function with Rcpp interface is defined in the file `examples/solve-cg.cpp`.
 
@@ -3082,7 +3080,7 @@ An equivalent R operation is the following. Note that indices in R are
 which(f(X), arr.ind = TRUE)
 ```
 
-### Functions {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/which.h][which-h].
 
@@ -3101,7 +3099,7 @@ Rcpp::IntegerMatrix which(
 3. If `one_based = false`, zero-based indices are produced which are suitable
    for use with C++ code. If `true`, one-based indices are produced.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Construct a matrix and identify the elements between $0$ and $0.5$. A C++
 function with Rcpp interface is defined in the file `examples/which.cpp`.
@@ -3170,7 +3168,7 @@ $\epsilon$ is a small positive number (e.g., $10^{-5}$).
 This functions in this section were originally adapted from the `rtruncated`
 function in the `LearnBayes` package [@LearnBayes].
 
-### Typedefs {.unlisted .unnumbered}
+### Typedefs {.unlisted}
 
 The following typedefs are utilized specifically in this section.
 
@@ -3194,7 +3192,7 @@ typedef std::function<double(double,bool,bool)> quantile; // <3>
 
 ## Density
 
-### Functions {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/trunc.h][trunc-h].
 The following functions operate on scalar arguments.
@@ -3229,7 +3227,7 @@ Rcpp::NumericVector d_trunc(
 
 When `x`, `lo` and `hi` are specified as vectors, they must be the same length.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Compute density of the $\text{Beta}(2,5)$ distribution truncated to the
 interval $(0.5, 0.95]$. A C++ function with Rcpp interface is defined in the
@@ -3248,7 +3246,7 @@ d_trunc_ex(x, shape1 = 2, shape2 = 5, lo = 0.5, hi = 0.95)
 
 ## CDF
 
-### Functions {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/trunc.h][trunc-h].
 The following functions operate on scalar arguments.
@@ -3284,7 +3282,7 @@ Rcpp::NumericVector p_trunc(
 
 When `x`, `lo` and `hi` are specified as vectors, they must be the same length.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Compute CDF of the $\text{Beta}(2,5)$ distribution truncated to the
 interval $(0.5, 0.95]$. A C++ function with Rcpp interface is defined in the
@@ -3304,7 +3302,7 @@ p_trunc_ex(x, shape1 = 2, shape2 = 5, lo = 0.5, hi = 0.95)
 
 ## Quantile
 
-### Functions {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/trunc.h][trunc-h].
 The following functions operate on scalar arguments.
@@ -3343,7 +3341,7 @@ Rcpp::NumericVector q_trunc(
 
 When `x`, `lo` and `hi` are specified as vectors, they must be the same length.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Compute CDF of the $\text{Beta}(2,5)$ distribution truncated to the
 interval $(0.5, 0.95]$. A C++ function with Rcpp interface is defined in the
@@ -3362,7 +3360,7 @@ q_trunc_ex(p, shape1 = 2, shape2 = 5, lo = 0.5, hi = 0.95)
 
 ## Variate Generation
 
-### Functions {.unlisted .unnumbered}
+### Functions {.unlisted}
 
 Primary location of source code is the file [inst/include/trunc.h][trunc-h].
 The following functions operate on scalar arguments.
@@ -3397,7 +3395,7 @@ When `lo` and `hi` are specified as vectors, they must be the same length.
 The following are analogous functions for some of the arguments are vectors,
 for convenience.
 
-### Example {.unlisted .unnumbered}
+### Example {.unlisted}
 
 Draw from the $\text{Beta}(2,5)$ distribution truncated to the interval
 $(0.5, 0.95]$. A C++ function with Rcpp interface is defined in the file
