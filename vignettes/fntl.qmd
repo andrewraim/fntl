@@ -1,5 +1,5 @@
 ---
-title: "`fntl`: Numerical Tools for Rcpp and Lambda Functions"
+title: "`fntl`: `{r} packageDescription('fntl', fields = 'Title')`"
 author:
   - name: Andrew M. Raim
     email: andrew.raim@gmail.com
