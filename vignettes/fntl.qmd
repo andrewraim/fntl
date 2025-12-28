@@ -2987,7 +2987,7 @@ outer_sp_ex(X)
 
 ## Matrix-Free Linear Solve
 
-Solve a linear system $\vec{A} \vec{x} = \vec{b}$ for symmetric positive definite $\vec{A} \in \mathbb{R}^{n \times n}$ [@NocedalWright2006]. Here the operation $\vec{A} \vec{x}$ is specified through a function $\ell(\vec{x}) = \vec{A} \vec{x}$. This can be used to avoid explicit storage of large matrices when $A$ is sparse. The solution $\vec{x}^*$ is found by minimizing the quadratic function
+Solve a linear system $\vec{A} \vec{x} = \vec{b}$ for symmetric positive definite $\vec{A} \in \mathbb{R}^{n \times n}$ using the conjugate gradient method [e.g., @NocedalWright2006, Chapter 5], where the operation $\vec{A} \vec{x}$ is specified through a function $\ell(\vec{x}) = \vec{A} \vec{x}$. This can be used to avoid explicit storage of large matrices when $\vec{A}$ is sparse. The solution $\vec{x}^*$ is found by minimizing the quadratic function
 <!-- -->
 $$
 f(\vec{x}) = \frac{1}{2} \vec{x}^\top \ell(\vec{x}) - \vec{b}^\top \vec{x},
