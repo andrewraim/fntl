@@ -190,6 +190,55 @@ inline coo_mat<T>::operator SEXP() const
 	);
 }
 
+template <typename T, int RTYPE>
+// inline Rcpp::Matrix<RTYPE> as(const csc_mat<T>& x, const T& s)
+inline Rcpp::Matrix<RTYPE> as(const csc_mat<T>& x)
+{
+	unsigned int m = x.m;
+	unsigned int n = x.n;
+	unsigned int N = x.x[n];
+
+	Rcpp::Matrix<RTYPE> out(m, n);
+	//out.fill(s);
+
+	for (unsigned int j = 0; j < n; j++) {
+		for (unsigned int l = x.p[j]; l < x.p[j+1]; l++) {
+			unsigned int i = x.i[l];
+			unsigned int idx = i + j*m;
+			out(i,j) = x.x[l];
+		}
+	}
+
+	return out;
+}
+
+
+template <typename T>
+inline coo_mat<T> as(const csc_mat<T>& x)
+{
+	unsigned int m = x.m;
+	unsigned int n = x.n;
+	unsigned int N = x.x[n];
+
+	coo_mat<T> out;
+	out.m = m;
+	out.n = n;
+
+	unsigned int idx = 0;;
+
+	for (unsigned int j = 0; j < n; j++) {
+		for (unsigned int l = x.p[j]; l < x.p[j+1]; l++) {
+			out.i.push_back(x.i[l]);
+			out.j.push_back(j);
+			out.x.push_back(x.x[l]);
+			idx++;
+		}
+	}
+
+	return out;
+}
+
+
 }
 
 #endif
