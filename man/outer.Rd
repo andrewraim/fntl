@@ -6,8 +6,8 @@
 \alias{outer2}
 \alias{outer1_matvec}
 \alias{outer2_matvec}
-\alias{outer1_triplet}
-\alias{outer2_triplet}
+\alias{outer1_sp}
+\alias{outer2_sp}
 \title{Outer Matrix}
 \usage{
 outer1(X, f)
@@ -18,9 +18,9 @@ outer1_matvec(X, f, a)
 
 outer2_matvec(X, Y, f, a)
 
-outer1_triplet(X, f, g)
+outer1_sp(X, f, g)
 
-outer2_triplet(X, Y, f, g)
+outer2_sp(X, Y, f, g)
 }
 \arguments{
 \item{X}{A numerical matrix.}
@@ -39,8 +39,8 @@ result.}
 }
 \value{
 \code{outer1} and \code{outer2} return a matrix. \code{outer1_matvec} and \code{outer2_matvec}
-return a vector. \code{outer1_triplet} and \code{outer2_triplet} return a list with
-a sparse matrix (triplet) representation. See section "Outer" of the
+return a vector. \code{outer1_sp} and \code{outer2_sp} return a list with
+a sparse matrix (csc) representation. See section "Outer" of the
 package vignette for details.
 }
 \description{
@@ -107,9 +107,9 @@ a_n \cr
 \end{bmatrix}.
 }
 
-The \code{outer_triplet1} and \code{outer_triplet2} operations are analogous to
+The \code{outer_sp1} and \code{outer_sp2} operations are analogous to
 \code{outer1} and \code{outer2}, respectively, except return sparse matrices in
-triplet form. The triplet variants take an additional argument \code{g}, a
+csc form. The csc variants take an additional argument \code{g}, a
 function $g(x_i, y_j)$ that returns \code{TRUE} if the result is to be stored
 in the result and \code{FALSE} otherwise. The argument \code{g} can be used for
 sparseness.

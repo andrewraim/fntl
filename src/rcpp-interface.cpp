@@ -417,7 +417,7 @@ Rcpp::NumericVector outer2_matvec_rcpp(const Rcpp::NumericMatrix& X,
 	return fntl::outer_matvec(X, Y, ff, a);
 }
 
-Rcpp::List outer1_triplet_rcpp(const Rcpp::NumericMatrix& X,
+Rcpp::List outer1_sp_rcpp(const Rcpp::NumericMatrix& X,
 	const Rcpp::Function& f, const Rcpp::Function& g)
 {
 	const fntl::dfvv& ff =
@@ -432,11 +432,11 @@ Rcpp::List outer1_triplet_rcpp(const Rcpp::NumericMatrix& X,
 		return gxy(0);
 	};
 
-	const auto& out = fntl::outer_triplet(X, ff, gg);
+	const auto& out = fntl::outer_sp(X, ff, gg);
 	return Rcpp::wrap(out);
 }
 
-Rcpp::List outer2_triplet_rcpp(const Rcpp::NumericMatrix& X,
+Rcpp::List outer2_sp_rcpp(const Rcpp::NumericMatrix& X,
 	const Rcpp::NumericMatrix& Y, const Rcpp::Function& f,
 	const Rcpp::Function& g)
 {
@@ -452,7 +452,7 @@ Rcpp::List outer2_triplet_rcpp(const Rcpp::NumericMatrix& X,
 		return gxy(0);
 	};
 
-	const auto& out = fntl::outer_triplet(X, Y, ff, gg);
+	const auto& out = fntl::outer_sp(X, Y, ff, gg);
 	return Rcpp::wrap(out);
 }
 

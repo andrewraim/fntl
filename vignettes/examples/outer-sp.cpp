@@ -14,7 +14,7 @@ arma::sp_mat outer_sp_ex(Rcpp::NumericMatrix X)
         return f(x,y) < 2.0;
     };
 
-    auto res = fntl::outer_triplet(X, f, g);
+    auto res = fntl::outer_sp(X, f, g);
 
     // Pack the vectors i and j into an arma matrix with two rows. Convert
     // vector x into an arma vector. These are used to construct an arma sparse

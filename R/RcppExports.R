@@ -512,9 +512,9 @@ which0 <- function(X, f) {
 #' \end{bmatrix}.
 #' }
 #'
-#' The `outer_triplet1` and `outer_triplet2` operations are analogous to
+#' The `outer_sp1` and `outer_sp2` operations are analogous to
 #' `outer1` and `outer2`, respectively, except return sparse matrices in
-#' triplet form. The triplet variants take an additional argument `g`, a
+#' csc form. The csc variants take an additional argument `g`, a
 #' function $g(x_i, y_j)$ that returns `TRUE` if the result is to be stored
 #' in the result and `FALSE` otherwise. The argument `g` can be used for
 #' sparseness.
@@ -534,8 +534,8 @@ which0 <- function(X, f) {
 #'
 #' @return
 #' `outer1` and `outer2` return a matrix. `outer1_matvec` and `outer2_matvec`
-#' return a vector. `outer1_triplet` and `outer2_triplet` return a list with
-#' a sparse matrix (triplet) representation. See section "Outer" of the
+#' return a vector. `outer1_sp` and `outer2_sp` return a list with
+#' a sparse matrix (csc) representation. See section "Outer" of the
 #' package vignette for details.
 #'
 #' @name outer
@@ -565,14 +565,14 @@ outer2_matvec <- function(X, Y, f, a) {
 
 #' @name outer
 #' @export
-outer1_triplet <- function(X, f, g) {
-    .Call(`_fntl_outer1_triplet_rcpp`, X, f, g)
+outer1_sp <- function(X, f, g) {
+    .Call(`_fntl_outer1_sp_rcpp`, X, f, g)
 }
 
 #' @name outer
 #' @export
-outer2_triplet <- function(X, Y, f, g) {
-    .Call(`_fntl_outer2_triplet_rcpp`, X, Y, f, g)
+outer2_sp <- function(X, Y, f, g) {
+    .Call(`_fntl_outer2_sp_rcpp`, X, Y, f, g)
 }
 
 #' Iteratively Solve a Linear System with Conjugate Gradient

@@ -515,9 +515,9 @@ Rcpp::IntegerMatrix which_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Functio
 //' \end{bmatrix}.
 //' }
 //'
-//' The `outer_triplet1` and `outer_triplet2` operations are analogous to
+//' The `outer_sp1` and `outer_sp2` operations are analogous to
 //' `outer1` and `outer2`, respectively, except return sparse matrices in
-//' triplet form. The triplet variants take an additional argument `g`, a
+//' csc form. The csc variants take an additional argument `g`, a
 //' function $g(x_i, y_j)$ that returns `TRUE` if the result is to be stored
 //' in the result and `FALSE` otherwise. The argument `g` can be used for
 //' sparseness.
@@ -537,8 +537,8 @@ Rcpp::IntegerMatrix which_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Functio
 //'
 //' @return
 //' `outer1` and `outer2` return a matrix. `outer1_matvec` and `outer2_matvec`
-//' return a vector. `outer1_triplet` and `outer2_triplet` return a list with
-//' a sparse matrix (triplet) representation. See section "Outer" of the
+//' return a vector. `outer1_sp` and `outer2_sp` return a list with
+//' a sparse matrix (csc) representation. See section "Outer" of the
 //' package vignette for details.
 //'
 //' @name outer
@@ -569,14 +569,14 @@ Rcpp::NumericVector outer2_matvec_rcpp(const Rcpp::NumericMatrix& X,
 
 //' @name outer
 //' @export
-// [[Rcpp::export(name = "outer1_triplet")]]
-Rcpp::List outer1_triplet_rcpp(const Rcpp::NumericMatrix& X,
+// [[Rcpp::export(name = "outer1_sp")]]
+Rcpp::List outer1_sp_rcpp(const Rcpp::NumericMatrix& X,
 	const Rcpp::Function& f, const Rcpp::Function& g);
 
 //' @name outer
 //' @export
-// [[Rcpp::export(name = "outer2_triplet")]]
-Rcpp::List outer2_triplet_rcpp(const Rcpp::NumericMatrix& X,
+// [[Rcpp::export(name = "outer2_sp")]]
+Rcpp::List outer2_sp_rcpp(const Rcpp::NumericMatrix& X,
 	const Rcpp::NumericMatrix& Y, const Rcpp::Function& f,
 	const Rcpp::Function& g);
 
