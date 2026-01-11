@@ -152,7 +152,7 @@ inline csc_mat<T>::operator SEXP() const
 	Rcpp::IntegerVector pp(p.begin(), p.end());
 
 	return Rcpp::List::create(
-		Rcpp::Named("i") = ii,
+		Rcpp::Named("i") = ii + 1,
 		Rcpp::Named("p") = pp,
 		Rcpp::Named("x") = x,
 		Rcpp::Named("m") = m,
@@ -167,7 +167,7 @@ inline csr_mat<T>::operator SEXP() const
 	Rcpp::IntegerVector pp(p.begin(), p.end());
 
 	return Rcpp::List::create(
-		Rcpp::Named("j") = jj,
+		Rcpp::Named("j") = jj + 1,
 		Rcpp::Named("p") = pp,
 		Rcpp::Named("x") = x,
 		Rcpp::Named("m") = m,
@@ -182,8 +182,8 @@ inline coo_mat<T>::operator SEXP() const
 	Rcpp::IntegerVector jj(j.begin(), j.end());
 
 	return Rcpp::List::create(
-		Rcpp::Named("i") = ii,
-		Rcpp::Named("j") = jj,
+		Rcpp::Named("i") = ii + 1,
+		Rcpp::Named("j") = jj + 1,
 		Rcpp::Named("x") = x,
 		Rcpp::Named("m") = m,
 		Rcpp::Named("n") = n
@@ -191,15 +191,13 @@ inline coo_mat<T>::operator SEXP() const
 }
 
 template <typename T, int RTYPE>
-// inline Rcpp::Matrix<RTYPE> as(const csc_mat<T>& x, const T& s)
-inline Rcpp::Matrix<RTYPE> as(const csc_mat<T>& x)
+inline Rcpp::Matrix<RTYPE> to_Matrix(const csc_mat<T>& x)
 {
 	unsigned int m = x.m;
 	unsigned int n = x.n;
-	unsigned int N = x.x[n];
+	unsigned int N = x.p[n];
 
 	Rcpp::Matrix<RTYPE> out(m, n);
-	//out.fill(s);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int l = x.p[j]; l < x.p[j+1]; l++) {
@@ -212,33 +210,83 @@ inline Rcpp::Matrix<RTYPE> as(const csc_mat<T>& x)
 	return out;
 }
 
-
 template <typename T>
-inline coo_mat<T> as(const csc_mat<T>& x)
+inline csr_mat<T> to_csr(const csc_mat<T>& x)
 {
 	unsigned int m = x.m;
 	unsigned int n = x.n;
-	unsigned int N = x.x[n];
+	unsigned int N = x.p[n];
+
+	// Use an STL map to order entries of x in row-major order
+	typedef std::pair<unsigned int, unsigned int> coord_t;
+	std::function<bool(const coord_t&, const coord_t&)> cmp =
+	[](const coord_t& a, const coord_t& b) -> bool {
+		if (a.first == b.first) {
+			return a.second < b.second;
+		}
+		return a.first < b.first;
+	};
+	std::map<coord_t, T, decltype(cmp)> z(cmp);
+
+	for (unsigned int j = 0; j < n; j++) {
+		for (unsigned int l = x.p[j]; l < x.p[j+1]; l++) {
+			unsigned int i = x.i[l];
+			coord_t c;
+			c.first = i;
+			c.second = j;
+			z[c] = x.x[l];
+		}
+	}
+
+	csr_mat<T> out;
+	out.m = m;
+	out.n = n;
+	out.p.resize(m+1, N);
+
+	auto itr = z.begin();
+	for (; itr != z.end(); ++itr) {
+		const coord_t& c = itr->first;
+		const T& v = itr->second;
+		unsigned int i = c.first;
+		unsigned int j = c.second;
+
+		if (out.p[i] == N) {
+			out.p[i] = out.x.size();
+		}
+		out.j.push_back(j);
+		out.x.push_back(v);
+	}
+
+	for (int i = m-1; i >= 0; i--) {
+		out.p[i] = std::min(out.p[i], out.p[i+1]);
+	}
+
+	return out;
+}
+
+template <typename T>
+inline coo_mat<T> to_coo(const csc_mat<T>& x)
+{
+	unsigned int m = x.m;
+	unsigned int n = x.n;
+	unsigned int N = x.p[n];
 
 	coo_mat<T> out;
 	out.m = m;
 	out.n = n;
-
-	unsigned int idx = 0;;
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int l = x.p[j]; l < x.p[j+1]; l++) {
 			out.i.push_back(x.i[l]);
 			out.j.push_back(j);
 			out.x.push_back(x.x[l]);
-			idx++;
 		}
 	}
 
 	return out;
 }
 
-
 }
 
 #endif
+

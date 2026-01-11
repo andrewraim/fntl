@@ -69,7 +69,7 @@ inline csc_dmat outer_sp(const Rcpp::NumericMatrix& X,
 
 	// Handle last pointer and any empty columns
 	out.p[n] = out.x.size();
-	for (unsigned int j = 0; j < n; j++) {
+	for (int j = n-1; j >= 0; j--) {
 		if (out.p[j] == uint_max) {
 			out.p[j] = out.p[j+1];
 		}
@@ -81,14 +81,17 @@ inline csc_dmat outer_sp(const Rcpp::NumericMatrix& X,
 inline csc_dmat outer_sp(const Rcpp::NumericMatrix& X,
 	const Rcpp::NumericMatrix& Y, const dfvv& f, const bfvv& g)
 {
+	printf("outer_sp: checkpoint 1\n");
 	unsigned int m = X.nrow();
 	unsigned int n = Y.nrow();
 
+	printf("outer_sp: checkpoint 2\n");
 	csc_dmat out;
 	out.p.resize(n+1, uint_max);
 	out.m = m;
 	out.n = n;
 
+	printf("outer_sp: checkpoint 3\n");
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {
 			double val = f(X.row(i), Y.row(j));
@@ -104,13 +107,20 @@ inline csc_dmat outer_sp(const Rcpp::NumericMatrix& X,
 
 	}
 
+	printf("outer_sp: checkpoint 4\n");
+
 	// Handle last pointer and any empty columns
 	out.p[n] = out.x.size();
-	for (unsigned int j = 0; j < n; j++) {
+	printf("outer_sp: checkpoint 5\n");
+	for (int j = n-1; j >= 0; j--) {
+		printf("outer_sp: checkpoint 5.1 j = %d\n", j);
+
 		if (out.p[j] == uint_max) {
 			out.p[j] = out.p[j+1];
 		}
 	}
+
+	printf("outer_sp: checkpoint 6\n");
 
 	return out;
 }
