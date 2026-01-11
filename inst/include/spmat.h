@@ -27,6 +27,17 @@
 namespace fntl {
 
 template <typename T>
+struct mat
+{
+	std::vector<T> x;
+	unsigned int m = 0;
+	unsigned int n = 0;
+
+	mat() { };
+};
+
+
+template <typename T>
 struct csc_mat
 {
 	std::vector<unsigned int> i;

@@ -4,7 +4,7 @@ Rcpp::sourceCpp("temp.cpp", rebuild = TRUE)
 set.seed(1234)
 
 x = matrix(rnorm(12), 4, 3)
-y = matrix(rnorm(12), 2, 3)
+y = matrix(rnorm(6), 2, 3)
 
 print(x)
 print(y)

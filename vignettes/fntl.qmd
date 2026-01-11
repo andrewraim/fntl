@@ -2831,7 +2831,7 @@ f(x_n, x_1) & \cdots & f(x_n, x_n) \\
 \end{bmatrix}.
 $$
 <!-- -->
-Furthermore, let $\vec{a} = [a_1 \cdots a_n]^\top$ be a vector in $\mathbb{R}^{n \times 1}$ and suppose the operation $\sum_{j=1}^n a_j u_j$ is defined for $u_j \in \mathbb{E}$. The `outer_matvec` operation computes the vector
+Furthermore, let $\vec{a} = [a_1 \cdots a_n]^\top$ be a vector in $\mathbb{R}^{n \times 1}$ and suppose the operation $\sum_{j=1}^n a_j u_j$ is defined for $u_j \in \mathbb{E}$ and $\sum_{j=1}^n a_j u_j \in E$. The `outer_matvec` operation computes the vector
 <!-- -->
 $$
 \text{\texttt outer\_matvec}(X, f, \vec{a}) =

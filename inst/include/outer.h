@@ -8,6 +8,11 @@
 
 namespace fntl {
 
+/*
+* Versions of outer that are specific to Rcpp matrices
+*/
+
+
 template <typename T, int RTYPE>
 inline Rcpp::Matrix<RTYPE> outer(
 	const Rcpp::Matrix<RTYPE>& X,
@@ -56,19 +61,19 @@ inline csc_mat<T> outer_sp(
 	const std::function<bool(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& g)
 {
 	unsigned int n = X.nrow();
-	unsigned int N = n*n;
+	unsigned int N_bdd = n*n;
 
 	csc_mat<T> out;
 	out.m = n;
 	out.n = n;
-	out.p.resize(n+1, N);
+	out.p.resize(n+1, N_bdd);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i <= j; i++) {
 			double val = f(X.row(i), X.row(j));
 			bool ind = g(X.row(i), X.row(j));
 			if (ind) {
-				if (out.p[j] == N) {
+				if (out.p[j] == N_bdd) {
 					out.p[j] = out.x.size();
 				}
 				out.i.push_back(i);
@@ -80,9 +85,7 @@ inline csc_mat<T> outer_sp(
 	// Handle pointer for last column and any empty columns
 	out.p[n] = out.x.size();
 	for (int j = n-1; j >= 0; j--) {
-		if (out.p[j] == N) {
-			out.p[j] = out.p[j+1];
-		}
+		out.p[j] = std::min(out.p[j], out.p[j+1]);
 	}
 
 	return out;
@@ -97,10 +100,10 @@ inline csc_mat<T> outer_sp(
 {
 	unsigned int m = X.nrow();
 	unsigned int n = Y.nrow();
-	unsigned int N = m*n;
+	unsigned int N_bdd = m*n;
 
 	csc_mat<T> out;
-	out.p.resize(n+1, N);
+	out.p.resize(n+1, N_bdd);
 	out.m = m;
 	out.n = n;
 
@@ -109,7 +112,7 @@ inline csc_mat<T> outer_sp(
 			double val = f(X.row(i), Y.row(j));
 			bool ind = g(X.row(i), Y.row(j));
 			if (ind) {
-				if (out.p[j] == N) {
+				if (out.p[j] == N_bdd) {
 					out.p[j] = out.x.size();
 				}
 				out.i.push_back(i);
@@ -121,9 +124,7 @@ inline csc_mat<T> outer_sp(
 	// Handle pointer for last column and any empty columns
 	out.p[n] = out.x.size();
 	for (int j = n-1; j >= 0; j--) {
-		if (out.p[j] == N) {
-			out.p[j] = out.p[j+1];
-		}
+		out.p[j] = std::min(out.p[j], out.p[j+1]);
 	}
 
 	return out;
@@ -179,6 +180,172 @@ inline Rcpp::NumericVector outer_matvec(
 		for (unsigned int i = 0; i < m; i++) {
 			double f_ij = f(X.row(i), Y.row(j));
 			out(i) += f_ij * a(j);
+		}
+	}
+
+	return out;
+}
+
+/*
+* More general versions of outer functions
+*/
+
+template <typename S, typename E>
+inline mat<E> outer(
+	const std::vector<S>& x,
+	const std::function<E(const S&, const S&)>& f)
+{
+	unsigned int n = x.size();
+	mat<E> out(n*n);
+
+	for (unsigned int j = 0; j < n; j++) {
+		for (unsigned int i = 0; i < n; i++) {
+			out.x[i + j*n] = f(x[i], x[j]);
+		}
+	}
+
+	return out;
+}
+
+template <typename S, typename T, typename E>
+inline csc_mat<E> outer(
+	const std::vector<S>& x,
+	const std::vector<T>& y,
+	const std::function<E(const S&, const T&)>& f)
+{
+	unsigned int m = x.size();
+	unsigned int n = y.size();
+	mat<E> out(m*n);
+
+	for (unsigned int j = 0; j < n; j++) {
+		for (unsigned int i = 0; i < n; i++) {
+			out.x[i + j*n] = f(x[i], y[j]);
+		}
+	}
+
+	return out;
+}
+
+template <typename S, typename E>
+inline csc_mat<E> outer_sp(
+	const std::vector<S>& x,
+	const std::function<E(const std::vector<S>&, const std::vector<S>&)>& f,
+	const std::function<bool(const std::vector<S>&, const std::vector<S>&)>& g)
+{
+	unsigned int n = x.size();
+	unsigned int N_bdd = n*n;
+
+	csc_mat<E> out;
+	out.m = n;
+	out.n = n;
+	out.p.resize(n+1, N_bdd);
+
+	for (unsigned int j = 0; j < n; j++) {
+		for (unsigned int i = 0; i <= j; i++) {
+			double val = f(x[i], x[j]);
+			bool ind = g(x[i], x[j]);
+			if (ind) {
+				if (out.p[j] == N_bdd) {
+					out.p[j] = out.x.size();
+				}
+				out.i.push_back(i);
+				out.x.push_back(val);
+			}
+		}
+	}
+
+	// Handle pointer for last column and any empty columns
+	out.p[n] = out.x.size();
+	for (int j = n-1; j >= 0; j--) {
+		out.p[j] = std::min(out.p[j], out.p[j+1]);
+	}
+
+	return out;
+}
+
+template <typename S, typename T, typename E>
+inline csc_mat<E> outer_sp(
+	const std::vector<S>& x,
+	const std::vector<T>& y,
+	const std::function<E(const std::vector<S>&, const std::vector<T>&)>& f,
+	const std::function<bool(const std::vector<S>&, const std::vector<T>&)>& g)
+{
+	unsigned int m = x.size();
+	unsigned int n = y.size();
+	unsigned int N_bdd = m*n;
+
+	csc_mat<E> out;
+	out.p.resize(n+1, N_bdd);
+	out.m = m;
+	out.n = n;
+
+	for (unsigned int j = 0; j < n; j++) {
+		for (unsigned int i = 0; i < m; i++) {
+			double val = f(x[i], y[j]);
+			bool ind = g(x[i], y[j]);
+			if (ind) {
+				if (out.p[j] == N_bdd) {
+					out.p[j] = out.x.size();
+				}
+				out.i.push_back(i);
+				out.x.push_back(val);
+			}
+		}
+	}
+
+	// Handle pointer for last column and any empty columns
+	out.p[n] = out.x.size();
+	for (int j = n-1; j >= 0; j--) {
+		out.p[j] = std::min(out.p[j], out.p[j+1]);
+	}
+
+	return out;
+}
+
+template <typename S, typename E>
+inline std::vector<E> outer_matvec(
+	const std::vector<S>& x,
+	const std::function<E(const std::vector<S>&, const std::vector<S>&)>& f,
+	const std::vector<double>& a)
+{
+	unsigned int n = x.size();
+
+	if (a.size() != n) {
+		Rcpp::stop("Dimension mismatch: dim(a) = %d and dim(x) = %d", a.size(), n);
+	}
+
+	std::vector<E> out(n);
+
+	for (unsigned int j = 0; j < n; j++) {
+		out[j] = a[0] * f(x[0], x[j]);
+		for (unsigned int i = 1; i < n; i++) {
+			out[j] += a[i] * f(x[i], x[j]);
+		}
+	}
+
+	return out;
+}
+
+template <typename S, typename T, typename E>
+inline std::vector<E> outer_matvec(
+	const std::vector<S>& x,
+	const std::vector<T>& y,
+	const std::function<E(const std::vector<S>&, const std::vector<T>&)>& f,
+	const std::vector<double>& a)
+{
+	unsigned int m = x.size();
+	unsigned int n = y.size();
+
+	if (a.size() != n) {
+		Rcpp::stop("Dimension mismatch: dim(a) = %d and dim(y) = %d", a.size(), n);
+	}
+
+	std::vector<E> out(m);
+
+	for (unsigned int j = 0; j < n; j++) {
+		out[j] = a[0] * f(x[0], y[j]);
+		for (unsigned int i = 1; i < n; i++) {
+			out[j] += a[i] * f(x[i], y[j]);
 		}
 	}
 
