@@ -14,7 +14,6 @@ Rcpp::List temp_ex(const Rcpp::NumericMatrix& x, const Rcpp::NumericMatrix& y)
 		return fabs(f(x,y)) < 5;
 	};
 
-	//const std::function<bool(const double&)>&h =
 	std::function h = [&](const double& x) -> bool {
 		return fabs(x) < 5;
 	};
@@ -27,12 +26,16 @@ Rcpp::List temp_ex(const Rcpp::NumericMatrix& x, const Rcpp::NumericMatrix& y)
 	const fntl::coo_mat<double>& out3 = fntl::to_coo<double>(out_sp);
 	const fntl::csr_mat<double>& out4 = fntl::to_csr<double>(out_sp);
 
+	std::function hh = [](double x) -> bool { return x > 0; };
+	const Rcpp::IntegerMatrix& which_out = fntl::which(out_sp, hh);
+
 	return Rcpp::List::create(
 		Rcpp::Named("ds") = out,
 		Rcpp::Named("ds2") = out2,
 		Rcpp::Named("sp0") = Rcpp::wrap(out0_sp),
 		Rcpp::Named("sp1") = Rcpp::wrap(out_sp),
 		Rcpp::Named("sp2") = Rcpp::wrap(out3),
-		Rcpp::Named("sp3") = Rcpp::wrap(out4)
+		Rcpp::Named("sp3") = Rcpp::wrap(out4),
+		Rcpp::Named("which_out") = which_out
 	);
 }

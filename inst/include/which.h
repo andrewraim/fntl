@@ -50,7 +50,8 @@ Rcpp::IntegerMatrix which(const csc_mat<T>& X,
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int l = X.p[j]; l < X.p[j+1]; l++) {
 			unsigned int i = X.i[l];
-			bool ind = f(X(i,j));
+			const T& v = X.x[l];
+			bool ind = f(v);
 			if (ind) {
 				idx_row.push_back(i);
 				idx_col.push_back(j);

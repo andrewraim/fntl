@@ -2691,6 +2691,11 @@ Mention the converters.
 
 ## Apply
 
+::: {.callout-note title="TBD"}
+Add material for sparse version. For `mat_apply`, we skip the missing elements and do not attempt to process their values. For `row_apply` and `col_apply`, we take a vector with the non-missing elements and another vector with their respective row or column indices.
+:::
+
+
 Apply a function to the elements, rows, or columns of an $m \times n$ matrix.
 Suppose $\vec{X} \in \mathbb{R}^{m \times n}$ is a matrix with rows
 $\vec{x}_{1 \ast}, \ldots, \vec{x}_{m \ast}$ and columns
@@ -2806,7 +2811,7 @@ Construct a matrix from a function of two arguments. Or carry out a matrix multi
 
 
 ::: {.callout-note title="TBD"}
-Should $vec{a}$ be of type $\mathbb{U}$ or just a vector of scalars? Until now, we were only thinking about numerical matrices.
+Should $\vec{a}$ be of type $\mathbb{E}$ or just a vector of scalars? Until now, we were only thinking about numerical matrices.
 
 Do we need this notation for when our sets are rows of matrices? (That is one of the main use cases).
 <!-- -->
@@ -2848,7 +2853,7 @@ a_n \\
 \end{bmatrix}.
 $$
 <!-- -->
-Now suppose $f(x,y) : \mathbb{X} \times \mathbb{Y} \rightarrow \mathbb{U}$
+Now suppose $f(x,y) : \mathbb{X} \times \mathbb{Y} \rightarrow \mathbb{E}$
 where $x \in X$ and $y \in Y$ for $X = \{ x_1, \ldots, x_m \} \in \mathbb{X}^m$ and $Y = \{ y_1, \ldots, y_n \} \in \mathbb{Y}^n$. The `outer` operation computes the $m \times n$ matrix
 <!-- -->
 $$
@@ -2880,10 +2885,11 @@ a_n \\
 \vdots \\
 \sum_{j=1}^n a_j f(x_m, y_j) \\
 \end{bmatrix}.
-.
 $$
 <!-- -->
 The `outer` functions above are similar to the `outer` function in R.
+
+An important special case for `outer` is where $x_i$ and $y_j$ are rows from respective matrices $\vec{X}$ and $\vec{Y}$.
 
 The function $\text{\texttt outer\_sp}(X, f, g)$ is analogous to the previously introduced $\text{\texttt outer}(X, f)$, but returns a `csc` sparse representation of the matrix. The additional argument $g(x_i, x_j) : \mathbb{X} \times \mathbb{X} \rightarrow \{ 0, 1 \}$ is an indicator function that determines whether the $(i, j)$th element is included in the result. This is especially useful when computing large matrices with relatively few nontrivial elements. Omitted elements are conventionally taken to represent zeros, but may be reserved for other values such as `Inf`, `-Inf`, or numbers outside of a given interval. Similarly, the function $\text{\texttt outer\_sp}(X, Y, f, g)$ is analogous to $\text{\texttt outer}(X, Y, f)$ with argument $g(x_i, y_j) : \mathbb{X} \times \mathbb{Y} \rightarrow \{ 0, 1 \}$ that determines which elements are included in the result.
 
@@ -3087,6 +3093,10 @@ solve(A, b)
 ```
 
 ## Which
+
+::: {.callout-note title="TBD"}
+Add material for sparse version. For this one, we skip the missing elements and do not attempt to interpret their values.
+:::
 
 Identify the indices of a matrix which satisfy a given indicator function. Specifically, let $\vec{X} \in \mathbb{S}^{m \times n}$ be a matrix whose elements are in the domain $\mathbb{S}$ which may be doubles, integers, or another Rcpp `Matrix` type. Let $f : \mathbb{S} \rightarrow \{0, 1\}$ be an indicator function and suppose $k$ of the $mn$ elements in $\vec{X}$ satisfy the indicator. The `which` operation produces a $k \times 2$ matrix
 <!-- -->
