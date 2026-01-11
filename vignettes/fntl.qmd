@@ -2682,6 +2682,13 @@ print(out$res3[nn])
 
 This section presents several matrix operations based on a lambda function.
 
+::: {.callout-note title="TBD"}
+What is `csc`? `csr`? `coo`?
+Consisting of the row index $i$, column index $j$, and value $v_{ij}$ of each element.
+Where are these formats from? How can our containers be used with `Matrix`, `Armadillo` and other libraries for matrix work?
+Mention the converters.
+:::
+
 ## Apply
 
 Apply a function to the elements, rows, or columns of an $m \times n$ matrix.
@@ -2795,70 +2802,90 @@ print(out)
 
 ## Outer
 
-Construct a matrix from a real-valued function of two arguments. Or carry out a
-matrix multiplication without explicitly constructing the matrix.
+Construct a matrix from a function of two arguments. Or carry out a matrix multiplication without explicitly constructing the matrix.
 
-Suppose $f(\vec{x},\vec{x}') : \mathbb{R}^d \times \mathbb{R}^d \rightarrow \mathbb{R}$ and $\vec{X} \in \mathbb{R}^{n \times d}$ is a matrix with rows $\vec{x}_1, \ldots, \vec{x}_n$. Also let $\vec{a} = [a_1 \cdots a_n]^\top$ be a fixed vector. The `outer` operation computes the $n \times n$ symmetric matrix
+
+::: {.callout-note title="TBD"}
+Should $vec{a}$ be of type $\mathbb{U}$ or just a vector of scalars? Until now, we were only thinking about numerical matrices.
+
+Do we need this notation for when our sets are rows of matrices? (That is one of the main use cases).
+<!-- -->
+$\vec{X} \in \mathbb{R}^{n \times d}$ is a matrix with rows $\vec{x}_1, \ldots, \vec{x}_n$.
+$\vec{X} \in \mathbb{R}^{m \times d_1}$ is a matrix with rows $\vec{x}_1, \ldots, \vec{x}_m$, $\vec{Y} \in \mathbb{R}^{n \times d_2}$ is a matrix with rows $\vec{y}_1, \ldots, \vec{y}_n$,
+<!-- -->
+:::
+
+Suppose $f(x, x') : \mathbb{X} \times \mathbb{X} \rightarrow \mathbb{E}$ where $x, x' \in X$ for $X = \{ x_1, \ldots, x_n \} \in \mathbb{X}^n$. We are primarily interested in cases where $\mathbb{E}$ is the real numbers or integers, but other types such as strings may be used. The `outer` operation computes the $n \times n$ symmetric matrix
 <!-- -->
 $$
-\text{\texttt outer}(\vec{X}, f) =
+\text{\texttt outer}(X, f) =
 \begin{bmatrix}
-f(\vec{x}_1, \vec{x}_1) & \cdots & f(\vec{x}_1, \vec{x}_n) \\
+f(x_1, x_1) & \cdots & f(x_1, x_n) \\
 \vdots & \ddots & \vdots \\
-f(\vec{x}_n, \vec{x}_1) & \cdots & f(\vec{x}_n, \vec{x}_n) \\
-\end{bmatrix}
+f(x_n, x_1) & \cdots & f(x_n, x_n) \\
+\end{bmatrix}.
 $$
 <!-- -->
-and the `outer_matvec` operation computes the $n$-dimensional vector
+Furthermore, let $\vec{a} = [a_1 \cdots a_n]^\top$ be a vector in $\mathbb{R}^{n \times 1}$ and suppose the operation $\sum_{j=1}^n a_j u_j$ is defined for $u_j \in \mathbb{E}$. The `outer_matvec` operation computes the vector
 <!-- -->
 $$
-\text{\texttt outer\_matvec}(\vec{X}, f, \vec{a}) =
+\text{\texttt outer\_matvec}(X, f, \vec{a}) =
 \begin{bmatrix}
-f(\vec{x}_1, \vec{x}_1) & \cdots & f(\vec{x}_1, \vec{x}_n) \\
+f(x_1, x_1) & \cdots & f(x_1, x_n) \\
 \vdots & \ddots & \vdots \\
-f(\vec{x}_n, \vec{x}_1) & \cdots & f(\vec{x}_n, \vec{x}_n) \\
+f(x_n, x_1) & \cdots & f(x_n, x_n) \\
 \end{bmatrix}
 \begin{bmatrix}
 a_1 \\
 \vdots \\
 a_n \\
+\end{bmatrix}
+=
+\begin{bmatrix}
+\sum_{j=1}^n a_j f(x_1, x_j) \\
+\vdots \\
+\sum_{j=1}^n a_j f(x_n, x_j) \\
 \end{bmatrix}.
 $$
-
-Now suppose $f(\vec{x},\vec{y}) : \mathbb{R}^{d_1} \times \mathbb{R}^{d_2} \rightarrow \mathbb{R}$,
-$\vec{X} \in \mathbb{R}^{m \times d_1}$ is a matrix with rows $\vec{x}_1, \ldots, \vec{x}_m$,
-$\vec{Y} \in \mathbb{R}^{n \times d_2}$ is a matrix with rows $\vec{y}_1, \ldots, \vec{y}_n$,
-and $\vec{a} = [a_1 \cdots a_n]^\top$ is a fixed vector. The `outer` operation
-computes the $m \times n$ matrix
+<!-- -->
+Now suppose $f(x,y) : \mathbb{X} \times \mathbb{Y} \rightarrow \mathbb{U}$
+where $x \in X$ and $y \in Y$ for $X = \{ x_1, \ldots, x_m \} \in \mathbb{X}^m$ and $Y = \{ y_1, \ldots, y_n \} \in \mathbb{Y}^n$. The `outer` operation computes the $m \times n$ matrix
 <!-- -->
 $$
-\text{\texttt outer}(\vec{X}, \vec{Y}, f) =
+\text{\texttt outer}(X, Y, f) =
 \begin{bmatrix}
-f(\vec{x}_1, \vec{y}_1) & \cdots & f(\vec{x}_1, \vec{y}_n) \\
+f(x_1, y_1) & \cdots & f(x_1, y_n) \\
 \vdots & \ddots & \vdots \\
-f(\vec{x}_m, \vec{y}_1) & \cdots & f(\vec{x}_m, \vec{y}_n) \\
+f(x_m, y_1) & \cdots & f(x_m, y_n) \\
 \end{bmatrix}
 $$
 <!-- -->
 and the `outer_matvec` operation computes the $m$-dimensional vector
 <!-- -->
 $$
-\text{\texttt outer\_matvec}(\vec{X}, \vec{Y}, f, \vec{a}) =
+\text{\texttt outer\_matvec}(X, Y, f, \vec{a}) =
 \begin{bmatrix}
-f(\vec{x}_1, \vec{y}_1) & \cdots & f(\vec{x}_1, \vec{y}_n) \\
+f(x_1, y_1) & \cdots & f(x_1, y_n) \\
 \vdots & \ddots & \vdots \\
-f(\vec{x}_m, \vec{y}_1) & \cdots & f(\vec{x}_m, \vec{y}_n) \\
+f(x_m, y_1) & \cdots & f(x_m, y_n) \\
 \end{bmatrix}
 \begin{bmatrix}
 a_1 \\
 \vdots \\
 a_n \\
+\end{bmatrix}
+=
+\begin{bmatrix}
+\sum_{j=1}^n a_j f(x_1, y_j) \\
+\vdots \\
+\sum_{j=1}^n a_j f(x_m, y_j) \\
 \end{bmatrix}.
+.
 $$
 <!-- -->
-The `outer` functions above replicate the behavior of the `outer` function in R.
+The `outer` functions above are similar to the `outer` function in R.
 
-The function $\text{\texttt outer\_sp}(\vec{X}, f, g)$ is analogous to the previously introduced $\text{\texttt outer}(\vec{X}, f)$, but returns a sparse representation consisting of the row index $i$, column index $j$, and value $v_{ij}$ of each element. The additional argument $g(\vec{x}_i, \vec{x}_j) : \mathbb{R}^{d} \times \mathbb{R}^{d} \rightarrow \{ 0, 1 \}$ is an indicator function to determine whether the corresponding $(i, j, v_{ij})$ triplet is included in the result. This can be used to construct sparse matrices and is especially useful when computing large matrices with relatively few nontrivial elements. (Omitted elements are conventionally taken to represent zeros, but may be used for other values such as `Inf`, `-Inf`, or numbers outside of a given interval). Similarly, the function $\text{\texttt outer\_sp}(\vec{X}, \vec{Y}, f, g)$ is analogous to $\text{\texttt outer}(\vec{X}, \vec{Y}, f)$ with argument $g(\vec{x}_i, \vec{y}_j) : \mathbb{R}^{d_1} \times \mathbb{R}^{d_2} \rightarrow \{ 0, 1 \}$ that determines which $(i, j, v_{ij})$ triplets are included in the result.
+The function $\text{\texttt outer\_sp}(X, f, g)$ is analogous to the previously introduced $\text{\texttt outer}(X, f)$, but returns a `csc` sparse representation of the matrix. The additional argument $g(x_i, x_j) : \mathbb{X} \times \mathbb{X} \rightarrow \{ 0, 1 \}$ is an indicator function that determines whether the $(i, j)$th element is included in the result. This is especially useful when computing large matrices with relatively few nontrivial elements. Omitted elements are conventionally taken to represent zeros, but may be reserved for other values such as `Inf`, `-Inf`, or numbers outside of a given interval. Similarly, the function $\text{\texttt outer\_sp}(X, Y, f, g)$ is analogous to $\text{\texttt outer}(X, Y, f)$ with argument $g(x_i, y_j) : \mathbb{X} \times \mathbb{Y} \rightarrow \{ 0, 1 \}$ that determines which elements are included in the result.
 
 ### Functions {.unnumbered .unlisted}
 
@@ -2962,15 +2989,15 @@ out = outer_ex(X, Y, a, b)
 print(out[1:4])
 ```
 
-Construct sparse matrices from each of the triplet results using the function `sparseMatrix` from the `Matrix` package [@Matrix]. The first matrix is to be interpreted as the lower triangular block of a symmetric matrix.
+Construct sparse matrices from each of the sparse results using the function `sparseMatrix` from the `Matrix` package [@Matrix]. The first matrix is to be interpreted as the lower triangular block of a symmetric matrix.
 
 ```{r}
 #| message: false
 library(Matrix)
 sp1 = out[[5]]
 sp2 = out[[6]]
-sparseMatrix(sp1$i, sp1$j, x = sp1$x, dims = c(sp1$m, sp1$n), symmetric = T)
-sparseMatrix(sp2$i, sp2$j, x = sp2$x, dims = c(sp2$m, sp2$n), symmetric = F)
+sparseMatrix(sp1$i, p = sp1$p, x = sp1$x, dims = c(sp1$m, sp1$n), symmetric = T)
+sparseMatrix(sp2$i, p = sp2$p, x = sp2$x, dims = c(sp2$m, sp2$n), symmetric = F)
 ```
 
 ### Example 2 {.unnumbered .unlisted}

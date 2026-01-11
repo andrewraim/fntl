@@ -8,10 +8,13 @@
 
 namespace fntl {
 
-inline Rcpp::NumericMatrix outer(const Rcpp::NumericMatrix& X, const dfvv& f)
+template <typename T, int RTYPE>
+inline Rcpp::Matrix<RTYPE> outer(
+	const Rcpp::Matrix<RTYPE>& X,
+	const std::function<T(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& f)
 {
 	unsigned int n = X.nrow();
-	Rcpp::NumericMatrix out(n, n);
+	Rcpp::Matrix<RTYPE> out(n, n);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < j; i++) {
@@ -27,12 +30,15 @@ inline Rcpp::NumericMatrix outer(const Rcpp::NumericMatrix& X, const dfvv& f)
 	return out;
 }
 
-inline Rcpp::NumericMatrix outer(const Rcpp::NumericMatrix& X,
-	const Rcpp::NumericMatrix& Y, const dfvv& f)
+template <typename T, int RTYPE>
+inline Rcpp::Matrix<RTYPE> outer(
+	const Rcpp::Matrix<RTYPE>& X,
+	const Rcpp::Matrix<RTYPE>& Y,
+	const std::function<T(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& f)
 {
 	unsigned int m = X.nrow();
 	unsigned int n = Y.nrow();
-	Rcpp::NumericMatrix out(m, n);
+	Rcpp::Matrix<RTYPE> out(m, n);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {
@@ -43,22 +49,26 @@ inline Rcpp::NumericMatrix outer(const Rcpp::NumericMatrix& X,
 	return out;
 }
 
-inline csc_dmat outer_sp(const Rcpp::NumericMatrix& X,
-	const dfvv& f, const bfvv& g)
+template <typename T, int RTYPE>
+inline csc_mat<T> outer_sp(
+	const Rcpp::Matrix<RTYPE>& X,
+	const std::function<T(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& f,
+	const std::function<bool(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& g)
 {
 	unsigned int n = X.nrow();
+	unsigned int N = n*n;
 
-	csc_dmat out;
-	out.p.resize(n+1, uint_max);
+	csc_mat<T> out;
 	out.m = n;
 	out.n = n;
+	out.p.resize(n+1, N);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i <= j; i++) {
 			double val = f(X.row(i), X.row(j));
 			bool ind = g(X.row(i), X.row(j));
 			if (ind) {
-				if (out.p[j] == uint_max) {
+				if (out.p[j] == N) {
 					out.p[j] = out.x.size();
 				}
 				out.i.push_back(i);
@@ -67,10 +77,10 @@ inline csc_dmat outer_sp(const Rcpp::NumericMatrix& X,
 		}
 	}
 
-	// Handle last pointer and any empty columns
+	// Handle pointer for last column and any empty columns
 	out.p[n] = out.x.size();
 	for (int j = n-1; j >= 0; j--) {
-		if (out.p[j] == uint_max) {
+		if (out.p[j] == N) {
 			out.p[j] = out.p[j+1];
 		}
 	}
@@ -78,55 +88,52 @@ inline csc_dmat outer_sp(const Rcpp::NumericMatrix& X,
 	return out;
 }
 
-inline csc_dmat outer_sp(const Rcpp::NumericMatrix& X,
-	const Rcpp::NumericMatrix& Y, const dfvv& f, const bfvv& g)
+template <typename T, int RTYPE>
+inline csc_mat<T> outer_sp(
+	const Rcpp::Matrix<RTYPE>& X,
+	const Rcpp::Matrix<RTYPE>& Y,
+	const std::function<T(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& f,
+	const std::function<bool(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& g)
 {
-	printf("outer_sp: checkpoint 1\n");
 	unsigned int m = X.nrow();
 	unsigned int n = Y.nrow();
+	unsigned int N = m*n;
 
-	printf("outer_sp: checkpoint 2\n");
-	csc_dmat out;
-	out.p.resize(n+1, uint_max);
+	csc_mat<T> out;
+	out.p.resize(n+1, N);
 	out.m = m;
 	out.n = n;
 
-	printf("outer_sp: checkpoint 3\n");
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {
 			double val = f(X.row(i), Y.row(j));
 			bool ind = g(X.row(i), Y.row(j));
 			if (ind) {
-				if (out.p[j] == uint_max) {
+				if (out.p[j] == N) {
 					out.p[j] = out.x.size();
 				}
 				out.i.push_back(i);
 				out.x.push_back(val);
 			}
 		}
-
 	}
 
-	printf("outer_sp: checkpoint 4\n");
-
-	// Handle last pointer and any empty columns
+	// Handle pointer for last column and any empty columns
 	out.p[n] = out.x.size();
-	printf("outer_sp: checkpoint 5\n");
 	for (int j = n-1; j >= 0; j--) {
-		printf("outer_sp: checkpoint 5.1 j = %d\n", j);
-
-		if (out.p[j] == uint_max) {
+		if (out.p[j] == N) {
 			out.p[j] = out.p[j+1];
 		}
 	}
 
-	printf("outer_sp: checkpoint 6\n");
-
 	return out;
 }
 
-inline Rcpp::NumericVector outer_matvec(const Rcpp::NumericMatrix& X,
-	const dfvv& f, const Rcpp::NumericVector& a)
+template <int RTYPE>
+inline Rcpp::NumericVector outer_matvec(
+	const Rcpp::Matrix<RTYPE>& X,
+	const std::function<double(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& f,
+	const Rcpp::NumericVector& a)
 {
 	unsigned int n = X.nrow();
 	if (n != a.size()) {
@@ -152,8 +159,11 @@ inline Rcpp::NumericVector outer_matvec(const Rcpp::NumericMatrix& X,
 	return out;
 }
 
-inline Rcpp::NumericVector outer_matvec(const Rcpp::NumericMatrix& X,
-	const Rcpp::NumericMatrix& Y, const dfvv& f,
+template <int RTYPE>
+inline Rcpp::NumericVector outer_matvec(
+	const Rcpp::Matrix<RTYPE>& X,
+	const Rcpp::Matrix<RTYPE>& Y,
+	const std::function<double(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& f,
 	const Rcpp::NumericVector& a)
 {
 	unsigned int m = X.nrow();
@@ -178,3 +188,4 @@ inline Rcpp::NumericVector outer_matvec(const Rcpp::NumericMatrix& X,
 }
 
 #endif
+

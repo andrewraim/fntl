@@ -190,6 +190,49 @@ inline coo_mat<T>::operator SEXP() const
 	);
 }
 
+/*
+* Conversion operators between matrix types
+*/
+
+
+template <typename T, int RTYPE>
+inline csc_mat<T> to_csc(const Rcpp::Matrix<RTYPE>& x,
+	const std::function<bool(const T&)>&f)
+{
+	unsigned int m = x.nrow();
+	unsigned int n = x.ncol();
+	unsigned int N = m*n;
+
+	csc_mat<T> out;
+	out.p.resize(n+1, N);
+	out.m = m;
+	out.n = n;
+
+	for (unsigned int j = 0; j < n; j++) {
+		for (unsigned int i = 0; i < m; i++) {
+			bool ind = f(x(i,j));
+			if (ind) {
+				if (out.p[j] == N) {
+					out.p[j] = out.x.size();
+				}
+				out.i.push_back(i);
+				out.x.push_back(x(i,j));
+			}
+		}
+	}
+
+	// Handle last pointer and any empty columns
+	out.p[n] = out.x.size();
+	for (int j = n-1; j >= 0; j--) {
+		if (out.p[j] == N) {
+			out.p[j] = out.p[j+1];
+		}
+	}
+
+	return out;
+}
+
+
 template <typename T, int RTYPE>
 inline Rcpp::Matrix<RTYPE> to_Matrix(const csc_mat<T>& x)
 {

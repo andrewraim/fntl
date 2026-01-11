@@ -6,7 +6,8 @@
 namespace fntl {
 
 template <typename T, int RTYPE>
-Rcpp::Vector<RTYPE> row_apply(const Rcpp::Matrix<RTYPE>& X,
+Rcpp::Vector<RTYPE> row_apply(
+	const Rcpp::Matrix<RTYPE>& X,
 	const std::function<T(const Rcpp::Vector<RTYPE>&)>& f)
 {
 	unsigned int m = X.nrow();
@@ -21,7 +22,8 @@ Rcpp::Vector<RTYPE> row_apply(const Rcpp::Matrix<RTYPE>& X,
 }
 
 template <typename T, int RTYPE>
-Rcpp::Vector<RTYPE> col_apply(const Rcpp::Matrix<RTYPE>& X,
+Rcpp::Vector<RTYPE> col_apply(
+	const Rcpp::Matrix<RTYPE>& X,
 	const std::function<T(const Rcpp::Vector<RTYPE>&)>& f)
 {
 	unsigned int n = X.ncol();
@@ -36,7 +38,8 @@ Rcpp::Vector<RTYPE> col_apply(const Rcpp::Matrix<RTYPE>& X,
 }
 
 template <typename T, int RTYPE>
-Rcpp::Matrix<RTYPE> mat_apply(const Rcpp::Matrix<RTYPE>& X,
+Rcpp::Matrix<RTYPE> mat_apply(
+	const Rcpp::Matrix<RTYPE>& X,
 	const std::function<T(T)>& f)
 {
 	unsigned int m = X.nrow();
