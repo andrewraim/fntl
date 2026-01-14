@@ -5,6 +5,22 @@
 
 namespace fntl {
 
+template <typename T, int RTYPE, int RTYPE2>
+Rcpp::Vector<RTYPE2> row_apply2(
+	const Rcpp::Matrix<RTYPE>& X,
+	const std::function<T(const Rcpp::Vector<RTYPE>&)>& f)
+{
+	unsigned int m = X.nrow();
+	Rcpp::Vector<RTYPE2> out(m);
+
+	for (unsigned int i = 0; i < m; i++) {
+		const Rcpp::ConstMatrixRow<RTYPE>& xx = X.row(i);
+		out(i) = f(xx);
+	}
+
+	return out;
+}
+
 template <typename T, int RTYPE>
 Rcpp::Vector<RTYPE> row_apply(
 	const Rcpp::Matrix<RTYPE>& X,

@@ -16,6 +16,7 @@
 #include "integrate.h"
 #include "jacobian.h"
 #include "lbfgsb.h"
+#include "mat.h"
 #include "neldermead.h"
 #include "nlm.h"
 #include "optimize-brent.h"
