@@ -16,5 +16,9 @@ for (i in 1:m) {
 	}
 }
 
-out = apply_ex(X, Y, Z)
-print(out)
+out1 = apply1_ex(X)
+out2 = apply2_ex(Y)
+out3 = apply3_ex(Z)
+print(out1)
+print(out2)
+print(out3)

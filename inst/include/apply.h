@@ -129,7 +129,8 @@ mat<T> mat_apply(
 template <typename S, typename T>
 std::vector<T> row_apply(
 	const csc_mat<S>& X,
-	const std::function<T(const std::vector<S>&, const std::vector<unsigned int>&)>& f)
+	const std::function<T(const std::vector<S>&,
+		const std::vector<unsigned int>&)>& f)
 {
 	const csc_mat<T>& Y = to_csr(X);
 	unsigned int m = Y.m;
@@ -155,7 +156,8 @@ std::vector<T> row_apply(
 template <typename S, typename T>
 std::vector<T> col_apply(
 	const csc_mat<S>& X,
-	const std::function<T(const std::vector<S>&, const std::vector<unsigned int>&)>& f)
+	const std::function<T(const std::vector<S>&,
+		const std::vector<unsigned int>&)>& f)
 {
 	unsigned int m = X.m;
 	unsigned int n = X.n;
@@ -186,9 +188,7 @@ csc_mat<T> mat_apply(
 	unsigned int n = X.n;
 	unsigned int N = X.p[n];
 
-	csc_mat<T> out;
-	out.m = m;
-	out.n = n;
+	csc_mat<T> out(m, n);
 	out.i = X.i;
 	out.p = X.p;
 	out.x.resize(N);

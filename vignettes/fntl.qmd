@@ -2705,7 +2705,7 @@ Mention the converters.
 ## Apply {#sec-matrix-apply}
 
 ::: {.callout-note title="TBD"}
-Add material for sparse version. For `mat_apply`, we skip the missing elements and do not attempt to process their values. For `row_apply` and `col_apply`, we take a vector with the non-missing elements and another vector with their respective row or column indices.
+Add material for updated code. We need some examples to clarify usage of the template functions.
 :::
 
 
@@ -2753,36 +2753,100 @@ apply(X, 2, f)
 
 ### Functions {.unnumbered .unlisted}
 
-Primary location of source code is the file [inst/include/apply.h][apply-h].
+The functions  `mat_apply`, `row_apply`, and `col_apply` correspond to
+elementwise, rowwise, and columnwise apply. Primary location of the source code is the file [inst/include/apply.h][apply-h]. A number of template arguments are defined so that the functions can operate on many types of elements. Template arguments will be implicitly determined in typical usage; see the examples in the following subsection.
 
 [apply-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/apply.h
 
+The following operate on Rcpp matrices and vectors. The result is either an STL vector or a `mat` container (**TBD:** link to information on `mat`).
+
 ```{cpp}
 template <typename T, int RTYPE>
-Rcpp::Vector<RTYPE> row_apply(
-	const Rcpp::Matrix<RTYPE>& X,							// <1>
+std::vector<T> row_apply(
+	const Rcpp::Matrix<RTYPE>& X,                           // <1>
 	const std::function<T(const Rcpp::Vector<RTYPE>&)>& f   // <2>
 )
 
 template <typename T, int RTYPE>
-Rcpp::Vector<RTYPE> col_apply(
-	const Rcpp::Matrix<RTYPE>& X,							// <1>
+std::vector<T> col_apply(
+	const Rcpp::Matrix<RTYPE>& X,                           // <1>
 	const std::function<T(const Rcpp::Vector<RTYPE>&)>& f   // <2>
 )
 
-template <typename T, int RTYPE>
-Rcpp::Matrix<RTYPE> mat_apply(
-	const Rcpp::Matrix<RTYPE>& X,							// <1>
-	const std::function<T(T)>& f                            // <2>
+template <typename S, typename T, int RTYPE>
+mat<T> mat_apply(
+	const Rcpp::Matrix<RTYPE>& X,                           // <1>
+	const std::function<T(S)>& f                            // <3>
 )
 ```
+
 1. An Rcpp matrix object.
-2. Function $f$ to apply.
+2. Function $f$ that takes an Rcpp vector `x` and returns an element of type `T`. Type `T` need not the the same as the elements of `x`.
+3. Function $f$ that takes elements of type `S` and returns elements of type `T`. Type `S` should be compatible with the elements of `X` but `T` need not be.
 
-The functions `mat_apply`, `row_apply`, and `col_apply` correspond to
-elementwise, rowwise, and columnwise apply.
+**TBD: Explain templates.** Template argument `RTYPE` represents the Rcpp element type (@sec-rpp-templates) and `T` represents a native C++ type which is compatible with `RTYPE`. The domain and range of function `f` should match the class of `X` and type of apply operation. Template arguments are not explicitly specified when calling the functions; instead, they are inferred by the arguments to the function. See the examples in the following subsection for an illustration.
 
-Template argument `RTYPE` represents the Rcpp element type (see @sec-rpp-templates) and `T` represents a native C++ type which is compatible with `RTYPE`. The domain and range of function `f` should match the class of `X` and type of apply operation. Template arguments are not explicitly specified when calling the functions; instead, they are inferred by the arguments to the function. See the examples in the following subsection for an illustration.
+The following operate on `mat` matrix containers (**TBD** link to section). These can contain elements of an arbitrary type that cannot necessarily be passed back and forth to R.
+
+```{cpp}
+template <typename S, typename T>
+std::vector<T> row_apply(
+	const mat<S>& X,                                        // <1>
+	const std::function<T(const std::vector<S>&)>& f        // <2>
+)
+
+template <typename S, typename T>
+std::vector<T> col_apply(
+	const mat<S>& X,                                        // <1>
+	const std::function<T(const std::vector<S>&)>& f        // <2>
+)
+
+template <typename S, typename T>
+mat<T> mat_apply(
+	const mat<S>& X,                                        // <1>
+	const std::function<T(const S&)>& f                     // <2>
+)
+```
+1. An `mat` matrix object that contains elements of type `T`.
+2. Function $f$ that takes a vector `x` of type `S` elements and returns an element of type `T`.
+3. Function $f$ that takes an element `x` of type `S` elements and returns an element of type `T`.
+
+The following operate on `csc_mat` sparse matrix containers (**TBD** link to section). As with `mat`, these can contain elements of an arbitrary type that cannot necessarily be passed back and forth to R.
+
+```{cpp}
+template <typename S, typename T>
+std::vector<T> row_apply(
+	const csc_mat<S>& X,                                    // <1>
+	const std::function<T(const std::vector<S>&,            // <2>
+		const std::vector<unsigned int>&)>& f
+)
+
+template <typename S, typename T>
+std::vector<T> col_apply(
+	const csc_mat<S>& X,                                    // <1>
+	const std::function<T(const std::vector<S>&,            // <2>
+		const std::vector<unsigned int>&)>& f
+)
+
+template <typename S, typename T>
+csc_mat<T> mat_apply(
+	const csc_mat<S>& X,                                    // <1>
+	const std::function<T(const S&)>& f                     // <3>
+)
+```
+1. A `csc_mat` matrix object that contains elements of type `T`.
+2. Function $f$ of two arguments, `x` and `rows`, which sparsely represent a column of `X`. The elements of the argument are of type `S` and the result is of type `T`, which need not be the same. The argument `x` contains the values of the non-missing elements of the column and `rows` contains the corresponding (zero-based) row indices.
+3. Function $f$ that takes an element `x` of type `S` elements and returns an element of type `T`.
+
+Elements missing from `csc_mat` `X` are skipped in `mat_apply` so that they are also missing in the result.
+
+**TBD:** Do we want another variant (or flag) that lets us process missing elements too? How should we indicate that we want the result to have a missing value? Maybe we should have a second function `g` for this? Or we can take a second function `g` that processes missing values.
+
+**TBD:** Apply functions may want access to the coordinate in the matrix. And maybe access to other elements in the matrix? Do we want to have another batch of apply functions, or extend the current ones to support this? Does "extended apply" go by another name in R or other platforms? I'm thinking we just stick to R-style apply...
+
+**TBD** Another function we might want is to map/apply a function to an Rcpp List. 
+
+**TBD** For STL vectors, there is already `for_each` and `transform`. We can mention that.
 
 
 ### Example {.unnumbered .unlisted}
@@ -2806,7 +2870,10 @@ Call the function from R.
 ```{r}
 Rcpp::sourceCpp("examples/apply.cpp")
 X = matrix(rnorm(12), 4, 3)
+apply1_ex(X)
+
 Y = matrix(1:12, 4, 3)
+apply2_ex(Y)
 
 words = character(12)
 for (i in 1:12) {
@@ -2815,9 +2882,7 @@ for (i in 1:12) {
 		paste(collapse = "")
 }
 Z = matrix(words, 4, 3)
-
-out = apply_ex(X, Y, Z)
-print(out)
+apply3_ex(Z)
 ```
 
 ## Outer
