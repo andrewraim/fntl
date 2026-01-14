@@ -31,17 +31,33 @@ namespace fntl {
 template <typename T>
 struct csr_mat
 {
+/* Constructors */
+	csr_mat();
+	csr_mat(unsigned int rows, unsigned int cols);
+	csr_mat(SEXP obj);
+
+/* Serialize to S-expression */
+	operator SEXP() const;
+
+/* Member variables */
+	unsigned int m;
+	unsigned int n;
 	std::vector<unsigned int> j;
 	std::vector<unsigned int> p;
 	std::vector<T> x;
-	unsigned int m = 0;
-	unsigned int n = 0;
-
-	csr_mat() { };
-	csr_mat(unsigned int rows, unsigned int cols) : m(rows), n(cols) { };
-	csr_mat(SEXP obj);
-	operator SEXP() const;
 };
+
+template <typename T>
+csr_mat<T>::csr_mat()
+: m(0), n(0), j(), p(1), x()
+{
+}
+
+template <typename T>
+csr_mat<T>::csr_mat(unsigned int rows, unsigned int cols)
+: m(rows), n(cols), j(), p(1), x()
+{
+}
 
 }
 
@@ -51,7 +67,7 @@ struct csr_mat
 namespace fntl {
 
 /*
-* Constructors from SEXP objects
+* Constructor from SEXP object
 */
 
 template <typename T>

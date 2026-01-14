@@ -5,62 +5,46 @@
 
 namespace fntl {
 
-template <typename T, int RTYPE, int RTYPE2>
-Rcpp::Vector<RTYPE2> row_apply2(
+template <typename T, int RTYPE>
+std::vector<T> row_apply(
 	const Rcpp::Matrix<RTYPE>& X,
 	const std::function<T(const Rcpp::Vector<RTYPE>&)>& f)
 {
 	unsigned int m = X.nrow();
-	Rcpp::Vector<RTYPE2> out(m);
+	std::vector<T> out(m);
 
 	for (unsigned int i = 0; i < m; i++) {
 		const Rcpp::ConstMatrixRow<RTYPE>& xx = X.row(i);
-		out(i) = f(xx);
+		out[i] = f(xx);
 	}
 
 	return out;
 }
 
 template <typename T, int RTYPE>
-Rcpp::Vector<RTYPE> row_apply(
-	const Rcpp::Matrix<RTYPE>& X,
-	const std::function<T(const Rcpp::Vector<RTYPE>&)>& f)
-{
-	unsigned int m = X.nrow();
-	Rcpp::Vector<RTYPE> out(m);
-
-	for (unsigned int i = 0; i < m; i++) {
-		const Rcpp::ConstMatrixRow<RTYPE>& xx = X.row(i);
-		out(i) = f(xx);
-	}
-
-	return out;
-}
-
-template <typename T, int RTYPE>
-Rcpp::Vector<RTYPE> col_apply(
+std::vector<T> col_apply(
 	const Rcpp::Matrix<RTYPE>& X,
 	const std::function<T(const Rcpp::Vector<RTYPE>&)>& f)
 {
 	unsigned int n = X.ncol();
-	Rcpp::Vector<RTYPE> out(n);
+	std::vector<T> out(n);
 
 	for (unsigned int i = 0; i < n; i++) {
 		const Rcpp::ConstMatrixColumn<RTYPE>& xx = X.column(i);
-		out(i) = f(xx);
+		out[i] = f(xx);
 	}
 
 	return out;
 }
 
-template <typename T, int RTYPE>
-Rcpp::Matrix<RTYPE> mat_apply(
+template <typename S, typename T, int RTYPE>
+mat<T> mat_apply(
 	const Rcpp::Matrix<RTYPE>& X,
-	const std::function<T(T)>& f)
+	const std::function<T(S)>& f)
 {
 	unsigned int m = X.nrow();
 	unsigned int n = X.ncol();
-	Rcpp::Matrix<RTYPE> out(m, n);
+	mat<T> out(m, n);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {

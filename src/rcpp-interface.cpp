@@ -331,7 +331,8 @@ Rcpp::NumericMatrix mat_apply_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Fun
 		return fx(0);
 	};
 
-	return fntl::mat_apply(X, ff);
+	const auto& out = fntl::mat_apply(X, ff);
+	return Rcpp::wrap(out);
 }
 
 Rcpp::NumericVector row_apply_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Function& f)
@@ -342,7 +343,8 @@ Rcpp::NumericVector row_apply_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Fun
 		return fx(0);
 	};
 
-	return fntl::row_apply(X, ff);
+	const auto& out = fntl::row_apply(X, ff);
+	return Rcpp::wrap(out);
 }
 
 Rcpp::NumericVector col_apply_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Function& f)
@@ -353,7 +355,8 @@ Rcpp::NumericVector col_apply_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Fun
 		return fx(0);
 	};
 
-	return fntl::col_apply(X, ff);
+	const auto& out = fntl::col_apply(X, ff);
+	return Rcpp::wrap(out);
 }
 
 Rcpp::IntegerMatrix which_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Function& f)

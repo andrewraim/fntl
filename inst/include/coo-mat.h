@@ -31,17 +31,33 @@ namespace fntl {
 template <typename T>
 struct coo_mat
 {
+/* Constructors */
+	coo_mat();
+	coo_mat(unsigned int rows, unsigned int cols);
+	coo_mat(SEXP obj);
+
+/* Serialize to S-expression */
+	operator SEXP() const;
+
+/* Member variables */
+	unsigned int m;
+	unsigned int n;
 	std::vector<unsigned int> i;
 	std::vector<unsigned int> j;
 	std::vector<T> x;
-	unsigned int m = 0;
-	unsigned int n = 0;
-
-	coo_mat() { };
-	coo_mat(unsigned int rows, unsigned int cols) : m(rows), n(cols) { };
-	coo_mat(SEXP obj);
-	operator SEXP() const;
 };
+
+template <typename T>
+coo_mat<T>::coo_mat()
+: m(0), n(0), i(), j(), x()
+{
+}
+
+template <typename T>
+coo_mat<T>::coo_mat(unsigned int rows, unsigned int cols)
+: m(rows), n(cols), i(), j(), x()
+{
+}
 
 }
 

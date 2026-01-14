@@ -34,27 +34,47 @@ namespace fntl {
 template <typename T>
 struct csc_mat
 {
-	std::vector<unsigned int> i;
-	std::vector<unsigned int> p;
-	std::vector<T> x;
-	unsigned int m = 0;
-	unsigned int n = 0;
+/* Constructors */
+	csc_mat();
+	csc_mat(unsigned int rows, unsigned int cols);
 
-	csc_mat() { };
-	csc_mat(unsigned int rows, unsigned int cols) : m(rows), n(cols) { };
 	csc_mat(SEXP obj);
 
 	template <int RTYPE>
 	csc_mat(const Rcpp::Matrix<RTYPE>& x, const std::function<bool(const T&)>&f);
 
+	template <typename S>
+	csc_mat(const csc_mat<S>& y, const std::function<bool(const S&)>&f);
+
+/* Serialize to S-expression */
 	operator SEXP() const;
 
+/* Convert to other matrix format */
 	coo_mat<T> to_coo() const;
 	csr_mat<T> to_csr() const;
 
 	template <int RTYPE>
 	Rcpp::Matrix<RTYPE> to_Matrix() const;
+
+/* Member variables */
+	unsigned int m;
+	unsigned int n;
+	std::vector<unsigned int> i;
+	std::vector<unsigned int> p;
+	std::vector<T> x;
 };
+
+template <typename T>
+csc_mat<T>::csc_mat()
+: m(0), n(0), i(), p(1), x()
+{
+}
+
+template <typename T>
+csc_mat<T>::csc_mat(unsigned int rows, unsigned int cols)
+: m(rows), n(cols), i(), p(cols+1), x()
+{
+}
 
 /*
 * Constructors from dense matrices
@@ -64,6 +84,37 @@ template <typename T>
 template <int RTYPE>
 csc_mat<T>::csc_mat(const Rcpp::Matrix<RTYPE>& y,
 	const std::function<bool(const T&)>&f)
+{
+	m = y.nrow();
+	n = y.ncol();
+	unsigned int N = m*n;
+	p.resize(n+1, N);
+
+	for (unsigned int jj = 0; jj < n; jj++) {
+		for (unsigned int ii = 0; ii < m; ii++) {
+			bool ind = f(y(ii,jj));
+			if (ind) {
+				if (p[jj] == N) {
+					p[jj] = x.size();
+				}
+				i.push_back(ii);
+				x.push_back(y(ii,jj));
+			}
+		}
+	}
+
+	// Handle last pointer and any empty columns
+	p[n] = x.size();
+	for (int jj = n-1; jj >= 0; jj--) {
+		if (p[jj] == N) {
+			p[jj] = p[jj+1];
+		}
+	}
+}
+
+template <typename T>
+template <typename S>
+csc_mat<T>::csc_mat(const csc_mat<S>& y, const std::function<bool(const S&)>&f)
 {
 	m = y.nrow();
 	n = y.ncol();
@@ -125,7 +176,7 @@ inline csc_mat<T>::csc_mat(SEXP obj)
 }
 
 /*
-* Conversion operators to SEXP objects
+* Conversion operator to SEXP object
 */
 
 template <typename T>

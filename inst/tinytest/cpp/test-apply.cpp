@@ -23,7 +23,8 @@ Rcpp::NumericMatrix mat_pow(const Rcpp::NumericMatrix& x, double exponent = 2)
 		return std::pow(x, exponent);
 	};
 
-	return fntl::mat_apply(x, f);
+	const auto& out = fntl::mat_apply(x, f);
+	return Rcpp::wrap(out);
 }
 
 // [[Rcpp::export]]
@@ -34,7 +35,8 @@ Rcpp::NumericVector row_sum(const Rcpp::NumericMatrix& x)
 		return Rcpp::sum(x);
 	};
 
-	return fntl::row_apply(x, f);
+	const auto& out = fntl::row_apply(x, f);
+	return Rcpp::wrap(out);
 }
 
 // [[Rcpp::export]]
@@ -45,7 +47,8 @@ Rcpp::NumericVector col_sum(const Rcpp::NumericMatrix& x)
 		return Rcpp::sum(x);
 	};
 
-	return fntl::col_apply(x, f);
+	const auto& out = fntl::col_apply(x, f);
+	return Rcpp::wrap(out);
 }
 
 // [[Rcpp::export]]
@@ -56,5 +59,6 @@ Rcpp::IntegerMatrix imat_square(const Rcpp::IntegerMatrix& x)
 		return x * x;
 	};
 
-	return fntl::mat_apply(x, f);
+	const auto& out = fntl::mat_apply(x, f);
+	return Rcpp::wrap(out);
 }

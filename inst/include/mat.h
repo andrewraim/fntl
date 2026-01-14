@@ -14,32 +14,41 @@ namespace fntl {
 template <typename T>
 struct mat
 {
-	std::vector<T> x;
-	unsigned int m = 0;
-	unsigned int n = 0;
+/* Constructors */
+	mat();
+	mat(unsigned int rows, unsigned int cols);
 
-	mat() { };
-	mat(unsigned int rows, unsigned int cols) : m(rows), n(cols), x(rows*cols) { };
-
-	// Construct from an Rcpp matrix type
 	template <int RTYPE>
 	mat(const Rcpp::Matrix<RTYPE>& obj);
 
-	// Serialize to an S-expression.
+/* Serialize to S-expression */
 	operator SEXP() const;
 
-	// Access an element via x(i,j). No searching required here. Check
-	// bounds and throw an exception if attempting to go outside allocated
-	// memory. First function allows element to be modified and second ensures
-	// that it cannot be (const).
+/* Access elements via x(i,j) */
 	T& operator()(unsigned int row, unsigned int col);
 	const T& operator()(unsigned int row, unsigned int col) const;
+
+/* Member variables */
+	unsigned int m;
+	unsigned int n;
+	std::vector<T> x;
 };
+
+template <typename T>
+inline mat<T>::mat()
+: m(0), n(0), x()
+{
+}
+
+template <typename T>
+inline mat<T>::mat(unsigned int rows, unsigned int cols)
+: m(rows), n(cols), x(rows*cols)
+{
+}
 
 template <typename T>
 inline T& mat<T>::operator()(unsigned int row, unsigned int col)
 {
-	Rprintf("mat: size of x is %d\n", x.size());
 	if (row >= m || col >= n) {
 		 Rcpp::stop("Index out of bounds");
 	}
@@ -49,7 +58,6 @@ inline T& mat<T>::operator()(unsigned int row, unsigned int col)
 template <typename T>
 inline const T& mat<T>::operator()(unsigned int row, unsigned int col) const
 {
-	Rprintf("mat: size of x is %d\n", x.size());
 	if (row >= m || col >= n) {
 		 Rcpp::stop("Index out of bounds");
 	}
