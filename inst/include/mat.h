@@ -2,6 +2,12 @@
 #define FNTL_MAT_H
 
 #include <complex>
+#include <RcppCommon.h>
+
+/*
+* Components defined in this file are defined in a particular way to support
+* the `as` and `wrap` operations.
+*/
 
 namespace fntl {
 
@@ -13,27 +19,42 @@ struct mat
 	unsigned int n = 0;
 
 	mat() { };
-	mat(unsigned int rows, unsigned int cols) : m(rows), n(cols) { };
-	// mat(SEXP obj);
+	mat(unsigned int rows, unsigned int cols) : m(rows), n(cols), x(rows*cols) { };
 
-	// template <int RTYPE>
-	// void init(const Rcpp::Matrix<RTYPE>& obj);
-
+	// Construct from an Rcpp matrix type
 	template <int RTYPE>
 	mat(const Rcpp::Matrix<RTYPE>& obj);
 
-	// template <int RTYPE>
+	// Serialize to an S-expression.
 	operator SEXP() const;
 
-	// Access an element. No searching is required here.
-	const T& operator()(unsigned int row, unsigned int col) const {
-		Rprintf("mat: size of x is %d\n", x.size());
-		if (row >= m || col >= n) {
-			 Rcpp::stop("Index out of bounds");
-		}
-		return x[row + col*m];
-	}
+	// Access an element via x(i,j). No searching required here. Check
+	// bounds and throw an exception if attempting to go outside allocated
+	// memory. First function allows element to be modified and second ensures
+	// that it cannot be (const).
+	T& operator()(unsigned int row, unsigned int col);
+	const T& operator()(unsigned int row, unsigned int col) const;
 };
+
+template <typename T>
+inline T& mat<T>::operator()(unsigned int row, unsigned int col)
+{
+	Rprintf("mat: size of x is %d\n", x.size());
+	if (row >= m || col >= n) {
+		 Rcpp::stop("Index out of bounds");
+	}
+	return x[row + col*m];
+}
+
+template <typename T>
+inline const T& mat<T>::operator()(unsigned int row, unsigned int col) const
+{
+	Rprintf("mat: size of x is %d\n", x.size());
+	if (row >= m || col >= n) {
+		 Rcpp::stop("Index out of bounds");
+	}
+	return x[row + col*m];
+}
 
 template <typename T>
 template <int RTYPE>
@@ -44,97 +65,12 @@ inline mat<T>::mat(const Rcpp::Matrix<RTYPE>& y)
 	x.assign(y.begin(), y.end());
 }
 
-/*
-template <typename T>
-inline mat<T>::mat(SEXP obj)
-{
-	if (!Rf_isMatrix(obj)) {
-		Rcpp::stop("Not a matrix");
-	}
-
-	init(obj);
-
-	//if (TYPEOF(obj) == REALSXP) {
-	//	Rprintf("Matrix is a NumericMatrix\n");
-	//	init(Rcpp::as<Rcpp::NumericMatrix>(obj));
-	// } else if (TYPEOF(obj) == INTSXP) {
-	//	Rprintf("Matrix is a IntegerMatrix\n");
-	//	init(Rcpp::as<Rcpp::IntegerMatrix>(obj));
-	// } else if (TYPEOF(obj) == LGLSXP) {
-	// 	init(Rcpp::as<Rcpp::LogicalMatrix>(obj));
-	// } else if (TYPEOF(obj) == CPLXSXP) {
-	//	init(Rcpp::as<Rcpp::ComplexMatrix>(obj));
-	//	Rprintf("Matrix is a ComplexMatrix\n");
-	// } else if (TYPEOF(obj) == STRSXP) {
-	// 	init(Rcpp::as<Rcpp::CharacterMatrix>(obj));
-	// } else if (TYPEOF(obj) == RAWSXP) {
-	// 	init(Rcpp::as<Rcpp::RawMatrix>(obj));
-	// } else if (TYPEOF(obj) == VECSXP) {
-	// 	init(Rcpp::as<Rcpp::GenericMatrix>(obj));
-	// } else {
-	// 	Rcpp::stop("Unknown matrix type");
-	// }
-
-//	switch (TYPEOF(obj)) {
-//		case REALSXP: init(Rcpp::as<Rcpp::NumericMatrix>(obj)); break;
-//		default:      Rcpp::stop("Unknown matrix type"); break;
-//	}
 }
-*/
 
+#include <Rcpp.h>
+#include "mat.h"
 
-/*
-template <typename T>
-inline mat<T>::mat(SEXP obj)
-{
-	if (!Rf_isMatrix(obj)) {
-		Rcpp::stop("Not a matrix");
-	}
-
-	// Rcpp::stop("TYPEOF(obj) = %d, REALSXP = %d", TYPEOF(obj), REALSXP);
-
-	if (TYPEOF(obj) == REALSXP) {
-		Rprintf("REALSXP Checkpoint 1\n");
-		const Rcpp::NumericMatrix& xx = Rcpp::as<Rcpp::NumericMatrix>(obj);
-		Rprintf("REALSXP Checkpoint 2\n");
-		// x = Rcpp::as<std::vector<T>>(xx);
-		m = xx.nrow();
-		Rprintf("REALSXP Checkpoint 3\n");
-		n = xx.ncol();
-		Rprintf("REALSXP Checkpoint 4\n");
-		x.assign(xx.begin(), xx.end());
-		Rprintf("REALSXP Checkpoint 5\n");
-	} else {
-		Rcpp::stop("Unknown matrix type");
-	}
-
-	// switch (TYPEOF(obj)) {
-	// 	case REALSXP:
-	// 		const Rcpp::NumericMatrix& xx = Rcpp::as<Rcpp::NumericMatrix>(obj);
-	// 		// x = Rcpp::as<std::vector<T>>(xx);
-	// 		m = xx.nrow();
-	// 		n = xx.ncol();
-	// 		// x.assign(xx.begin(), xx.end());
-	// 		break;
-	// 	default:
-	// 		Rcpp::stop("Unknown matrix type");
-	// 		break;
-	// }
-	//
-	//		case INTSXP:
-	//			return "IntegerMatrix (int)";
-	//			break;
-	//		case LGLSXP:
-	//			return "LogicalMatrix (bool)";
-	//			break;
-	//		case STRSXP:
-	//			return "CharacterMatrix (string)";
-	//			break;
-	//		case CPLXSXP:
-	//			return "ComplexMatrix (complex)";
-	//			break;
-}
-*/
+namespace fntl {
 
 /*
 * Conversion operators to SEXP objects
@@ -179,7 +115,6 @@ inline mat<std::string>::operator SEXP() const
 	out.attr("dim") = Rcpp::Dimension(m, n);
 	return out;
 }
-
 
 }
 

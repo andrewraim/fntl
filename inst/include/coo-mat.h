@@ -16,22 +16,9 @@
 *
 **/
 
-/*** TBD: PUT THIS NOTE IN ONE PLACE. MAYBE VIGNETTE.
-* This code follows a specific structure so that we can use the `as` and `wrap`
-* constructs to serialize between structs and Rcpp Lists. The structs are
-* defined first without Rcpp included yet, then Rcpp is included and the
-* implementations for serialization operations are give.
-*
-* The pattern we follow here is referred to as "intrusive" (rather than
-* "non-intrusive") because `wrap` and `as` are defined via member functions.
-*
-* See the following articles:
-* <https://gallery.rcpp.org/articles/custom-templated-wrap-and-as-for-seamingless-interfaces>
-* <https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-extending.pdf>
-*
-* The issue also came up in Stack Overflow threads such as:
-* <https://stackoverflow.com/questions/51110244/in-rcpp-how-to-get-a-user-defined-structure-from-c-into-r>
-* <https://stackoverflow.com/questions/74887786/specialising-rcppas-for-stdarray>
+/*
+* Components defined in this file are defined in a particular way to support
+* the `as` and `wrap` operations.
 */
 
 #include <RcppCommon.h>

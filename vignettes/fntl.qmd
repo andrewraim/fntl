@@ -66,7 +66,7 @@ callout-icon: false
 filters:
   - include-code-files
 execute:
-  eval: true
+  eval: false
 ---
 
 ```{r}
@@ -335,10 +335,8 @@ There are a number of `args` structs which represent optional arguments to
 functions. `integrate_args` is one example; other `args` types have a prefix
 matching their corresponding function. Each of these may
 be instantiated from an Rcpp `List` or exported to an Rcpp `List` using the
-`as` and `wrap` mechanisms, respectively.^[Details on implementing these
-mechanisms may be found in the [Rcpp Extending][rcpp-extend] vignette.]
+`as` and `wrap` mechanisms, respectively.
 
-[rcpp-extend]: https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-extending.pdf
 
 ```{cpp}
 // Create args and export to a list
@@ -369,6 +367,13 @@ the `args` as follows.
 ```{cpp}
 fntl::integrate_result out = fntl::integrate(f, 0, 1);
 ```
+
+In the `fntl` source code, objects which support `as` and `wrap` are implemented in a particular way: structures are defined before `Rcpp.h` is included, then `Rcpp.h` is included, and finally serialization operations are defined. The `wrap` and `as` operations are defined via member functions (referred to as the "intrusive" implementation). Details on implementing these mechanisms are found in the [Rcpp Extending][rcpp-extend] vignette, a detailed post on the [Rcpp Gallery][gallery-seamless], and helpful threads on Stack Overflow [here][so-51110244] and [here][so-74887786] .
+
+[rcpp-extend]: https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-extending.pdf
+[gallery-seamless]: https://gallery.rcpp.org/articles/custom-templated-wrap-and-as-for-seamingless-interfaces/
+[so-51110244]: https://stackoverflow.com/q/51110244
+[so-74887786]: https://stackoverflow.com/q/74887786
 
 ## Results
 

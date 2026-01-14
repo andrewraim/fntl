@@ -85,12 +85,12 @@ std::vector<T> row_apply(
 	unsigned int m = X.m;
 	unsigned int n = X.n;
 
-	std::vector<S> x;
+	std::vector<S> x(n);
 	std::vector<T> out(m);
 
 	for (unsigned int i = 0; i < m; i++) {
 		for (unsigned int j = 0; j < n; j++) {
-			x[j] = X.x[j + i*n];
+			x[j] = X(i,j);
 		}
 		out[i] = f(x);
 	}
@@ -106,12 +106,12 @@ std::vector<T> col_apply(
 	unsigned int m = X.m;
 	unsigned int n = X.n;
 
-	std::vector<S> x;
-	std::vector<T> out(m);
+	std::vector<S> x(m);
+	std::vector<T> out(n);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {
-			x[i] = X.x[i + j*m];
+			x[i] = X(i,j);
 		}
 		out[j] = f(x);
 	}
@@ -130,7 +130,7 @@ mat<T> mat_apply(
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {
-			out.x[i + j*m] = f(X.x[i + j*m]);
+			out(i,j) = f(X(i,j));
 		}
 	}
 
