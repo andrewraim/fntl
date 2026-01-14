@@ -2805,8 +2805,18 @@ Call the function from R.
 
 ```{r}
 Rcpp::sourceCpp("examples/apply.cpp")
-X = matrix(1:12, 4, 3)
-out = apply_ex(X)
+X = matrix(rnorm(12), 4, 3)
+Y = matrix(1:12, 4, 3)
+
+words = character(12)
+for (i in 1:12) {
+	words[i] = rpois(1, lambda = 10) |>
+		sample(LETTERS, size = _, replace = F) |>
+		paste(collapse = "")
+}
+Z = matrix(words, 4, 3)
+
+out = apply_ex(X, Y, Z)
 print(out)
 ```
 

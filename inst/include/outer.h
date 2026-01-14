@@ -12,7 +12,6 @@ namespace fntl {
 * Versions of outer that are specific to Rcpp matrices
 */
 
-
 template <typename T, int RTYPE>
 inline Rcpp::Matrix<RTYPE> outer(
 	const Rcpp::Matrix<RTYPE>& X,
@@ -64,11 +63,13 @@ inline csc_mat<T> outer_sp(
 	unsigned int N_bdd = n*n;
 
 	csc_mat<T> out(n, n);
-	out.p.resize(n+1, N_bdd);
+	out.i.resize(0);
+	out.x.resize(0);
+	out.p.assign(n+1, N_bdd);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i <= j; i++) {
-			double val = f(X.row(i), X.row(j));
+			const T& val = f(X.row(i), X.row(j));
 			bool ind = g(X.row(i), X.row(j));
 			if (ind) {
 				if (out.p[j] == N_bdd) {
@@ -101,11 +102,13 @@ inline csc_mat<T> outer_sp(
 	unsigned int N_bdd = m*n;
 
 	csc_mat<T> out(m, n);
-	out.p.resize(n+1, N_bdd);
+	out.i.resize(0);
+	out.x.resize(0);
+	out.p.assign(n+1, N_bdd);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {
-			double val = f(X.row(i), Y.row(j));
+			const T& val = f(X.row(i), Y.row(j));
 			bool ind = g(X.row(i), Y.row(j));
 			if (ind) {
 				if (out.p[j] == N_bdd) {
@@ -204,7 +207,7 @@ inline mat<E> outer(
 }
 
 template <typename S, typename T, typename E>
-inline csc_mat<E> outer(
+inline mat<E> outer(
 	const std::vector<S>& x,
 	const std::vector<T>& y,
 	const std::function<E(const S&, const T&)>& f)
@@ -232,7 +235,9 @@ inline csc_mat<E> outer_sp(
 	unsigned int N_bdd = n*n;
 
 	csc_mat<E> out(n, n);
-	out.p.resize(n+1, N_bdd);
+	out.i.resize();
+	out.x.resize();
+	out.p.assign(n+1, N_bdd);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i <= j; i++) {
@@ -269,7 +274,9 @@ inline csc_mat<E> outer_sp(
 	unsigned int N_bdd = m*n;
 
 	csc_mat<E> out(m, n);
-	out.p.resize(n+1, N_bdd);
+	out.i.resize();
+	out.x.resize();
+	out.p.assign(n+1, N_bdd);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {
