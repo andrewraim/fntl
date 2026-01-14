@@ -34,8 +34,16 @@ struct mat
 	unsigned int n = 0;
 
 	mat() { };
-};
+	mat(unsigned int rows, unsigned int cols) : m(rows), n(cols) { };
 
+	// Access an element. No searching is required here.
+	const T& operator()(unsigned int row, unsigned int col) const {
+		if (row >= m || col >= n) {
+			 Rcpp::stop("Index out of bounds");
+		}
+		return x[row + col*m];
+	}
+};
 
 template <typename T>
 struct csc_mat
@@ -47,6 +55,7 @@ struct csc_mat
 	unsigned int n = 0;
 
 	csc_mat() { };
+	csc_mat(unsigned int rows, unsigned int cols) : m(rows), n(cols) { };
 	csc_mat(SEXP obj);
 	operator SEXP() const;
 };
@@ -61,6 +70,7 @@ struct csr_mat
 	unsigned int n = 0;
 
 	csr_mat() { };
+	csr_mat(unsigned int rows, unsigned int cols) : m(rows), n(cols) { };
 	csr_mat(SEXP obj);
 	operator SEXP() const;
 };
@@ -75,6 +85,7 @@ struct coo_mat
 	unsigned int n = 0;
 
 	coo_mat() { };
+	coo_mat(unsigned int rows, unsigned int cols) : m(rows), n(cols) { };
 	coo_mat(SEXP obj);
 	operator SEXP() const;
 };
@@ -214,10 +225,8 @@ inline csc_mat<T> to_csc(const Rcpp::Matrix<RTYPE>& x,
 	unsigned int n = x.ncol();
 	unsigned int N = m*n;
 
-	csc_mat<T> out;
+	csc_mat<T> out(m, n);
 	out.p.resize(n+1, N);
-	out.m = m;
-	out.n = n;
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {
@@ -292,9 +301,7 @@ inline csr_mat<T> to_csr(const csc_mat<T>& x)
 		}
 	}
 
-	csr_mat<T> out;
-	out.m = m;
-	out.n = n;
+	csr_mat<T> out(m, n);
 	out.p.resize(m+1, N);
 
 	auto itr = z.begin();
@@ -325,9 +332,7 @@ inline coo_mat<T> to_coo(const csc_mat<T>& x)
 	unsigned int n = x.n;
 	unsigned int N = x.p[n];
 
-	coo_mat<T> out;
-	out.m = m;
-	out.n = n;
+	coo_mat<T> out(m, n);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int l = x.p[j]; l < x.p[j+1]; l++) {

@@ -659,6 +659,14 @@ const references in both the API and internal implementation. It is recommended
 that users consider consider which of the three - by-value, by-reference, or
 by-const-reference - is most appropriate for their application in actual usage.
 
+## Templates for Rcpp Vectors and Matrices {#sec-rpp-templates}
+
+**TBD:** Under Construction
+
+Rcpp matrix and vector types are based on templated classes that parameterize the types of underlying elements which they contain. For example, `NumericMatrix` is a typedef for `Matrix<REALSXP>` while `IntegerVector` is a typedef for `Vector<INTSXP>`. For others, see the [Rcpp API][rcpp-matrices-src]. We make use of the template classes in several places in the `fntl` API to support multiple Rcpp types with the same API function, especially in @sec-matrix. Rcpp vector and matrix arguments will appear as `Vector<RTYPE>` and `Matrix<RTYPE>` with a `RTYPE` template argument under these circumstances.
+
+[rcpp-matrices-src]: https://dirk.eddelbuettel.com/code/rcpp/html/instantiation_8h.html
+
 ## Using RcppArmadillo
 
 The `RcppArmadillo` package [@EddelbuettelSanderson2014] greatly facilitates
@@ -2689,7 +2697,7 @@ Where are these formats from? How can our containers be used with `Matrix`, `Arm
 Mention the converters.
 :::
 
-## Apply
+## Apply {#sec-matrix-apply}
 
 ::: {.callout-note title="TBD"}
 Add material for sparse version. For `mat_apply`, we skip the missing elements and do not attempt to process their values. For `row_apply` and `col_apply`, we take a vector with the non-missing elements and another vector with their respective row or column indices.
@@ -2769,29 +2777,21 @@ Rcpp::Matrix<RTYPE> mat_apply(
 The functions `mat_apply`, `row_apply`, and `col_apply` correspond to
 elementwise, rowwise, and columnwise apply.
 
-Rcpp matrix objects may be of type `NumericMatrix`, `IntegerMatrix`,
-or one of the others defined in the [Rcpp API][rcpp-matrices-src]. The template
-argument `RTYPE` represents the type of data stored in in the matrix, taking
-on value `REALSXP` for `NumericMatrix`, `INTSXP` for `IntegerMatrix`, etc. The
-template argument `T` represents an underlying C++ variable type such as
-`double`, `int`, etc.
+Template argument `RTYPE` represents the Rcpp element type (see @sec-rpp-templates) and `T` represents a native C++ type which is compatible with `RTYPE`. The domain and range of function `f` should match the class of `X` and type of apply operation. Template arguments are not explicitly specified when calling the functions; instead, they are inferred by the arguments to the function. See the examples in the following subsection for an illustration.
 
-The domain and range of function `f` should match the class of `x` and type of
-apply operation. As an example, suppose `X` is an object of type `NumericMatrix`.
-
-- The domain of `row_apply` should be of type `const NumericVector&` and
-  the range should be of type `double`.
-- The domain of `col_apply` should be of type `const NumericVector&` and
-  the range should be of type `double`.
-- The domain and range of `mat_apply` should be of type `double`.
-
-[rcpp-matrices-src]: https://dirk.eddelbuettel.com/code/rcpp/html/instantiation_8h.html
 
 ### Example {.unnumbered .unlisted}
 
 Compute the square of each element of a matrix, then its rowwise sums, then its
 columnwise sums. A C++ function with Rcpp interface is defined in the file
 `examples/apply.cpp`.
+
+TBD: Here is a snippet demonstrating `mat_apply` with `X` as a `NumericMatrix` and `f` as a function that transforms a `double` to another `double` by squaring it.
+
+TBD: The following snippet shows a `row_apply` and `col_apply` which compute row and column sums of an integer matrix. Here the argument of `f` is a reference to an Rcpp `IntegerVector` and the return value is an `int`.
+
+TBD: The following snippet operates on a matrix of strings. We compute the elementwise length of each string.
+
 
 ```{.cpp include="examples/apply.cpp"}
 ```

@@ -55,10 +55,81 @@ Rcpp::Matrix<RTYPE> mat_apply(
 	return out;
 }
 
-template <typename T>
-csc_mat<T> row_apply(
-	const csc_mat<T>& X,
-	const std::function<T(std::vector<T>, std::vector<unsigned int>)>& f)
+/*
+* More general apply for dense matrices. This version can produce vectors and
+* matrices of a different type than the argument. For example, with input as
+* a matrix of strings, the output can be a matrix of string lengths.
+*/
+
+template <typename S, typename T>
+std::vector<T> row_apply(
+	const mat<S>& X,
+	const std::function<T(const std::vector<S>&)>& f)
+{
+	unsigned int m = X.m;
+	unsigned int n = X.n;
+
+	std::vector<S> x;
+	std::vector<T> out(m);
+
+	for (unsigned int i = 0; i < m; i++) {
+		for (unsigned int j = 0; j < n; j++) {
+			x[j] = X.x[j + i*n];
+		}
+		out[i] = f(x);
+	}
+
+	return out;
+}
+
+template <typename S, typename T>
+std::vector<T> col_apply(
+	const mat<S>& X,
+	const std::function<T(const std::vector<S>&)>& f)
+{
+	unsigned int m = X.m;
+	unsigned int n = X.n;
+
+	std::vector<S> x;
+	std::vector<T> out(m);
+
+	for (unsigned int j = 0; j < n; j++) {
+		for (unsigned int i = 0; i < m; i++) {
+			x[i] = X.x[i + j*m];
+		}
+		out[j] = f(x);
+	}
+
+	return out;
+}
+
+template <typename S, typename T>
+mat<T> mat_apply(
+	const mat<S>& X,
+	const std::function<T(const S&)>& f)
+{
+	unsigned int m = X.m;
+	unsigned int n = X.n;
+	mat<T> out(m, n);
+
+	for (unsigned int j = 0; j < n; j++) {
+		for (unsigned int i = 0; i < m; i++) {
+			out.x[i + j*m] = f(X.x[i + j*m]);
+		}
+	}
+
+	return out;
+}
+
+/*
+* Apply for sparse matrices. Be able to transform from one type of matrix to
+* another. Row and col apply transform to an STL vector.
+*/
+
+template <typename S, typename T>
+std::vector<T> row_apply(
+	const csc_mat<S>& X,
+	const std::function<T(const std::vector<S>&, const std::vector<unsigned int>&)>& f)
 {
 	const csc_mat<T>& Y = to_csr(X);
 	unsigned int m = Y.m;
@@ -67,11 +138,11 @@ csc_mat<T> row_apply(
 	std::vector<T> out(m);
 
 	for (unsigned int i = 0; i < m; i++) {
-		std::vector<T> y;
+		std::vector<S> y;
 		std::vector<unsigned int> idx;
 		for (unsigned int l = Y.p[i]; l < Y.p[i+1]; l++) {
 			unsigned int j = Y.j[l];
-			const T& v = Y.x[l];
+			const S& v = Y.x[l];
 			y.push_back(v);
 			idx.push_back(i);
 		}
@@ -81,10 +152,10 @@ csc_mat<T> row_apply(
 	return out;
 }
 
-template <typename T>
-csc_mat<T> col_apply(
-	const csc_mat<T>& X,
-	const std::function<T(std::vector<T>, std::vector<unsigned int>)>& f)
+template <typename S, typename T>
+std::vector<T> col_apply(
+	const csc_mat<S>& X,
+	const std::function<T(const std::vector<S>&, const std::vector<unsigned int>&)>& f)
 {
 	unsigned int m = X.m;
 	unsigned int n = X.n;
@@ -92,11 +163,11 @@ csc_mat<T> col_apply(
 	std::vector<T> out(n);
 
 	for (unsigned int j = 0; j < n; j++) {
-		std::vector<T> x;
+		std::vector<S> x;
 		std::vector<unsigned int> idx;
 		for (unsigned int l = X.p[j]; l < X.p[j+1]; l++) {
 			unsigned int i = X.i[l];
-			const T& v = X.x[l];
+			const S& v = X.x[l];
 			x.push_back(v);
 			idx.push_back(i);
 		}
@@ -106,10 +177,10 @@ csc_mat<T> col_apply(
 	return out;
 }
 
-template <typename T>
+template <typename S, typename T>
 csc_mat<T> mat_apply(
-	const csc_mat<T>& X,
-	const std::function<T(T)>& f)
+	const csc_mat<S>& X,
+	const std::function<T(const S&)>& f)
 {
 	unsigned int m = X.m;
 	unsigned int n = X.n;
@@ -125,7 +196,8 @@ csc_mat<T> mat_apply(
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int l = X.p[j]; l < X.p[j+1]; l++) {
 			unsigned int i = X.i[l];
-			out.x[l] = f(X.x[l]);
+			const S& v = X.x[l];
+			out.x[l] = f(v);
 		}
 	}
 

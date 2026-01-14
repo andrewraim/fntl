@@ -337,7 +337,7 @@ Rcpp::NumericMatrix mat_apply_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Fun
 Rcpp::NumericVector row_apply_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Function& f)
 {
 	const std::function<double(const Rcpp::NumericVector&)>& ff =
-	[&](const Rcpp::NumericVector& x) {
+	[&](const Rcpp::NumericVector& x) -> double {
 		const Rcpp::NumericVector& fx = f(x);
 		return fx(0);
 	};

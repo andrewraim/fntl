@@ -63,9 +63,7 @@ inline csc_mat<T> outer_sp(
 	unsigned int n = X.nrow();
 	unsigned int N_bdd = n*n;
 
-	csc_mat<T> out;
-	out.m = n;
-	out.n = n;
+	csc_mat<T> out(n, n);
 	out.p.resize(n+1, N_bdd);
 
 	for (unsigned int j = 0; j < n; j++) {
@@ -102,10 +100,8 @@ inline csc_mat<T> outer_sp(
 	unsigned int n = Y.nrow();
 	unsigned int N_bdd = m*n;
 
-	csc_mat<T> out;
+	csc_mat<T> out(m, n);
 	out.p.resize(n+1, N_bdd);
-	out.m = m;
-	out.n = n;
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {
@@ -196,7 +192,7 @@ inline mat<E> outer(
 	const std::function<E(const S&, const S&)>& f)
 {
 	unsigned int n = x.size();
-	mat<E> out(n*n);
+	mat<E> out(n, n);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < n; i++) {
@@ -215,7 +211,7 @@ inline csc_mat<E> outer(
 {
 	unsigned int m = x.size();
 	unsigned int n = y.size();
-	mat<E> out(m*n);
+	mat<E> out(m, n);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < n; i++) {
@@ -235,9 +231,7 @@ inline csc_mat<E> outer_sp(
 	unsigned int n = x.size();
 	unsigned int N_bdd = n*n;
 
-	csc_mat<E> out;
-	out.m = n;
-	out.n = n;
+	csc_mat<E> out(n, n);
 	out.p.resize(n+1, N_bdd);
 
 	for (unsigned int j = 0; j < n; j++) {
@@ -274,10 +268,8 @@ inline csc_mat<E> outer_sp(
 	unsigned int n = y.size();
 	unsigned int N_bdd = m*n;
 
-	csc_mat<E> out;
+	csc_mat<E> out(m, n);
 	out.p.resize(n+1, N_bdd);
-	out.m = m;
-	out.n = n;
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {
