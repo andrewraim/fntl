@@ -1,7 +1,7 @@
 #ifndef FNTL_TYPEDEFS_H
 #define FNTL_TYPEDEFS_H
 
-#include "spmat.h"
+#include "csc-mat.h"
 
 static const std::vector<std::string> integrate_messages = {
 	"OK",
