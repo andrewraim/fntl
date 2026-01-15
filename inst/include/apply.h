@@ -183,13 +183,6 @@ std::vector<T> col_apply(
 * TBD: consider modifying this so that `f` also returns a bool so that we can
 * make the result more sparse than the input. Or keep it simple and avoid
 * modifying the sparseness here?
-*
-* Also, should we have another variant that operates on dense matrices? This
-* isn't crucial because, in this case, we could already represent the matrix
-* in dense form. But it might be useful.
-*
-* Modifying sparseness could be handled in `apply_indices` or whatever we're
-* going to call it.
 */
 
 template <typename S, typename T>
@@ -212,6 +205,74 @@ csc_mat<T> mat_apply(
 			const S& v = X.x[l];
 			out.x[l] = f(v);
 		}
+	}
+
+	return out;
+}
+
+template <typename T>
+std::vector<T> coord_apply(
+	unsigned int n,
+	const std::function<T(unsigned int)>& f)
+{
+	std::vector<T> out(n);
+
+	for (unsigned int i = 0; i < n; i++) {
+		out[i] = f(i);
+	}
+
+	return out;
+}
+
+template <typename T>
+mat<T> coord_apply(
+	unsigned int m,
+	unsigned int n,
+	const std::function<T(unsigned int, unsigned int)>& f)
+{
+	mat<T> out(m,n);
+
+	for (unsigned int j = 0; j < n; j++) {
+		for (unsigned int i = 0; i < m; i++) {
+			out(i,j) = f(i,j);
+		}
+	}
+
+	return out;
+}
+
+template <typename T>
+csc_mat<T> coord_apply_sp(
+	unsigned int m,
+	unsigned int n,
+	const std::function<std::pair<T,bool>(unsigned int, unsigned int)>& f)
+{
+	unsigned int N_bdd = m*n;
+
+	csc_mat<T> out(m,n);
+	out.i.resize(0);
+	out.x.resize(0);
+	out.p.assign(n+1, N_bdd);
+
+	for (unsigned int j = 0; j < n; j++) {
+		for (unsigned int i = 0; i < m; i++) {
+			const std::pair<T,bool>& f_ij = f(i,j);
+			const T& val = f_ij.first;
+			bool ind = f_ij.second;
+			if (ind) {
+				if (out.p[j] == N_bdd) {
+					out.p[j] = out.x.size();
+				}
+				out.i.push_back(i);
+				out.x.push_back(val);
+			}
+		}
+	}
+
+	// Handle pointer for last column and any empty columns
+	out.p[n] = out.x.size();
+	for (int j = n-1; j >= 0; j--) {
+		out.p[j] = std::min(out.p[j], out.p[j+1]);
 	}
 
 	return out;

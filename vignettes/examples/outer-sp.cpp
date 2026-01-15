@@ -5,16 +5,17 @@
 // [[Rcpp::export]]
 arma::sp_mat outer_sp_ex(Rcpp::NumericMatrix X)
 {
-    std::function f = [ ](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y) -> double {
-        double norm2 = Rcpp::sum(Rcpp::pow(x - y, 2));
-        return std::sqrt(norm2);
+    std::function f = [](
+        const Rcpp::NumericVector& x,
+        const Rcpp::NumericVector& y)
+        -> std::pair<double,bool>
+    {
+        double norm = std::sqrt(Rcpp::sum(Rcpp::pow(x - y, 2)));
+        bool ind = norm < 2.0;
+        return std::pair<double,bool>(norm, ind);
     };
 
-    std::function g = [&](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y) -> bool {
-        return f(x,y) < 2.0;
-    };
-
-    auto res = fntl::outer_sp(X, f, g);
+    auto res = fntl::outer_sp(X, f);
 
     // Convert csc_mat to arma::sp_mat
     arma::uvec i = arma::conv_to<arma::uvec>::from(res.i);

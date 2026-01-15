@@ -2753,12 +2753,11 @@ apply(X, 2, f)
 
 ### Functions {.unnumbered .unlisted}
 
-The functions  `mat_apply`, `row_apply`, and `col_apply` correspond to
-elementwise, rowwise, and columnwise apply. Primary location of the source code is the file [inst/include/apply.h][apply-h]. A number of template arguments are defined so that the functions can operate on many types of elements. Template arguments will be implicitly determined in typical usage; see the examples in the following subsection.
+The functions  `mat_apply`, `row_apply`, and `col_apply` correspond to elementwise, rowwise, and columnwise apply. Primary location of the source code is the file [inst/include/apply.h][apply-h]. A number of template arguments are defined so that the functions can operate on many types of elements. Template arguments will be implicitly determined in typical usage; see the examples in the following subsection.
 
 [apply-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/apply.h
 
-The following operate on Rcpp matrices and vectors. The result is either an STL vector or a `mat` container (**TBD:** link to information on `mat`).
+The following operate on Rcpp matrices and vectors. The result is either an STL vector or a `mat` container (**TBD:** link to information on `mat`). Note that the type of the result need not be the same as elements of `X`.
 
 ```{cpp}
 template <typename T, int RTYPE>
@@ -2786,7 +2785,7 @@ mat<T> mat_apply(
 
 **TBD: Explain templates.** Template argument `RTYPE` represents the Rcpp element type (@sec-rpp-templates) and `T` represents a native C++ type which is compatible with `RTYPE`. The domain and range of function `f` should match the class of `X` and type of apply operation. Template arguments are not explicitly specified when calling the functions; instead, they are inferred by the arguments to the function. See the examples in the following subsection for an illustration.
 
-The following operate on `mat` matrix containers (**TBD** link to section). These can contain elements of an arbitrary type that cannot necessarily be passed back and forth to R.
+The following operate on `mat` matrix containers (**TBD** link to section) and STL vectors. These can contain elements of an arbitrary type; therefore, they cannot necessarily be passed back and forth to R.
 
 ```{cpp}
 template <typename S, typename T>
@@ -2811,7 +2810,7 @@ mat<T> mat_apply(
 2. Function $f$ that takes a vector `x` of type `S` elements and returns an element of type `T`.
 3. Function $f$ that takes an element `x` of type `S` elements and returns an element of type `T`.
 
-The following operate on `csc_mat` sparse matrix containers (**TBD** link to section). As with `mat`, these can contain elements of an arbitrary type that cannot necessarily be passed back and forth to R.
+The following operate on sparse matrices. Matrices arguments are represented as `csc_mat` sparse matrix containers (**TBD** link to section). Rows and columns are represented by a pair of STL vectors: one for the values of nonmissing elements and another for their indices. As with `mat`, these can contain elements of an arbitrary type, so cannot necessarily be returned to R directly.
 
 ```{cpp}
 template <typename S, typename T>
@@ -2840,16 +2839,40 @@ csc_mat<T> mat_apply(
 
 Elements missing from `csc_mat` `X` are skipped in `mat_apply` so that they are also missing in the result.
 
-**TBD:** Do we want another variant (or flag) that lets us process missing elements too? How should we indicate that we want the result to have a missing value? Maybe we should have a second function `g` for this? Or we can take a second function `g` that processes missing values.
+```{cpp}
+template <typename T>
+std::vector<T> coord_apply(
+    unsigned int n,                                                        // <1>
+    const std::function<T(unsigned int)>& f)                               // <4>
 
-**TBD:** Apply functions may want access to the coordinate in the matrix. And maybe access to other elements in the matrix? Do we want to have another batch of apply functions, or extend the current ones to support this? Does "extended apply" go by another name in R or other platforms? I'm thinking we just stick to R-style apply...
+template <typename T>
+mat<T> coord_apply(
+    unsigned int m,                                                        // <2>
+    unsigned int n,                                                        // <3>
+    const std::function<T(unsigned int, unsigned int)>& f)                 // <5>
 
-**TBD** Another function we might want is to map/apply a function to an Rcpp List. 
+template <typename T>
+csc_mat<T> coord_apply_sp(
+    unsigned int m,                                                        // <2>
+    unsigned int n,                                                        // <3>
+    const std::function<std::pair<T,bool>(unsigned int, unsigned int)>& f) // <6>
+```
+1. Length of sequence to iterate for single index coordinates; i.e., `0, 1, ..., n`.
+2. Length of sequence to iterate for row indices; i.e., `0, 1, ..., m`.
+3. Length of sequence to iterate for column indices; i.e., `0, 1, ..., n`.
+4. Function whose argument is a single index and returns a value of type `T`.
+5. Function of two arguments: a row index `i` and a column index `j`. Returns a value of type `T`.
+6. Function of two arguments: a row index `i` and a column index `j`. Returns a pair of elements: the first of type `T` is the return value and the second is a `bool` to indicate whether the result should be included in the result; otherwise it is omitted from the sparse representation.
 
-**TBD** For STL vectors, there is already `for_each` and `transform`. We can mention that.
+**TBD** Maybe we don't need all these apply functions. I think we could keep just the `coord_apply` ones, but maybe also keep the Rcpp matrix ones since we had them before? But... the extra ones are nice because they gather up rows or columns into a vector for the caller...
 
+**TBD** Consider renaming `coord_apply` and dropping `coord`.
 
-### Example {.unnumbered .unlisted}
+**TBD** For STL vectors, there is already `for_each` and `transform`. We can mention them. Ours may be convenient because they reqire iterators.
+
+**TBD** The `coord_apply` functions are equivalent to calling `outer(x, y, f)` with `x = c(0, ..., m-1)` and `y = c(0, ..., n-1)`. The `coord_apply` functions are a bit more convenient to use.
+
+### Example: Apply for Rcpp Matrices {.unnumbered .unlisted}
 
 Compute the square of each element of a matrix, then its rowwise sums, then its
 columnwise sums. A C++ function with Rcpp interface is defined in the file
@@ -2885,9 +2908,29 @@ Z = matrix(words, 4, 3)
 apply3_ex(Z)
 ```
 
+
+### Example: Apply for Coordinates {.unnumbered .unlisted}
+
+```{.cpp include="examples/apply-coord.cpp"}
+```
+
+**TBD:** This demonstrates apply functions for coordinates.
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/apply-coord.cpp")
+x = rnorm(24)
+X = matrix(x, 4, 6)
+coord_apply1_ex(as.vector(X))
+coord_apply2_ex(X)
+sp = coord_apply_sp_ex(X)
+Matrix::sparseMatrix(sp$i, p = sp$p, x = sp$x, dims = c(sp$m, sp$n))
+```
+
 ## Outer
 
-Construct a matrix from a function of two arguments. Or carry out a matrix multiplication without explicitly constructing the matrix.
+Construct a matrix from a function of two arguments. Or use it in a matrix multiplication without explicitly constructing the matrix.
 
 
 ::: {.callout-note title="TBD"}
