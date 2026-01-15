@@ -179,10 +179,23 @@ std::vector<T> col_apply(
 	return out;
 }
 
+/*
+* TBD: consider modifying this so that `f` also returns a bool so that we can
+* make the result more sparse than the input. Or keep it simple and avoid
+* modifying the sparseness here?
+*
+* Also, should we have another variant that operates on dense matrices? This
+* isn't crucial because, in this case, we could already represent the matrix
+* in dense form. But it might be useful.
+*
+* Modifying sparseness could be handled in `apply_indices` or whatever we're
+* going to call it.
+*/
+
 template <typename S, typename T>
 csc_mat<T> mat_apply(
 	const csc_mat<S>& X,
-	const std::function<T(const S&)>& f)
+	const std::function<std::pair<T>(const S&)>& f)
 {
 	unsigned int m = X.m;
 	unsigned int n = X.n;
@@ -204,6 +217,55 @@ csc_mat<T> mat_apply(
 	return out;
 }
 
+/*
+**** TBD: Apply a function of indices ****
+
+# Sparse Apply Modification
+
+Change the function f to return a pair of `T` and `bool`. Remove `g` from the
+interface. This is for `apply` and `outer` functions that return sparse
+matrices.
+
+# Apply functions for indices
+
+Here is pseudo-code for how I think it could work
+
+```r
+x = rnorm(5)
+f = \(i,j) { cumsum(x)[i] * cumsum(x)[j] }
+X = matrix(NA, 5, 5)
+for (i in 1:5) {
+	for (j in 1:5) {
+		X[i,j] = f(i,j)
+	}
+}
+idx_apply(X, f)
+```
+
+We also want to be able to produce a sparse matrix. This would involve
+modifying `f` to return a boolean as well.
+
+```r
+f = \(i, j) {
+	out = list(
+		value = cumsum(x)[i] * cumsum(x)[j],
+		ind = abs(i-j) <= 1
+	}
+}
+idx_apply_sp(X, f)
+```
+
+R can handle this with `outer` using a call like the following.
+(<https://stackoverflow.com/a/7395664>)
+
+```r
+outer(1:nrow(mat), 1:ncol(mat) , FUN = function(r,c) log(r+c) )
+```
+
+We can accomplish this with calls to our `outer` functions in the same way.
+*/
+
 }
 
 #endif
+

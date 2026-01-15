@@ -15,7 +15,9 @@ namespace fntl {
 template <typename T, int RTYPE>
 inline Rcpp::Matrix<RTYPE> outer(
 	const Rcpp::Matrix<RTYPE>& X,
-	const std::function<T(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& f)
+	const std::function<T(
+		const Rcpp::Vector<RTYPE>&,
+		const Rcpp::Vector<RTYPE>&)>& f)
 {
 	unsigned int n = X.nrow();
 	Rcpp::Matrix<RTYPE> out(n, n);
@@ -38,7 +40,9 @@ template <typename T, int RTYPE>
 inline Rcpp::Matrix<RTYPE> outer(
 	const Rcpp::Matrix<RTYPE>& X,
 	const Rcpp::Matrix<RTYPE>& Y,
-	const std::function<T(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& f)
+	const std::function<T(
+		const Rcpp::Vector<RTYPE>&,
+		const Rcpp::Vector<RTYPE>&)>& f)
 {
 	unsigned int m = X.nrow();
 	unsigned int n = Y.nrow();
@@ -56,8 +60,9 @@ inline Rcpp::Matrix<RTYPE> outer(
 template <typename T, int RTYPE>
 inline csc_mat<T> outer_sp(
 	const Rcpp::Matrix<RTYPE>& X,
-	const std::function<T(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& f,
-	const std::function<bool(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& g)
+	const std::function<std::pair<T,bool>(
+		const Rcpp::Vector<RTYPE>&,
+		const Rcpp::Vector<RTYPE>&)>& f)
 {
 	unsigned int n = X.nrow();
 	unsigned int N_bdd = n*n;
@@ -69,8 +74,9 @@ inline csc_mat<T> outer_sp(
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i <= j; i++) {
-			const T& val = f(X.row(i), X.row(j));
-			bool ind = g(X.row(i), X.row(j));
+			const std::pair<T,bool>& f_ij = f(X.row(i), X.row(j));
+			const T& val = f_ij.first;
+			bool ind = f_ij.second;
 			if (ind) {
 				if (out.p[j] == N_bdd) {
 					out.p[j] = out.x.size();
@@ -94,8 +100,9 @@ template <typename T, int RTYPE>
 inline csc_mat<T> outer_sp(
 	const Rcpp::Matrix<RTYPE>& X,
 	const Rcpp::Matrix<RTYPE>& Y,
-	const std::function<T(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& f,
-	const std::function<bool(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& g)
+	const std::function<T,bool>(
+		const Rcpp::Vector<RTYPE>&,
+		const Rcpp::Vector<RTYPE>&)>& f)
 {
 	unsigned int m = X.nrow();
 	unsigned int n = Y.nrow();
@@ -108,8 +115,10 @@ inline csc_mat<T> outer_sp(
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {
-			const T& val = f(X.row(i), Y.row(j));
-			bool ind = g(X.row(i), Y.row(j));
+			const std::pair<T,bool>& f_ij = f(X.row(i), X.row(j));
+			const T& val = f_ij.first;
+			bool ind = f_ij.second;
+
 			if (ind) {
 				if (out.p[j] == N_bdd) {
 					out.p[j] = out.x.size();
@@ -132,7 +141,9 @@ inline csc_mat<T> outer_sp(
 template <int RTYPE>
 inline Rcpp::NumericVector outer_matvec(
 	const Rcpp::Matrix<RTYPE>& X,
-	const std::function<double(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& f,
+	const std::function<double(
+		const Rcpp::Vector<RTYPE>&,
+		const Rcpp::Vector<RTYPE>&)>& f,
 	const Rcpp::NumericVector& a)
 {
 	unsigned int n = X.nrow();
@@ -163,7 +174,9 @@ template <int RTYPE>
 inline Rcpp::NumericVector outer_matvec(
 	const Rcpp::Matrix<RTYPE>& X,
 	const Rcpp::Matrix<RTYPE>& Y,
-	const std::function<double(const Rcpp::Vector<RTYPE>&, const Rcpp::Vector<RTYPE>&)>& f,
+	const std::function<double(
+		const Rcpp::Vector<RTYPE>&,
+		const Rcpp::Vector<RTYPE>&)>& f,
 	const Rcpp::NumericVector& a)
 {
 	unsigned int m = X.nrow();
@@ -228,8 +241,9 @@ inline mat<E> outer(
 template <typename S, typename E>
 inline csc_mat<E> outer_sp(
 	const std::vector<S>& x,
-	const std::function<E(const std::vector<S>&, const std::vector<S>&)>& f,
-	const std::function<bool(const std::vector<S>&, const std::vector<S>&)>& g)
+	const std::function<E,bool>(
+		const std::vector<S>&,
+		const std::vector<S>&)>& f)
 {
 	unsigned int n = x.size();
 	unsigned int N_bdd = n*n;
@@ -241,8 +255,10 @@ inline csc_mat<E> outer_sp(
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i <= j; i++) {
-			double val = f(x[i], x[j]);
-			bool ind = g(x[i], x[j]);
+			const std::pair<T,bool>& f_ij = f(X.row(i), X.row(j));
+			const T& val = f_ij.first;
+			bool ind = f_ij.second;
+
 			if (ind) {
 				if (out.p[j] == N_bdd) {
 					out.p[j] = out.x.size();
@@ -266,8 +282,9 @@ template <typename S, typename T, typename E>
 inline csc_mat<E> outer_sp(
 	const std::vector<S>& x,
 	const std::vector<T>& y,
-	const std::function<E(const std::vector<S>&, const std::vector<T>&)>& f,
-	const std::function<bool(const std::vector<S>&, const std::vector<T>&)>& g)
+	const std::function<E,bool>(
+		const std::vector<S>&,
+		const std::vector<T>&)>& f)
 {
 	unsigned int m = x.size();
 	unsigned int n = y.size();
@@ -280,8 +297,10 @@ inline csc_mat<E> outer_sp(
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {
-			double val = f(x[i], y[j]);
-			bool ind = g(x[i], y[j]);
+			const std::pair<T,bool>& f_ij = f(X.row(i), X.row(j));
+			const T& val = f_ij.first;
+			bool ind = f_ij.second;
+
 			if (ind) {
 				if (out.p[j] == N_bdd) {
 					out.p[j] = out.x.size();
