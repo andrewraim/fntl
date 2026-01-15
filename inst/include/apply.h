@@ -195,7 +195,7 @@ std::vector<T> col_apply(
 template <typename S, typename T>
 csc_mat<T> mat_apply(
 	const csc_mat<S>& X,
-	const std::function<std::pair<T>(const S&)>& f)
+	const std::function<T(const S&)>& f)
 {
 	unsigned int m = X.m;
 	unsigned int n = X.n;

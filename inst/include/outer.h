@@ -100,7 +100,7 @@ template <typename T, int RTYPE>
 inline csc_mat<T> outer_sp(
 	const Rcpp::Matrix<RTYPE>& X,
 	const Rcpp::Matrix<RTYPE>& Y,
-	const std::function<T,bool>(
+	const std::function<std::pair<T,bool>(
 		const Rcpp::Vector<RTYPE>&,
 		const Rcpp::Vector<RTYPE>&)>& f)
 {
@@ -238,12 +238,12 @@ inline mat<E> outer(
 	return out;
 }
 
-template <typename S, typename E>
+template <typename T, typename E>
 inline csc_mat<E> outer_sp(
-	const std::vector<S>& x,
-	const std::function<E,bool>(
-		const std::vector<S>&,
-		const std::vector<S>&)>& f)
+	const std::vector<T>& x,
+	const std::function<std::pair<E,bool>(
+		const std::vector<T>&,
+		const std::vector<T>&)>& f)
 {
 	unsigned int n = x.size();
 	unsigned int N_bdd = n*n;
@@ -255,7 +255,7 @@ inline csc_mat<E> outer_sp(
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i <= j; i++) {
-			const std::pair<T,bool>& f_ij = f(X.row(i), X.row(j));
+			const std::pair<T,bool>& f_ij = f(x[i], x[j]);
 			const T& val = f_ij.first;
 			bool ind = f_ij.second;
 
@@ -282,7 +282,7 @@ template <typename S, typename T, typename E>
 inline csc_mat<E> outer_sp(
 	const std::vector<S>& x,
 	const std::vector<T>& y,
-	const std::function<E,bool>(
+	const std::function<std::pair<E,bool>(
 		const std::vector<S>&,
 		const std::vector<T>&)>& f)
 {
@@ -297,7 +297,7 @@ inline csc_mat<E> outer_sp(
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {
-			const std::pair<T,bool>& f_ij = f(X.row(i), X.row(j));
+			const std::pair<T,bool>& f_ij = f(x[i], y[j]);
 			const T& val = f_ij.first;
 			bool ind = f_ij.second;
 

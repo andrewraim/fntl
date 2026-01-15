@@ -43,7 +43,7 @@ B = sparseMatrix(sp$i, p = sp$p, x = sp$x, dims = c(sp$m, sp$n), symmetric = T)
 idx0 = which(E > 3, arr.ind = T)
 idx1 = which(E <= 3, arr.ind = T)
 expect_equal(B[idx1], E[idx1])
-expect_all_equal(B[idx0], 0)
+expect_true(all(B[idx0] == 0))
 
 expect_true(all(outer1_matvec(X, f, a) == E %*% a))
 

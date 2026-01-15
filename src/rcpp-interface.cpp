@@ -423,6 +423,19 @@ Rcpp::NumericVector outer2_matvec_rcpp(const Rcpp::NumericMatrix& X,
 Rcpp::List outer1_sp_rcpp(const Rcpp::NumericMatrix& X,
 	const Rcpp::Function& f, const Rcpp::Function& g)
 {
+
+	const std::function<std::pair<double, bool>(
+		const Rcpp::NumericVector&,
+		const Rcpp::NumericVector&)>& ff =
+	[&](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y) -> std::pair<double, bool>
+	{
+		const Rcpp::NumericVector& fxy = f(x, y);
+		bool ind = Rcpp::NumericVector::is_na(fxy(0));
+		return std::pair<double, bool>(fxy(0), ind);
+	};
+
+
+/*
 	const fntl::dfvv& ff =
 	[&](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y) {
 		const Rcpp::NumericVector& fxy = f(x, y);
@@ -434,8 +447,8 @@ Rcpp::List outer1_sp_rcpp(const Rcpp::NumericMatrix& X,
 		const Rcpp::NumericVector& gxy = g(x, y);
 		return gxy(0);
 	};
-
-	const auto& out = fntl::outer_sp(X, ff, gg);
+*/
+	const auto& out = fntl::outer_sp(X, ff);
 	return Rcpp::wrap(out);
 }
 
@@ -443,6 +456,18 @@ Rcpp::List outer2_sp_rcpp(const Rcpp::NumericMatrix& X,
 	const Rcpp::NumericMatrix& Y, const Rcpp::Function& f,
 	const Rcpp::Function& g)
 {
+
+	const std::function<std::pair<double, bool>(
+		const Rcpp::NumericVector&,
+		const Rcpp::NumericVector&)>& ff =
+	[&](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y) -> std::pair<double, bool>
+	{
+		const Rcpp::NumericVector& fxy = f(x, y);
+		bool ind = Rcpp::NumericVector::is_na(fxy(0));
+		return std::pair<double, bool>(fxy(0), ind);
+	};
+
+/*
 	const fntl::dfvv& ff =
 	[&](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y) {
 		const Rcpp::NumericVector& fxy = f(x, y);
@@ -454,8 +479,9 @@ Rcpp::List outer2_sp_rcpp(const Rcpp::NumericMatrix& X,
 		const Rcpp::NumericVector& gxy = g(x, y);
 		return gxy(0);
 	};
+*/
 
-	const auto& out = fntl::outer_sp(X, Y, ff, gg);
+	const auto& out = fntl::outer_sp(X, Y, ff);
 	return Rcpp::wrap(out);
 }
 
