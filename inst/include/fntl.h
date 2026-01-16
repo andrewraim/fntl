@@ -9,6 +9,8 @@
 #include "csc-mat.h"
 #include "csr-mat.h"
 #include "coo-mat.h"
+#include "csc-mat-builder.h"
+#include "csr-mat-builder.h"
 #include "deriv.h"
 #include "deriv2.h"
 #include "findroot-bisect.h"

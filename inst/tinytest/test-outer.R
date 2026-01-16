@@ -2,14 +2,16 @@ library(tidyverse)
 library(Matrix)
 
 set.seed(1234)
-#Rcpp::sourceCpp("cpp/test-outer.cpp")
 
 m = 10
 n = 8
 d = 5
 
-f = \(x,y) { sqrt(sum((x - y)^2)) }
-g = \(x,y) { f(x, y) <= 3 }
+f = \(x,y) {  }
+g = \(x,y) {
+	out = sqrt(sum((x - y)^2))
+	if (out > 3) { return(NA) } else { return(out) }
+}
 
 # ----- Test outer1, outer1_sp, and outer1_matvec -----
 x = rnorm(n*d)
@@ -30,7 +32,7 @@ A = outer1(X, f)
 expect_equal(dim(A), c(n,n))
 expect_equal(A, E)
 
-sp = outer1_sp(X, f, g = \(x,y) { TRUE })
+sp = outer1_sp(X, f)
 B = sparseMatrix(sp$i, p = sp$p, x = sp$x, dims = c(sp$m, sp$n), symmetric = T)
 expect_true(all(sp$i >= 1))
 expect_true(all(sp$i <= m))
@@ -38,7 +40,7 @@ expect_true(all(sp$p >= 0))
 expect_true(all(sp$p <= length(B)))
 expect_equal(as.matrix(B), E)
 
-sp = outer1_sp(X, f, g)
+sp = outer1_sp(X, g)
 B = sparseMatrix(sp$i, p = sp$p, x = sp$x, dims = c(sp$m, sp$n), symmetric = T)
 idx0 = which(E > 3, arr.ind = T)
 idx1 = which(E <= 3, arr.ind = T)
@@ -70,7 +72,7 @@ A = outer2(X, Y, f)
 expect_equal(dim(A), c(m,n))
 expect_equal(A, E)
 
-sp = outer2_sp(X, Y, f, g = \(x,y) { TRUE })
+sp = outer2_sp(X, Y, f)
 B = sparseMatrix(sp$i, p = sp$p, x = sp$x, dims = c(sp$m, sp$n), symmetric = F)
 expect_true(all(sp$i >= 1))
 expect_true(all(sp$i <= m))
@@ -78,7 +80,7 @@ expect_true(all(sp$p >= 0))
 expect_true(all(sp$p <= length(B)))
 expect_equal(as.matrix(B), E)
 
-sp = outer2_sp(X, Y, f, g)
+sp = outer2_sp(X, Y, g)
 B = sparseMatrix(sp$i, p = sp$p, x = sp$x, dims = c(sp$m, sp$n), symmetric = F)
 idx0 = which(E > 3, arr.ind = T)
 idx1 = which(E <= 3, arr.ind = T)

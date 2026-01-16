@@ -420,29 +420,27 @@ BEGIN_RCPP
 END_RCPP
 }
 // outer1_sp_rcpp
-Rcpp::List outer1_sp_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Function& f, const Rcpp::Function& g);
-RcppExport SEXP _fntl_outer1_sp_rcpp(SEXP XSEXP, SEXP fSEXP, SEXP gSEXP) {
+Rcpp::List outer1_sp_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Function& f);
+RcppExport SEXP _fntl_outer1_sp_rcpp(SEXP XSEXP, SEXP fSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type X(XSEXP);
     Rcpp::traits::input_parameter< const Rcpp::Function& >::type f(fSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::Function& >::type g(gSEXP);
-    rcpp_result_gen = Rcpp::wrap(outer1_sp_rcpp(X, f, g));
+    rcpp_result_gen = Rcpp::wrap(outer1_sp_rcpp(X, f));
     return rcpp_result_gen;
 END_RCPP
 }
 // outer2_sp_rcpp
-Rcpp::List outer2_sp_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::NumericMatrix& Y, const Rcpp::Function& f, const Rcpp::Function& g);
-RcppExport SEXP _fntl_outer2_sp_rcpp(SEXP XSEXP, SEXP YSEXP, SEXP fSEXP, SEXP gSEXP) {
+Rcpp::List outer2_sp_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::NumericMatrix& Y, const Rcpp::Function& f);
+RcppExport SEXP _fntl_outer2_sp_rcpp(SEXP XSEXP, SEXP YSEXP, SEXP fSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type X(XSEXP);
     Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type Y(YSEXP);
     Rcpp::traits::input_parameter< const Rcpp::Function& >::type f(fSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::Function& >::type g(gSEXP);
-    rcpp_result_gen = Rcpp::wrap(outer2_sp_rcpp(X, Y, f, g));
+    rcpp_result_gen = Rcpp::wrap(outer2_sp_rcpp(X, Y, f));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -646,8 +644,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_fntl_outer2_rcpp", (DL_FUNC) &_fntl_outer2_rcpp, 3},
     {"_fntl_outer1_matvec_rcpp", (DL_FUNC) &_fntl_outer1_matvec_rcpp, 3},
     {"_fntl_outer2_matvec_rcpp", (DL_FUNC) &_fntl_outer2_matvec_rcpp, 4},
-    {"_fntl_outer1_sp_rcpp", (DL_FUNC) &_fntl_outer1_sp_rcpp, 3},
-    {"_fntl_outer2_sp_rcpp", (DL_FUNC) &_fntl_outer2_sp_rcpp, 4},
+    {"_fntl_outer1_sp_rcpp", (DL_FUNC) &_fntl_outer1_sp_rcpp, 2},
+    {"_fntl_outer2_sp_rcpp", (DL_FUNC) &_fntl_outer2_sp_rcpp, 3},
     {"_fntl_solve_cg_rcpp", (DL_FUNC) &_fntl_solve_cg_rcpp, 4},
     {"_fntl_d_trunc_rcpp", (DL_FUNC) &_fntl_d_trunc_rcpp, 6},
     {"_fntl_p_trunc_rcpp", (DL_FUNC) &_fntl_p_trunc_rcpp, 6},

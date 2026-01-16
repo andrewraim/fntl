@@ -420,8 +420,7 @@ Rcpp::NumericVector outer2_matvec_rcpp(const Rcpp::NumericMatrix& X,
 	return fntl::outer_matvec(X, Y, ff, a);
 }
 
-Rcpp::List outer1_sp_rcpp(const Rcpp::NumericMatrix& X,
-	const Rcpp::Function& f, const Rcpp::Function& g)
+Rcpp::List outer1_sp_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Function& f)
 {
 
 	const std::function<std::pair<double, bool>(
@@ -430,56 +429,28 @@ Rcpp::List outer1_sp_rcpp(const Rcpp::NumericMatrix& X,
 	[&](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y) -> std::pair<double, bool>
 	{
 		const Rcpp::NumericVector& fxy = f(x, y);
-		bool ind = Rcpp::NumericVector::is_na(fxy(0));
+		bool ind = !Rcpp::NumericVector::is_na(fxy(0));
 		return std::pair<double, bool>(fxy(0), ind);
 	};
 
-
-/*
-	const fntl::dfvv& ff =
-	[&](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y) {
-		const Rcpp::NumericVector& fxy = f(x, y);
-		return fxy(0);
-	};
-
-	const fntl::bfvv& gg =
-	[&](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y) {
-		const Rcpp::NumericVector& gxy = g(x, y);
-		return gxy(0);
-	};
-*/
 	const auto& out = fntl::outer_sp(X, ff);
 	return Rcpp::wrap(out);
 }
 
 Rcpp::List outer2_sp_rcpp(const Rcpp::NumericMatrix& X,
-	const Rcpp::NumericMatrix& Y, const Rcpp::Function& f,
-	const Rcpp::Function& g)
+	const Rcpp::NumericMatrix& Y, const Rcpp::Function& f)
 {
 
 	const std::function<std::pair<double, bool>(
 		const Rcpp::NumericVector&,
 		const Rcpp::NumericVector&)>& ff =
-	[&](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y) -> std::pair<double, bool>
+	[&](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y)
+		-> std::pair<double, bool>
 	{
 		const Rcpp::NumericVector& fxy = f(x, y);
-		bool ind = Rcpp::NumericVector::is_na(fxy(0));
+		bool ind = !Rcpp::NumericVector::is_na(fxy(0));
 		return std::pair<double, bool>(fxy(0), ind);
 	};
-
-/*
-	const fntl::dfvv& ff =
-	[&](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y) {
-		const Rcpp::NumericVector& fxy = f(x, y);
-		return fxy(0);
-	};
-
-	const fntl::bfvv& gg =
-	[&](const Rcpp::NumericVector& x, const Rcpp::NumericVector& y) {
-		const Rcpp::NumericVector& gxy = g(x, y);
-		return gxy(0);
-	};
-*/
 
 	const auto& out = fntl::outer_sp(X, Y, ff);
 	return Rcpp::wrap(out);

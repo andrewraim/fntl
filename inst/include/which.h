@@ -73,3 +73,4 @@ Rcpp::IntegerMatrix which(const csc_mat<T>& X,
 }
 
 #endif
+

@@ -519,6 +519,9 @@ which0 <- function(X, f) {
 #' in the result and `FALSE` otherwise. The argument `g` can be used for
 #' sparseness.
 #'
+#' TBD: f should return `NA` to make the corresponding element missing from
+#' result.
+#'
 #' @examples
 #' set.seed(1234)
 #' f = function(x,y) { sum( (x - y)^2 ) }
@@ -565,14 +568,14 @@ outer2_matvec <- function(X, Y, f, a) {
 
 #' @name outer
 #' @export
-outer1_sp <- function(X, f, g) {
-    .Call(`_fntl_outer1_sp_rcpp`, X, f, g)
+outer1_sp <- function(X, f) {
+    .Call(`_fntl_outer1_sp_rcpp`, X, f)
 }
 
 #' @name outer
 #' @export
-outer2_sp <- function(X, Y, f, g) {
-    .Call(`_fntl_outer2_sp_rcpp`, X, Y, f, g)
+outer2_sp <- function(X, Y, f) {
+    .Call(`_fntl_outer2_sp_rcpp`, X, Y, f)
 }
 
 #' Iteratively Solve a Linear System with Conjugate Gradient

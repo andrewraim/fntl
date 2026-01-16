@@ -58,8 +58,8 @@ inline lbfgsb_result lbfgsb(const Rcpp::NumericVector& init,
 	std::vector<double> lower = args.lower;
 	std::vector<double> upper = args.upper;
 
-	if (lower.size() == 0) { lower.resize(n, R_NegInf); }
-	if (upper.size() == 0) { upper.resize(n, R_PosInf); }
+	if (lower.size() == 0) { lower.assign(n, R_NegInf); }
+	if (upper.size() == 0) { upper.assign(n, R_PosInf); }
 
 	if (lower.size() != n) { Rcpp::stop("Dimension mismatch for lower"); }
 	if (upper.size() != n) { Rcpp::stop("Dimension mismatch for upper"); }

@@ -5,6 +5,7 @@
 #include "typedefs.h"
 #include "typedefs-rcpp.h"
 #include "util.h"
+#include "csc-mat-builder.h"
 
 namespace fntl {
 
@@ -65,12 +66,7 @@ inline csc_mat<T> outer_sp(
 		const Rcpp::Vector<RTYPE>&)>& f)
 {
 	unsigned int n = X.nrow();
-	unsigned int N_bdd = n*n;
-
-	csc_mat<T> out(n, n);
-	out.i.resize(0);
-	out.x.resize(0);
-	out.p.assign(n+1, N_bdd);
+	csc_mat_builder<T> builder(n, n);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i <= j; i++) {
@@ -78,22 +74,12 @@ inline csc_mat<T> outer_sp(
 			const T& val = f_ij.first;
 			bool ind = f_ij.second;
 			if (ind) {
-				if (out.p[j] == N_bdd) {
-					out.p[j] = out.x.size();
-				}
-				out.i.push_back(i);
-				out.x.push_back(val);
+				builder.set(i, j, val);
 			}
 		}
 	}
 
-	// Handle pointer for last column and any empty columns
-	out.p[n] = out.x.size();
-	for (int j = n-1; j >= 0; j--) {
-		out.p[j] = std::min(out.p[j], out.p[j+1]);
-	}
-
-	return out;
+	return builder.get();
 }
 
 template <typename T, int RTYPE>
@@ -106,36 +92,20 @@ inline csc_mat<T> outer_sp(
 {
 	unsigned int m = X.nrow();
 	unsigned int n = Y.nrow();
-	unsigned int N_bdd = m*n;
-
-	csc_mat<T> out(m, n);
-	out.i.resize(0);
-	out.x.resize(0);
-	out.p.assign(n+1, N_bdd);
+	csc_mat_builder<T> builder(m, n);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {
 			const std::pair<T,bool>& f_ij = f(X.row(i), X.row(j));
 			const T& val = f_ij.first;
 			bool ind = f_ij.second;
-
 			if (ind) {
-				if (out.p[j] == N_bdd) {
-					out.p[j] = out.x.size();
-				}
-				out.i.push_back(i);
-				out.x.push_back(val);
+				builder.set(i, j, val);
 			}
 		}
 	}
 
-	// Handle pointer for last column and any empty columns
-	out.p[n] = out.x.size();
-	for (int j = n-1; j >= 0; j--) {
-		out.p[j] = std::min(out.p[j], out.p[j+1]);
-	}
-
-	return out;
+	return builder.get();
 }
 
 template <int RTYPE>
@@ -246,12 +216,7 @@ inline csc_mat<E> outer_sp(
 		const std::vector<T>&)>& f)
 {
 	unsigned int n = x.size();
-	unsigned int N_bdd = n*n;
-
-	csc_mat<E> out(n, n);
-	out.i.resize();
-	out.x.resize();
-	out.p.assign(n+1, N_bdd);
+	csc_mat_builder<E> builder(n, n);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i <= j; i++) {
@@ -260,22 +225,12 @@ inline csc_mat<E> outer_sp(
 			bool ind = f_ij.second;
 
 			if (ind) {
-				if (out.p[j] == N_bdd) {
-					out.p[j] = out.x.size();
-				}
-				out.i.push_back(i);
-				out.x.push_back(val);
+				builder.set(i, j, val);
 			}
 		}
 	}
 
-	// Handle pointer for last column and any empty columns
-	out.p[n] = out.x.size();
-	for (int j = n-1; j >= 0; j--) {
-		out.p[j] = std::min(out.p[j], out.p[j+1]);
-	}
-
-	return out;
+	return builder.get();
 }
 
 template <typename S, typename T, typename E>
@@ -288,36 +243,20 @@ inline csc_mat<E> outer_sp(
 {
 	unsigned int m = x.size();
 	unsigned int n = y.size();
-	unsigned int N_bdd = m*n;
-
-	csc_mat<E> out(m, n);
-	out.i.resize();
-	out.x.resize();
-	out.p.assign(n+1, N_bdd);
+	csc_mat_builder<E> builder(m, n);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {
 			const std::pair<T,bool>& f_ij = f(x[i], y[j]);
 			const T& val = f_ij.first;
 			bool ind = f_ij.second;
-
 			if (ind) {
-				if (out.p[j] == N_bdd) {
-					out.p[j] = out.x.size();
-				}
-				out.i.push_back(i);
-				out.x.push_back(val);
+				builder.set(i, j, val);
 			}
 		}
 	}
 
-	// Handle pointer for last column and any empty columns
-	out.p[n] = out.x.size();
-	for (int j = n-1; j >= 0; j--) {
-		out.p[j] = std::min(out.p[j], out.p[j+1]);
-	}
-
-	return out;
+	return builder.get();
 }
 
 template <typename S, typename E>

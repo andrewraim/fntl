@@ -22,14 +22,13 @@
 */
 
 #include <RcppCommon.h>
-#include "typedefs.h"
-#include "typedefs-rcpp.h"
-#include "util.h"
-#include "mat.h"
-#include "csr-mat.h"
-#include "coo-mat.h"
 
 namespace fntl {
+
+// Forward declarations; don't include their headers until Rcpp.h is included.
+template <typename T> struct csr_mat;
+template <typename T> struct coo_mat;
+template <typename T> struct csc_mat_builder;
 
 template <typename T>
 struct csc_mat
@@ -64,6 +63,26 @@ struct csc_mat
 	std::vector<T> x;
 };
 
+typedef csc_mat<double> csc_dmat;
+
+}
+
+#include <Rcpp.h>
+//#include "typedefs.h"
+//#include "typedefs-rcpp.h"
+#include "util.h"
+#include "mat.h"
+#include "csr-mat.h"
+#include "coo-mat.h"
+#include "csc-mat-builder.h"
+#include "csr-mat-builder.h"
+
+namespace fntl {
+
+/*
+* Constructors
+*/
+
 template <typename T>
 csc_mat<T>::csc_mat()
 : m(0), n(0), i(), p(1), x()
@@ -76,10 +95,6 @@ csc_mat<T>::csc_mat(unsigned int rows, unsigned int cols)
 {
 }
 
-/*
-* Constructors from dense matrices
-*/
-
 template <typename T>
 template <int RTYPE>
 csc_mat<T>::csc_mat(const Rcpp::Matrix<RTYPE>& y,
@@ -87,68 +102,46 @@ csc_mat<T>::csc_mat(const Rcpp::Matrix<RTYPE>& y,
 {
 	m = y.nrow();
 	n = y.ncol();
-	unsigned int N = m*n;
-	p.resize(n+1, N);
+	csc_mat_builder<T> builder(m, n);
 
 	for (unsigned int jj = 0; jj < n; jj++) {
 		for (unsigned int ii = 0; ii < m; ii++) {
 			bool ind = f(y(ii,jj));
 			if (ind) {
-				if (p[jj] == N) {
-					p[jj] = x.size();
-				}
-				i.push_back(ii);
-				x.push_back(y(ii,jj));
+				builder.set(ii, jj, y(ii,jj));
 			}
 		}
 	}
 
-	// Handle last pointer and any empty columns
-	p[n] = x.size();
-	for (int jj = n-1; jj >= 0; jj--) {
-		if (p[jj] == N) {
-			p[jj] = p[jj+1];
-		}
-	}
+	const csc_mat<T>& out = builder.get();
+	i = out.i;
+	p = out.p;
+	x = out.x;
 }
 
 template <typename T>
 template <typename S>
 csc_mat<T>::csc_mat(const csc_mat<S>& y, const std::function<bool(const S&)>&f)
 {
-	m = y.nrow();
-	n = y.ncol();
-	unsigned int N = m*n;
-	p.resize(n+1, N);
+	m = y.m;
+	n = y.n;
+	csc_mat_builder<T> builder(m, n);
 
 	for (unsigned int jj = 0; jj < n; jj++) {
 		for (unsigned int ii = 0; ii < m; ii++) {
 			bool ind = f(y(ii,jj));
 			if (ind) {
-				if (p[jj] == N) {
-					p[jj] = x.size();
-				}
-				i.push_back(ii);
-				x.push_back(y(ii,jj));
+				builder.set(ii, jj, y(ii,jj));
 			}
 		}
 	}
 
-	// Handle last pointer and any empty columns
-	p[n] = x.size();
-	for (int jj = n-1; jj >= 0; jj--) {
-		if (p[jj] == N) {
-			p[jj] = p[jj+1];
-		}
-	}
+	const csc_mat<T>& out = builder.get();
+	i = out.i;
+	p = out.p;
+	x = out.x;
 }
 
-}
-
-#include <Rcpp.h>
-#include "mat.h"
-
-namespace fntl {
 
 /*
 * Constructors from SEXP objects
@@ -222,53 +215,16 @@ inline Rcpp::Matrix<RTYPE> csc_mat<T>::to_Matrix() const
 template <typename T>
 inline csr_mat<T> csc_mat<T>::to_csr() const
 {
-	unsigned int m = m;
-	unsigned int n = n;
-	unsigned int N = p[n];
-
-	// Use an STL map to order entries of x in row-major order
-	typedef std::pair<unsigned int, unsigned int> coord_t;
-	std::function<bool(const coord_t&, const coord_t&)> cmp =
-	[](const coord_t& a, const coord_t& b) -> bool {
-		if (a.first == b.first) {
-			return a.second < b.second;
-		}
-		return a.first < b.first;
-	};
-	std::map<coord_t, T, decltype(cmp)> z(cmp);
+	csr_mat_builder<T> builder(m, n);
 
 	for (unsigned int jj = 0; jj < n; jj++) {
 		for (unsigned int l = p[jj]; l < p[jj+1]; l++) {
 			unsigned int ii = i[l];
-			coord_t c;
-			c.first = ii;
-			c.second = jj;
-			z[c] = x[l];
+			builder.set(ii, jj, x[l]);
 		}
 	}
 
-	csr_mat<T> out(m, n);
-	out.p.resize(m+1, N);
-
-	auto itr = z.begin();
-	for (; itr != z.end(); ++itr) {
-		const coord_t& c = itr->first;
-		const T& vv = itr->second;
-		unsigned int ii = c.first;
-		unsigned int jj = c.second;
-
-		if (out.p[ii] == N) {
-			out.p[ii] = out.x.size();
-		}
-		out.j.push_back(jj);
-		out.x.push_back(vv);
-	}
-
-	for (int ii = m-1; ii >= 0; ii--) {
-		out.p[ii] = std::min(out.p[ii], out.p[ii+1]);
-	}
-
-	return out;
+	return builder.get();
 }
 
 template <typename T>

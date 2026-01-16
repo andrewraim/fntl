@@ -1,8 +1,6 @@
 #ifndef FNTL_TYPEDEFS_H
 #define FNTL_TYPEDEFS_H
 
-#include "csc-mat.h"
-
 static const std::vector<std::string> integrate_messages = {
 	"OK",
 	"maximum number of subdivisions reached",
@@ -27,13 +25,13 @@ static const std::vector<std::string> findroot_messages = {
 
 namespace fntl {
 
+typedef std::pair<unsigned int, unsigned int> coord2_t;
+
 typedef std::function<double(double)> dfd;
 
 typedef std::function<double(double,bool)> density;
 typedef std::function<double(double,bool,bool)> cdf;
 typedef std::function<double(double,bool,bool)> quantile;
-
-typedef csc_mat<double> csc_dmat;
 
 static const double mach_eps = std::numeric_limits<double>::epsilon();
 static const double mach_eps_2r = sqrt(mach_eps);

@@ -2,6 +2,8 @@
 #define FNTL_APPLY_H
 
 #include <Rcpp.h>
+#include "mat.h"
+#include "csc-mat-builder.h"
 
 namespace fntl {
 
@@ -192,22 +194,17 @@ csc_mat<T> mat_apply(
 {
 	unsigned int m = X.m;
 	unsigned int n = X.n;
-	unsigned int N = X.p[n];
-
-	csc_mat<T> out(m, n);
-	out.i = X.i;
-	out.p = X.p;
-	out.x.resize(N);
+	csc_mat_builder<T> builder(m, n);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int l = X.p[j]; l < X.p[j+1]; l++) {
 			unsigned int i = X.i[l];
 			const S& v = X.x[l];
-			out.x[l] = f(v);
+			builder.set(i, j, v);
 		}
 	}
 
-	return out;
+	return builder.get();
 }
 
 template <typename T>
@@ -247,12 +244,7 @@ csc_mat<T> coord_apply_sp(
 	unsigned int n,
 	const std::function<std::pair<T,bool>(unsigned int, unsigned int)>& f)
 {
-	unsigned int N_bdd = m*n;
-
-	csc_mat<T> out(m,n);
-	out.i.resize(0);
-	out.x.resize(0);
-	out.p.assign(n+1, N_bdd);
+	csc_mat_builder<T> builder(m,n);
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < m; i++) {
@@ -260,22 +252,12 @@ csc_mat<T> coord_apply_sp(
 			const T& val = f_ij.first;
 			bool ind = f_ij.second;
 			if (ind) {
-				if (out.p[j] == N_bdd) {
-					out.p[j] = out.x.size();
-				}
-				out.i.push_back(i);
-				out.x.push_back(val);
+				builder.set(i, j, val);
 			}
 		}
 	}
 
-	// Handle pointer for last column and any empty columns
-	out.p[n] = out.x.size();
-	for (int j = n-1; j >= 0; j--) {
-		out.p[j] = std::min(out.p[j], out.p[j+1]);
-	}
-
-	return out;
+	return builder.get();
 }
 
 /*

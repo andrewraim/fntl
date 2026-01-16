@@ -522,6 +522,9 @@ Rcpp::IntegerMatrix which_rcpp(const Rcpp::NumericMatrix& X, const Rcpp::Functio
 //' in the result and `FALSE` otherwise. The argument `g` can be used for
 //' sparseness.
 //'
+//' TBD: f should return `NA` to make the corresponding element missing from
+//' result.
+//'
 //' @examples
 //' set.seed(1234)
 //' f = function(x,y) { sum( (x - y)^2 ) }
@@ -571,14 +574,13 @@ Rcpp::NumericVector outer2_matvec_rcpp(const Rcpp::NumericMatrix& X,
 //' @export
 // [[Rcpp::export(name = "outer1_sp")]]
 Rcpp::List outer1_sp_rcpp(const Rcpp::NumericMatrix& X,
-	const Rcpp::Function& f, const Rcpp::Function& g);
+	const Rcpp::Function& f);
 
 //' @name outer
 //' @export
 // [[Rcpp::export(name = "outer2_sp")]]
 Rcpp::List outer2_sp_rcpp(const Rcpp::NumericMatrix& X,
-	const Rcpp::NumericMatrix& Y, const Rcpp::Function& f,
-	const Rcpp::Function& g);
+	const Rcpp::NumericMatrix& Y, const Rcpp::Function& f);
 
 //' Iteratively Solve a Linear System with Conjugate Gradient
 //'
