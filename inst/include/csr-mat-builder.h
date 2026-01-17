@@ -60,6 +60,7 @@ csr_mat<T> csr_mat_builder<T>::get() const
 	for (; itr != _elements.end(); ++itr) {
 		const coord2_t& idx = itr->first;
 		const T& v = itr->second;
+
 		unsigned int i = idx.first;
 		unsigned int j = idx.second;
 

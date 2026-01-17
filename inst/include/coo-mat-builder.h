@@ -1,14 +1,15 @@
-#ifndef FNTL_CSC_MAT_BUILDER_H
-#define FNTL_CSC_MAT_BUILDER_H
+
+#ifndef FNTL_COO_MAT_BUILDER_H
+#define FNTL_COO_MAT_BUILDER_H
 
 #include <Rcpp.h>
-#include "csc-mat.h"
+#include "coo-mat.h"
 #include "typedefs.h"
 
 namespace fntl {
 
 // Order coordinates (row,col) in column-major order
-struct csc_comparator {
+struct coo_comparator {
 	bool operator()(const coord2_t& a, const coord2_t& b) const
 	{
 		if (a.second == b.second) {
@@ -19,27 +20,27 @@ struct csc_comparator {
 };
 
 template <typename T>
-class csc_mat_builder
+class coo_mat_builder
 {
 public:
-	csc_mat_builder(unsigned int m, unsigned int n);
+	coo_mat_builder(unsigned int m, unsigned int n);
 	void set(unsigned int i, unsigned int j, const T& x);
-	csc_mat<T> get() const;
+	coo_mat<T> get() const;
 
 private:
 	unsigned int _m;
 	unsigned int _n;
-	std::map<coord2_t, T, csc_comparator> _elements;
+	std::map<coord2_t, T, coo_comparator> _elements;
 };
 
 template <typename T>
-csc_mat_builder<T>::csc_mat_builder(unsigned int m, unsigned int n)
+coo_mat_builder<T>::coo_mat_builder(unsigned int m, unsigned int n)
 : _m(m), _n(n), _elements()
 {
 }
 
 template <typename T>
-void csc_mat_builder<T>::set(unsigned int i, unsigned int j, const T& x)
+void coo_mat_builder<T>::set(unsigned int i, unsigned int j, const T& x)
 {
 	if (i >= _m || j >= _n) {
 		Rcpp::stop("Index out of bounds");
@@ -50,11 +51,9 @@ void csc_mat_builder<T>::set(unsigned int i, unsigned int j, const T& x)
 }
 
 template <typename T>
-csc_mat<T> csc_mat_builder<T>::get() const
+coo_mat<T> coo_mat_builder<T>::get() const
 {
-	unsigned int N_bdd = _m * _n;
-	csc_mat<T> out(_m, _n);
-	out.p.assign(_n + 1, N_bdd);
+	coo_mat<T> out(_m, _n);
 
 	auto itr = _elements.begin();
 	for (; itr != _elements.end(); ++itr) {
@@ -64,16 +63,9 @@ csc_mat<T> csc_mat_builder<T>::get() const
 		unsigned int i = idx.first;
 		unsigned int j = idx.second;
 
-		if (out.p[j] == N_bdd) {
-			out.p[j] = out.x.size();
-		}
 		out.i.push_back(i);
+		out.j.push_back(j);
 		out.x.push_back(v);
-	}
-
-	out.p[_n] = out.x.size();
-	for (int j = _n-1; j >= 0; j--) {
-		out.p[j] = std::min(out.p[j], out.p[j+1]);
 	}
 
 	return out;

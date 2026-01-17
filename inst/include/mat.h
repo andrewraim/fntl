@@ -12,8 +12,9 @@
 namespace fntl {
 
 template <typename T>
-struct mat
+class mat
 {
+public:
 /* Constructors */
 	mat();
 	mat(unsigned int rows, unsigned int cols);
@@ -28,7 +29,7 @@ struct mat
 	T& operator()(unsigned int row, unsigned int col);
 	const T& operator()(unsigned int row, unsigned int col) const;
 
-/* Member variables */
+private:
 	unsigned int m;
 	unsigned int n;
 	std::vector<T> x;

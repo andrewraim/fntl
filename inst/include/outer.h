@@ -182,7 +182,7 @@ inline mat<E> outer(
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < n; i++) {
-			out.x[i + j*n] = f(x[i], x[j]);
+			out(i,j) = f(x[i], x[j]);
 		}
 	}
 
@@ -201,7 +201,7 @@ inline mat<E> outer(
 
 	for (unsigned int j = 0; j < n; j++) {
 		for (unsigned int i = 0; i < n; i++) {
-			out.x[i + j*n] = f(x[i], y[j]);
+			out(i,j) = f(x[i], y[j]);
 		}
 	}
 

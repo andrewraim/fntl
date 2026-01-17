@@ -2808,7 +2808,6 @@ mat<T> mat_apply(
 ```
 1. An `mat` matrix object that contains elements of type `T`.
 2. Function $f$ that takes a vector `x` of type `S` elements and returns an element of type `T`.
-3. Function $f$ that takes an element `x` of type `S` elements and returns an element of type `T`.
 
 The following operate on sparse matrices. Matrices arguments are represented as `csc_mat` sparse matrix containers (**TBD** link to section). Rows and columns are represented by a pair of STL vectors: one for the values of nonmissing elements and another for their indices. As with `mat`, these can contain elements of an arbitrary type, so cannot necessarily be returned to R directly.
 

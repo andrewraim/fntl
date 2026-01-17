@@ -18,9 +18,9 @@ outer1_matvec(X, f, a)
 
 outer2_matvec(X, Y, f, a)
 
-outer1_sp(X, f, g)
+outer1_sp(X, f)
 
-outer2_sp(X, Y, f, g)
+outer2_sp(X, Y, f)
 }
 \arguments{
 \item{X}{A numerical matrix.}
@@ -113,6 +113,9 @@ csc form. The csc variants take an additional argument \code{g}, a
 function $g(x_i, y_j)$ that returns \code{TRUE} if the result is to be stored
 in the result and \code{FALSE} otherwise. The argument \code{g} can be used for
 sparseness.
+
+TBD: f should return \code{NA} to make the corresponding element missing from
+result.
 }
 \examples{
 set.seed(1234)
