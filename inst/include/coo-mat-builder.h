@@ -12,10 +12,10 @@ namespace fntl {
 struct coo_comparator {
 	bool operator()(const coord2_t& a, const coord2_t& b) const
 	{
-		if (a.second == b.second) {
-			return a.first < b.first;
+		if (a[1] == b[1]) {
+			return a[0] < b[0];
 		}
-		return a.second < b.second;
+		return a[1] < b[1];
 	}
 };
 
@@ -60,8 +60,8 @@ coo_mat<T> coo_mat_builder<T>::get() const
 		const coord2_t& idx = itr->first;
 		const T& v = itr->second;
 
-		unsigned int i = idx.first;
-		unsigned int j = idx.second;
+		unsigned int i = idx[0];
+		unsigned int j = idx[1];
 
 		out.i.push_back(i);
 		out.j.push_back(j);

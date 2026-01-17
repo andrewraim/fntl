@@ -11,10 +11,10 @@ namespace fntl {
 struct csr_comparator {
 	bool operator()(const coord2_t& a, const coord2_t& b) const
 	{
-		if (a.first == b.first) {
-			return a.second < b.second;
+		if (a[0] == b[0]) {
+			return a[1] < b[1];
 		}
-		return a.first < b.first;
+		return a[0] < b[0];
 	}
 };
 
@@ -61,8 +61,8 @@ csr_mat<T> csr_mat_builder<T>::get() const
 		const coord2_t& idx = itr->first;
 		const T& v = itr->second;
 
-		unsigned int i = idx.first;
-		unsigned int j = idx.second;
+		unsigned int i = idx[0];
+		unsigned int j = idx[1];
 
 		if (out.p[i] == N_bdd) {
 			out.p[i] = out.x.size();

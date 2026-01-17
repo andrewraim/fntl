@@ -11,10 +11,10 @@ namespace fntl {
 struct csc_comparator {
 	bool operator()(const coord2_t& a, const coord2_t& b) const
 	{
-		if (a.second == b.second) {
-			return a.first < b.first;
+		if (a[1] == b[1]) {
+			return a[0] < b[0];
 		}
-		return a.second < b.second;
+		return a[1] < b[1];
 	}
 };
 
@@ -45,7 +45,7 @@ void csc_mat_builder<T>::set(unsigned int i, unsigned int j, const T& x)
 		Rcpp::stop("Index out of bounds");
 	}
 
-	coord2_t idx(i, j);
+	coord2_t idx = {i, j};
 	_elements[idx] = x;
 }
 
@@ -61,8 +61,8 @@ csc_mat<T> csc_mat_builder<T>::get() const
 		const coord2_t& idx = itr->first;
 		const T& v = itr->second;
 
-		unsigned int i = idx.first;
-		unsigned int j = idx.second;
+		unsigned int i = idx[0];
+		unsigned int j = idx[1];
 
 		if (out.p[j] == N_bdd) {
 			out.p[j] = out.x.size();

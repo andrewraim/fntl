@@ -25,7 +25,12 @@ static const std::vector<std::string> findroot_messages = {
 
 namespace fntl {
 
-typedef std::pair<unsigned int, unsigned int> coord2_t;
+typedef std::array<unsigned int, 2> coord2_t;
+typedef std::array<unsigned int, 3> coord3_t;
+typedef std::initializer_list<unsigned int> coord_list_t;
+
+template <std::size_t N>
+using coord_t = std::array<unsigned int, N>;
 
 typedef std::function<double(double)> dfd;
 
