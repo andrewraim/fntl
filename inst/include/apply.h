@@ -4,7 +4,6 @@
 #include <Rcpp.h>
 #include "mat.h"
 #include "csc-mat-builder.h"
-#include "mdarray.h"
 
 namespace fntl {
 
@@ -260,65 +259,6 @@ csc_mat<T> coord_apply_sp(
 
 	return builder.get();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-template<typename S, typename T, std::size_t N, std::size_t M>
-mdarray<T,M> apply(
-	const mdarray<S,N>& x,
-	const coord_t<M> margins,
-	const std::function<T(const mdarray<S,N-M>&)>& f)
-{
-	// Get the non-margins
-	// Iterate through each level of the margins
-	// For each level, collect the non-margins and put them into a sub-mdarray
-	// Pass this sub-mdarray to f and save the result into out.
-
-	const Rcpp::IntegerVector& dims_vec = Rcpp::wrap(x.dim());
-	const Rcpp::IntegerVector& margins_vec = Rcpp::wrap(margins);
-	const Rcpp::IntegerVector& nonmargins_vec = Rcpp::setdiff(dims_vec, margins_vec);
-
-	mdarray<T,M> out(margins);
-
-	// TBD
-	//
-	// We need an index for the margins and be able to increment through its
-	// exents. For each level, we need to increment over all the non-margins.
-	// I think this might require changing coord_t to a class. This could
-	// include from_coord_list somehow.
-	//
-	// This might end up being a bit inefficient; we are creating many copies
-	// of the non-margins. This might be avoidable with mdspan in STL, but that
-	// requires a version of C++ that may not be available on all systems.
-	//
-	// We can avoid making a copy if we can pass an iterator that iterates over
-	// the nonmargins with the margins fixed. The user would need to interact
-	// with this.
-
-	coord_t<M> idx_margins;
-	coord_t<N-M> idx_nonmargins;
-
-	for (unsigned int l = 0; l < margins_vec.size(); l++) {
-
-	}
-
-	return mdarray<T,M>(margins);
-}
-
-
-
-
 
 /*
 **** TBD: Apply a function of indices ****

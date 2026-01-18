@@ -22,7 +22,6 @@
 #include "jacobian.h"
 #include "lbfgsb.h"
 #include "mat.h"
-#include "mdarray.h"
 #include "neldermead.h"
 #include "nlm.h"
 #include "optimize-brent.h"
