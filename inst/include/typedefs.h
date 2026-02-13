@@ -1,6 +1,8 @@
 #ifndef FNTL_TYPEDEFS_H
 #define FNTL_TYPEDEFS_H
 
+namespace fntl {
+
 static const std::vector<std::string> integrate_messages = {
 	"OK",
 	"maximum number of subdivisions reached",
@@ -22,8 +24,6 @@ static const std::vector<std::string> findroot_messages = {
 	"Numerical overflow: tol may be too small",
 	"Not converged within maxiter iterations"
 };
-
-namespace fntl {
 
 typedef std::array<unsigned int, 2> coord2_t;
 

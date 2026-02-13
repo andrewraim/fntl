@@ -172,7 +172,7 @@ inline integrate_result integrate(const dfd& f, double lower,
 	}
 
 	out.status = integrate_status(ierr);
-	out.message = integrate_messages[to_underlying(out.status)];
+	out.message = integrate_messages[static_cast<unsigned int>(out.status)];
 
 	if (out.status == integrate_status::INVALID_INPUT) {
 		Rcpp::stop(out.message);

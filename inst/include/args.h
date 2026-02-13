@@ -389,7 +389,7 @@ inline findroot_args::operator SEXP() const
 	return Rcpp::List::create(
 		Rcpp::Named("tol") = tol,
 		Rcpp::Named("maxiter") = maxiter,
-		Rcpp::Named("action") = to_underlying(action),
+		Rcpp::Named("action") = static_cast<unsigned int>(action),
 		Rcpp::Named("report_period") = report_period
 	);
 }
@@ -401,7 +401,7 @@ inline optimize_args::operator SEXP() const
 		Rcpp::Named("tol") = tol,
 		Rcpp::Named("maxiter") = maxiter,
 		Rcpp::Named("report_period") = report_period,
-		Rcpp::Named("action") = to_underlying(action)
+		Rcpp::Named("action") = static_cast<unsigned int>(action)
 	);
 }
 

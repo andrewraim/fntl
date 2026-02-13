@@ -116,7 +116,7 @@ inline findroot_result findroot_brent(const dfd& f, double lower,
 		fb = f(b);
 	}
 
-	const std::string& message = findroot_messages[to_underlying(status)];
+	const std::string& message = findroot_messages[static_cast<unsigned int>(status)];
 
 	if (status != findroot_status::OK) {
 		switch (action) {

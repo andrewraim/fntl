@@ -244,7 +244,7 @@ inline optimize_result::operator SEXP() const
 		Rcpp::Named("value") = value,
 		Rcpp::Named("iter") = iter,
 		Rcpp::Named("tol") = tol,
-		Rcpp::Named("status") = to_underlying(status),
+		Rcpp::Named("status") = static_cast<unsigned int>(status),
 		Rcpp::Named("message") = message
 	);
 }
@@ -255,7 +255,7 @@ inline neldermead_result::operator SEXP() const
 		Rcpp::Named("par") = par,
 		Rcpp::Named("value") = value,
 		Rcpp::Named("fncount") = fncount,
-		Rcpp::Named("status") = to_underlying(status)
+		Rcpp::Named("status") = static_cast<unsigned int>(status)
 	);
 }
 
@@ -266,7 +266,7 @@ inline cg_result::operator SEXP() const
 		Rcpp::Named("value") = value,
 		Rcpp::Named("fncount") = fncount,
 		Rcpp::Named("grcount") = grcount,
-		Rcpp::Named("status") = to_underlying(status)
+		Rcpp::Named("status") = static_cast<unsigned int>(status)
 	);
 }
 
@@ -277,7 +277,7 @@ inline bfgs_result::operator SEXP() const
 		Rcpp::Named("value") = value,
 		Rcpp::Named("fncount") = fncount,
 		Rcpp::Named("grcount") = grcount,
-		Rcpp::Named("status") = to_underlying(status)
+		Rcpp::Named("status") = static_cast<unsigned int>(status)
 	);
 }
 
@@ -288,7 +288,7 @@ inline lbfgsb_result::operator SEXP() const
 		Rcpp::Named("value") = value,
 		Rcpp::Named("fncount") = fncount,
 		Rcpp::Named("grcount") = grcount,
-		Rcpp::Named("status") = to_underlying(status),
+		Rcpp::Named("status") = static_cast<unsigned int>(status),
 		Rcpp::Named("message") = message
 	);
 }
@@ -300,7 +300,7 @@ inline nlm_result::operator SEXP() const
 		Rcpp::Named("grad") = grad,
 		Rcpp::Named("estimate") = estimate,
 		Rcpp::Named("iterations") = iterations,
-		Rcpp::Named("status") = to_underlying(status),
+		Rcpp::Named("status") = static_cast<unsigned int>(status),
 		Rcpp::Named("hessian") = hessian
 	);
 };
@@ -312,7 +312,7 @@ inline findroot_result::operator SEXP() const
 		Rcpp::Named("f_root") = f_root,
 		Rcpp::Named("iter") = iter,
 		Rcpp::Named("tol") = tol,
-		Rcpp::Named("status") = to_underlying(status),
+		Rcpp::Named("status") = static_cast<unsigned int>(status),
 		Rcpp::Named("message") = message
 	);
 }
@@ -324,7 +324,7 @@ inline integrate_result::operator SEXP() const
 		Rcpp::Named("subdivisions") = subdivisions,
 		Rcpp::Named("n_eval") = n_eval,
 		Rcpp::Named("abs_error") = abs_error,
-		Rcpp::Named("status") = to_underlying(status),
+		Rcpp::Named("status") = static_cast<unsigned int>(status),
 		Rcpp::Named("message") = message
 	);
 }
@@ -335,7 +335,7 @@ inline richardson_result::operator SEXP() const
 		Rcpp::Named("value") = value,
 		Rcpp::Named("err") = err,
 		Rcpp::Named("iter") = iter,
-		Rcpp::Named("status") = to_underlying(status)
+		Rcpp::Named("status") = static_cast<unsigned int>(status)
 	);
 }
 
