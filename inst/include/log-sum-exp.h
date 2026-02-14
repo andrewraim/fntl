@@ -1,5 +1,5 @@
-#ifndef LOG_SUM_EXP_H
-#define LOG_SUM_EXP_H
+#ifndef FNTL_LOG_SUM_EXP_H
+#define FNTL_LOG_SUM_EXP_H
 
 #include <Rcpp.h>
 

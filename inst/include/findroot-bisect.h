@@ -1,5 +1,5 @@
-#ifndef FNTL_FINDROOT_H
-#define FNTL_FINDROOT_H
+#ifndef FNTL_FINDROOT_BISECT_H
+#define FNTL_FINDROOT_BISECT_H
 
 /*
 * The C code for uniroot in R appears not to be exported for easy inclusion in

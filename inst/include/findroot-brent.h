@@ -1,5 +1,5 @@
-#ifndef FNTL_ROOT_BRENT_H
-#define FNTL_ROOT_BRENT_H
+#ifndef FNTL_FINDROOT_BRENT_H
+#define FNTL_FINDROOT_BRENT_H
 
 #include "typedefs.h"
 #include "typedefs-rcpp.h"
