@@ -18,4 +18,9 @@ Useful links:
 \author{
 \strong{Maintainer}: Andrew M. Raim \email{andrew.raim@gmail.com} (\href{https://orcid.org/0000-0002-4440-2330}{ORCID})
 
+Authors:
+\itemize{
+  \item Andrew M. Raim \email{andrew.raim@gmail.com} (\href{https://orcid.org/0000-0002-4440-2330}{ORCID})
+}
+
 }
