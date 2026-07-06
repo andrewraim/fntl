@@ -1,5 +1,5 @@
-#ifndef FNTL_FD_JACOBIAN_H
-#define FNTL_FD_JACOBIAN_H
+#ifndef FNTL_JACOBIAN_H
+#define FNTL_JACOBIAN_H
 
 #include <Rcpp.h>
 #include "gradient.h"

@@ -1,5 +1,5 @@
-#ifndef FNTL_FINDROOT_H
-#define FNTL_FINDROOT_H
+#ifndef FNTL_FINDROOT_BISECT_H
+#define FNTL_FINDROOT_BISECT_H
 
 /*
 * The C code for uniroot in R appears not to be exported for easy inclusion in
@@ -67,7 +67,7 @@ inline findroot_result findroot_bisect(const dfd& f, double lower, double upper,
 		status = findroot_status::OK;
 	}
 
-	const std::string& message = findroot_messages[to_underlying(status)];
+	const std::string& message = findroot_messages[static_cast<unsigned int>(status)];
 
 	if (status != findroot_status::OK) {
 		if (action == error_action::STOP) {

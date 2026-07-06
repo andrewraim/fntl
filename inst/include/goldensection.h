@@ -74,7 +74,7 @@ inline optimize_result goldensection(const dfd& f, double lower,
 		status = optimize_status::OK;
 	}
 
-	const std::string& message = optimize_messages[to_underlying(status)];
+	const std::string& message = optimize_messages[static_cast<unsigned int>(status)];
 
 	if (status != optimize_status::OK) {
 		if (action == error_action::STOP) {

@@ -1,5 +1,5 @@
-#ifndef TRUNC_H
-#define TRUNC_H
+#ifndef FNTL_TRUNC_H
+#define FNTL_TRUNC_H
 
 #include "typedefs.h"
 #include "log-sum-exp.h"

@@ -1,5 +1,5 @@
-#ifndef FNTL_GRAD_H
-#define FNTL_GRAD_H
+#ifndef FNTL_GRADIENT_H
+#define FNTL_GRADIENT_H
 
 #include <Rcpp.h>
 #include "deriv.h"
