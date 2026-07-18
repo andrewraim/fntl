@@ -13,7 +13,7 @@ Rcpp::List first_ex(double a, double b)
     fntl::integrate_result out = fntl::integrate(f, 0, 1, args);
 
     Rprintf("value: %g\n", out.value);
-    Rprintf("status: %d\n", to_underlying(out.status));
+    Rprintf("status: %d\n", static_cast<unsigned int>(out.status));
 
     return Rcpp::wrap(out);
 }
