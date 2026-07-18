@@ -2479,8 +2479,8 @@ print(out$analytical)
 
 Minimization using the Newton-type algorithm underlying the [nlm][nlm-src] R function. The amounts to calling the C function [optif9][optif9-src] within the (experimental) R API. The implementation of `optif9` is based on @DennisSchnabel1983.
 
-::: {.callout-warning}
-The function `optif9` is in the experimental R API and therefore may be removed in future versions of R. If this occurs, it will also be removed from `fntl`.
+::: {.callout-warning title="Experimental API"}
+The function `optif9` is in the experimental R API and therefore may be removed in future versions of R. If this occurs, the functions in the present section will be removed from `fntl` accordingly.
 :::
 
 The gradient $g(\vec{x}) = \frac{\partial f(\vec{x})}{\partial \vec{x}}$ and Hessian $h(\vec{x}) = \frac{\partial^2 f(\vec{x})}{\partial \vec{x} \partial \vec{x}^\top}$ may be provided explicitly if available. When the gradient and/or Hessian are not specified, numerical approximations are used by `optif9`.
