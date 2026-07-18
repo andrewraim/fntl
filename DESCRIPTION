@@ -22,6 +22,7 @@ Suggests:
     numDeriv,
     rmarkdown,
     quarto,
+    RcppArmadillo,
     tidyverse,
     tinytest
 LinkingTo: 

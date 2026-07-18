@@ -2,10 +2,7 @@
 
 - Use `static_cast` rather than `to_underlying` to cast enums to integers.
 - Use lowercase variable and function names with underscores rather than camel
-  case.
-- Add support in API to update an existing proposal. This can be used to tune
-  proposals within a Gibbs sampler. A detailed example has been added to the
-  vignette.
+  case. The API is included in the changes.
 
 # fntl 0.1.2
 

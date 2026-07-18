@@ -18,4 +18,3 @@ double arma_example(arma::vec y, arma::vec mu)
     auto out = fntl::optimize_brent(f, 0, 100, args);
     return out.par;
 }
-
