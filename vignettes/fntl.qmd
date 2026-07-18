@@ -267,9 +267,18 @@ R, but are intended to be comparable.
 present the API in detail by topic: numerical integration in @sec-integrate,
 numerical differentiation in @sec-diff, root-finding in @sec-findroot,
 univariate optimization in @sec-optimize, multivariate optimization in
-@sec-optim, and matrix operations in @sec-matrix. The C++ examples in each
-section can be obtained as standalone files in the
-[vignettes/examples][examples-url] folder of the `fntl` source repository.
+@sec-optim, matrix operations in @sec-matrix, truncated distributions in
+@sec-trunc, and other utilities in @sec-util. The examples in each section can
+be obtained as standalone files in the [vignettes/examples][examples-url]
+folder of the `fntl` source repository. They can also be accessed in the
+`doc/examples` folder of the installed `fntl` package; this path can be
+accessed in R with the following command.
+
+```{r}
+#| eval: false
+#| prompt: true
+file.path(path.package("fntl"), "doc", "examples")
+```
 
 [stl-url]: https://www.cppreference.com/Cpp_STL_ReferenceManual.pdf
 [RcppLambdaPost]: https://gallery.rcpp.org/articles/simple-lambda-func-c++11
@@ -3124,7 +3133,7 @@ f = function(x) { x > 0 & x < 0.5 }
 which(f(X), arr.ind = TRUE) - 1
 ```
 
-# Truncated Distributions
+# Truncated Distributions {#sec-trunc}
 
 Functions to support a univariate distribution truncated to the interval
 $(a , b]$. Operations include variate generation, the density function, the
