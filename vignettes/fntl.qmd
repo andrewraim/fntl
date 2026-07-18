@@ -3409,6 +3409,20 @@ Rcpp::sourceCpp("examples/r_trunc.cpp")
 r_trunc_ex(n = 20, shape1 = 2, shape2 = 5, lo = 0.5, hi = 0.95)
 ```
 
+# Utilities  {#sec-util}
+
+## Formatted Print with Timestamp {#sec-api-logger}
+
+The following function writes a formatted message to the console preceded by a timestamp.
+
+```{cpp}
+void logger(const char* fmt, ...);
+```
+
+The arguments should be used in the same way as the C function `printf`. The timestamp is formatted as `"%Y-%m-%d %H:%M:%S"` and is in the local time zone of the machine. A dash `"-"` is displayed between the timestamp and the formatted message with one space of padding on each side. A reference for formatted messages can be found in R under the manual page `?sprintf`; for
+dates and times, see the manual page `?strptime`.
+
+
 # References {-}
 
 ::: {#refs}
