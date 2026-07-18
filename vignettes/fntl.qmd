@@ -23,6 +23,10 @@ format:
     include-in-header:
       text: |
         \usepackage{common}
+    cite-method: natbib
+    biblio-style: plainnat
+    natbiboptions:
+      - round
 pdf-engine: pdflatex
 vignette: >
   %\VignetteIndexEntry{fntl}
