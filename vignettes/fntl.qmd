@@ -31,6 +31,7 @@ vignette: >
 bibliography: references.bib
 editor_options: 
   chunk_output_type: console
+classoption: abstract
 abstract: |
   R programmers can combine R and C++ to effectively navigate
   a variety of computing tasks: R excels as a language for interactive tasks
@@ -3419,9 +3420,19 @@ The following function writes a formatted message to the console preceded by a t
 void logger(const char* fmt, ...);
 ```
 
-The arguments should be used in the same way as the C function `printf`. The timestamp is formatted as `"%Y-%m-%d %H:%M:%S"` and is in the local time zone of the machine. A dash `"-"` is displayed between the timestamp and the formatted message with one space of padding on each side. A reference for formatted messages can be found in R under the manual page `?sprintf`; for
-dates and times, see the manual page `?strptime`.
+It takes the same arguments as the C function `printf`. The timestamp is formatted as `"%Y-%m-%d %H:%M:%S"` and is in the local time zone of the machine. A dash `"-"` is displayed between the timestamp and the formatted message with one space of padding on each side. A reference for format placeholders within messages can be found in R under the manual page `?sprintf`; for dates and times, see the manual page `?strptime`.
 
+Here is an example.
+
+```{.cpp include="examples/logger.cpp"}
+```
+
+Call the function from R.
+
+```{r}
+Rcpp::sourceCpp("examples/logger.cpp")
+logger_ex()
+```
 
 # References {-}
 

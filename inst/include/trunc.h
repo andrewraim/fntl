@@ -7,7 +7,7 @@
 namespace fntl {
 
 /*
-* In the functions here, we compute two versions of probabilities: one making
+* In these functions, we compute two versions of probabilities: one making
 * use of lower CDF values and one making use of upper CDF values. One of the
 * two may lose precision and become `-Inf` while the other remains finite.
 * Therefore, take the maximum of the two.
@@ -40,25 +40,25 @@ inline double p_trunc(double x, double lo, double hi, const cdf& F,
 	} else if (x > hi) {
 		out = 0;
 	} else {
-	    double lpa = F(lo, true, true);
-	    double lpb = F(hi, true, true);
-	    double clpa = F(lo, false, true);
-	    double clpb = F(hi, false, true);
+		double lpa = F(lo, true, true);
+		double lpb = F(hi, true, true);
+		double clpa = F(lo, false, true);
+		double clpb = F(hi, false, true);
 		double lp_den = log_sub2_exp(lpb, lpa);
-	    double clp_den = log_sub2_exp(clpa, clpb);
+		double clp_den = log_sub2_exp(clpa, clpb);
 
 		double lpx = F(x, true, true);
 		double clpx = F(x, false, true);
-	    double lp_num;
-	    double clp_num;
+		double lp_num;
+		double clp_num;
 
-	    if (lower) {
+		if (lower) {
 			lp_num = log_sub2_exp(lpx, lpa);
 			clp_num = log_sub2_exp(clpa, clpx);
-	    } else {
+		} else {
 			lp_num = log_sub2_exp(lpb, lpx);
 			clp_num = log_sub2_exp(clpx, clpb);
-	    }
+		}
 
 		out = std::max(lp_num, clp_num) - std::max(lp_den, clp_den);
    	}
@@ -80,23 +80,40 @@ inline double q_trunc(double p, double lo, double hi, const cdf& F,
 	double clpb = F(hi, false, true);
 	double clp = log_sub2_exp(clpa, clpb);
 
-	double lpr = std::max(lp, clp);
+	/*
+	* Probability of the denominator (on the log-scale) computed using both
+	* complementary and non-complementary probabilities. The values of lo and
+	* hi may be such that one evaluates numerically to -Inf but the other
+	* evaluates to a finite number.
+	*
+	* Also protect against log-probabilities greater than zero, which can
+	* happen numerically.
+	*/
 
-	double lq;
-	if (std::isinf(lpp) || std::isinf(lpr)) {
-		lq = lpa;
+	// Use the complementary probabilities
+	double clq = log_sub2_exp(clpa, lpp + clp);
+	clq = std::min(clq, 0.0);
+	double out1 = Finv(clq, false, true);
+
+	// Use the non-complementary probabilities
+	double lq = log_add2_exp(lpa, lpp + lp);
+	lq = std::min(lq, 0.0);
+	double out2 = Finv(lq, true, true);
+
+	double out;
+
+	if (std::isinf(out1) || std::isnan(out1)) {
+		out = out2;
+	} else if (std::isinf(out2) || std::isnan(out2)) {
+		out = out1;
 	} else {
-		lq = log_add2_exp(lpa, lpp + lpr);
+		out = out2;
 	}
 
-	// Protect against log-probabilities greater than zero, which can happen
-	// numerically (assuming there are no mistakes).
-	lq = std::min(lq, 0.0);
-
-	double out = Finv(lq, true, true);
-
-	// Protect against quantiles outside of the support, which can happen
-	// numerically (assuming there are no mistakes).
+	/*
+	* Protect against quantiles outside of the support, which can happen
+	* numerically (assuming there are no mistakes).
+	*/
 	return std::max(std::min(out, hi), lo);
 }
 
