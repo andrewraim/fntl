@@ -104,9 +104,9 @@ project's Github repository (<https://github.com/andrewraim/fntl>).
 
 # Introduction {#sec-intro}
 
-Users of R [@Rcore2024] can implement intensive computations in compiled C++
+Users of R [@Rcore] can implement intensive computations in compiled C++
 and engage in interactive computation through the interpreted R language. The
-Rcpp package [@Rcpp2024] simplifies the process by automating interoperation
+Rcpp package [@Rcpp] simplifies the process by automating interoperation
 between the two languages and providing an intuitive API in C++. However,
 numerical tools such as integration, root-finding, and optimization, which are
 routinely used in R, are not as readily available or easy to use when carrying
@@ -118,7 +118,7 @@ R-like code can be achieved in C++ where functions are defined on the fly and
 passed as arguments to other routines. The name "fntl" is a portmanteau of
 "**f**unctions", "**n**umerical **t**ools", and "**l**ambdas".
 
-@IhakaGentleman1996 describe programming with functions as one of the main
+@Ihaka-Gentleman-1996 describe programming with functions as one of the main
 motivations in developing R. Namely, functions may be defined dynamically in
 the course of a program and can make use of variables from the surrounding
 environment. As an example, consider the following R snippet to compute the
@@ -135,7 +135,7 @@ Here the generated sample `x` is "baked in" to the definition of `loglik` so
 that `loglik` can be regarded as a univariate function of `mu` to be used with
 `optimize`. The ability to construct functions such as `loglik` in the course
 of a program and pass them to other functions, as any other variable, can be
-tremendously convenient. @Wickham2019 discusses some design patterns which are
+tremendously convenient. @Wickham-2019 discusses some design patterns which are
 possible using functions in R. However, such conveniences come at a cost, as
 performance can be inefficient in both speed and memory management.
 
@@ -147,7 +147,7 @@ matrix operations can yield a significant performance improvement when it is
 feasible. Compiled languages such as FORTRAN and C/C++ are often used for high
 performance implementation of numerical methods; however, they are not
 well-suited for interactive usages such as data wrangling, data analysis,
-and graphics like R, MATLAB, or Python. Julia [@BezansonEtAl2017] has emerged
+and graphics like R, MATLAB, or Python. Julia [@Bezanson-EtAl-2017] has emerged
 over the past decade as a language for scientific computing which is both
 suitable to be used interactively and compiles into efficient executable code.
 
@@ -163,7 +163,7 @@ performance while submerged in C++ is free of this overhead. The Rcpp API
 provides general C++ classes for vectors, matrices, lists, and other routinely
 used objects from R. Additional Rcpp extension packages have been developed to
 provide APIs with more application-specific classes; for example, `RcppArmadillo`
-[@EddelbuettelSanderson2014] exposes the API from Armadillo for numerical
+[@Eddelbuettel-Sanderson-2014] exposes the API from Armadillo for numerical
 matrix operations.
 
 A performance penalty is also suffered when defining a function in R and using
@@ -175,7 +175,7 @@ using C++. Instead, we will consider utilizing lambda functions in C++, which
 were introduced in the C++11 specification. There are alternative methods of
 defining and passing functions as objects - such as through function pointers
 and functor classes - but lambda functions seem best aligned with the R style
-discussed by @IhakaGentleman1996. Traditional functions and classes used in the
+discussed by @Ihaka-Gentleman-1996. Traditional functions and classes used in the
 function pointer and functor approaches, respectively, are declared in their
 own blocks prior to use. Another major difference lies in auxiliary data - such
 as sample data in a loglikelihood function - which are not considered to be
@@ -241,17 +241,17 @@ of the STL `transform` function to apply a lambda to each element of a vector.
 The `fntl` package avoids duplicating this existing functionality.
 
 Numerical tools implemented in `fntl` are covered in other Rcpp-related
-packages to some extent. The `RcppNumerical` package [@RcppNumerical2024]
+packages to some extent. The `RcppNumerical` package [@RcppNumerical]
 implements numerical integration - both univariate and multivariate - and
 optimization using a limited memory Broyden, Fletcher, Goldfarb and Shanno
 method. This is accomplished by providing an Rcpp interface to  several open
-source libraries. The `roptim` package [@Roptim2022] provides an Rcpp interface
+source libraries. The `roptim` package [@Roptim] provides an Rcpp interface
 to the R API to call individual optimization methods underlying the `optim`
 function. Function arguments in both `RcppNumerical` and `roptim` are specified
 via C++ functors. This vignette of `roptim` provides a discussion on calling
 the R API which was helpful in the development of `fntl`. A number of numerical
-utilities in the GSL [@GalassiEtAl2009] and [Boost](https://www.boost.org)
-libraries are provided by the `RcppGSL` [@RcppGSL2024] and `BH` [@BH2024]
+utilities in the GSL [@Galassi-EtAl-2009] and [Boost](https://www.boost.org)
+libraries are provided by the `RcppGSL` [@RcppGSL] and `BH` [@BH]
 packages, respectively. The `RcppGSL` package requires installation of the
 underlying GSL library to build the source package. The author of the present
 document finds the interfaces of both GSL and Boost to be somewhat daunting,
@@ -262,7 +262,7 @@ intended to be simple and familiar to R users. External dependencies beyond
 the R platform itself and the Rcpp package are avoided; this is to support use
 in locked-down computing environments where adding or upgrading system libraries
 may be nontrivial. For numerical methods, we first prefer to make use of
-functions exposed as entry points in the R API [@WritingRExtensions, Section 6].
+functions exposed as entry points in the R API [@R-ext, Section 6].
 In cases where a desired R method is not exposed in the API, we roll our own
 implementation. Such methods in `fntl` may not be exactly the same as those in
 R, but are intended to be comparable. 
@@ -284,8 +284,8 @@ accessed in R with the following command.
 file.path(path.package("fntl"), "doc", "examples")
 ```
 
-[stl-url]: https://www.cppreference.com/Cpp_STL_ReferenceManual.pdf
-[RcppLambdaPost]: https://gallery.rcpp.org/articles/simple-lambda-func-c++11
+[stl-url]: https://www.cppreference.com
+[RcppLambdaPost]: https://gallery.rcpp.org/articles/simple-lambda-func-c++11/
 [examples-url]: https://github.com/andrewraim/fntl/tree/main/vignettes/examples
 
 
@@ -350,9 +350,7 @@ functions. `integrate_args` is one example; other `args` types have a prefix
 matching their corresponding function. Each of these may
 be instantiated from an Rcpp `List` or exported to an Rcpp `List` using the
 `as` and `wrap` mechanisms, respectively.^[Details on implementing these
-mechanisms may be found in the [Rcpp Extending][rcpp-extend] vignette.]
-
-[rcpp-extend]: https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-extending.pdf
+mechanisms may be found in the vignette of @R-ext.]
 
 ```{cpp}
 // Create args and export to a list
@@ -672,7 +670,7 @@ by-const-reference - is most appropriate for their application in actual usage.
 
 ## Using RcppArmadillo
 
-The `RcppArmadillo` package [@EddelbuettelSanderson2014] greatly facilitates
+The `RcppArmadillo` package [@Eddelbuettel-Sanderson-2014] greatly facilitates
 numerical matrix operations in C++. While the `RcppArmadillo` API is not used
 in the `fntl` interface, `fntl` users may want to make use of the
 `RcppArmadillo` in their code. To use `RcppArmadillo` in code with `fntl`,
@@ -727,7 +725,7 @@ $\infty$. Directly uses the C functions [Rdqags][Rdqags-src] and
 These functions are based on two respective QUADPACK routines:
 [dqags][dqags-src] for the case when both limits are finite and
 [dqagi][dqagi-src] for the case when one or both limits are infinite
-[@PiessensEtAl1983]. 
+[@Piessens-EtAl-1983]. 
 
 [Rintegrate-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/integrate.R
 [Rdqags-src]: https://github.com/r-devel/r-svn/blob/b3133c253e72c7ae069e0d46964c9458a7219eaa/src/include/R_ext/Applic.h#L52
@@ -906,7 +904,7 @@ f(\vec{x}) - f(\vec{x} - h_i \vec{e}_i) - f(\vec{x} - h_j \vec{e}_j) + f(\vec{x}
 for given $h_1 > 0$ and $h_2 > 0$
 using symmetric, forward, or backward differences respectively.
 The accuracy of these derivatives depends on the nature of the function $f$ at
-$\vec{x}$ and the choice of $h$. See Section 5.7 of @PressEtAl2007 for discussion.
+$\vec{x}$ and the choice of $h$. See Section 5.7 of @Press-EtAl-2007 for discussion.
 
 ### Functions {.unnumbered .unlisted}
 
@@ -1027,7 +1025,7 @@ Richardson extrapolation. This is typically more accurate than the simple
 finite differences in [@sec-fd-deriv] and does not require an informed choice of
 the step size $h$; however, it requires more evaluations of $f$. A general
 discussion of Richardson extrapolation is given in Section 9.6 of
-@QuarteroniSaccoSaleri2007.
+@Quarteroni-Sacco-Saleri-2007.
 
 Taking the function $g(h)$ to be one of finite difference approximations
 (symmetric, forward, or backward), $h > 0$ to be an initial step size, and
@@ -1060,7 +1058,7 @@ $$
 <!-- -->
 with $e$ as the smallest $e_{mq}$ computed so far and $\tau > 1$ is a given
 multiplier. These criteria for convergence and stopping early due to reduced
-numerical precision are suggested in Section 5.7 of @PressEtAl2007; similar
+numerical precision are suggested in Section 5.7 of @Press-EtAl-2007; similar
 considerations for halting criteria are considered in the Julia package
 [Richardson.jl][richardson-jl].
 
@@ -1461,8 +1459,8 @@ $$
 Each coordinate is computed via `deriv2` in @sec-deriv.
 
 Note that there is a C function [fdhess][fdhess-src] within R which is based on
-Algorithm A5.6.2 of @DennisSchnabel1983. However, it is not included in the API
-for external use [@WritingRExtensions, Section 6].
+Algorithm A5.6.2 of @Dennis-Schnabel-1983. However, it is not included in the API
+for external use [@R-ext, Section 6].
 
 [fdhess-src]: https://github.com/r-devel/r-svn/blob/5c0e367225ec0ed9e1a95864302a6311708533ee/src/include/R_ext/Applic.h#L131
 
@@ -1549,9 +1547,9 @@ for external use. We therefore provide several alternatives in C++.
 [zeroin2-src]: https://github.com/r-devel/r-svn/blob/685baa84532ee09727f04725d5128f39d564bea5/src/library/stats/src/stats.h#L61C8-L61C17
 
 There are currently two implementations. The bisection method
-[e.g., @PressEtAl2007, Section 9.1] is simpler while Brent's method is
+[e.g., @Press-EtAl-2007, Section 9.1] is simpler while Brent's method is
 faster and is used in `uniroot`. This implementation of Brent's method is based
-on the ALGOL code in Section 4.6 of @Brent1973. The two functions use a common
+on the ALGOL code in Section 4.6 of @Brent-1973. The two functions use a common
 arguments struct, results struct, and status codes, which are given below.
 
 ## Optional Arguments {.unnumbered .unlisted}
@@ -1722,14 +1720,14 @@ print(out)
 Minimize the function $f : \mathbb{R} \rightarrow \mathbb{R}$ on a given
 interval $[a, b]$. The R [optimize][Roptimize-src] function is based on an
 underlying [Brent_fmin][optimize-src] C implementation of Brent's algorithm
-[@Brent1973, Section 5]. However, this function appears not to be exported
+[@Brent-1973, Section 5]. However, this function appears not to be exported
 from R for external use.
 
 We provide several alternatives in C++: The golden section search method
-[e.g., @PressEtAl2007, Section 10.2] is simple, guaranteed to converge, and
+[e.g., @Press-EtAl-2007, Section 10.2] is simple, guaranteed to converge, and
 does not require information about derivatives. Brent's algorithm is more
 involved but converges faster. The implementation of Brent's algorithm in C++
-based is on the ALGOL code in Section 5.8 of @Brent1973. The golden section and
+based is on the ALGOL code in Section 5.8 of @Brent-1973. The golden section and
 Brent functions use a common arguments struct, results struct, and status codes,
 which are given below.
 
@@ -1915,7 +1913,7 @@ This section presents methods to minimize a function $f : \mathbb{R}^n \rightarr
 ## Nelder-Mead
 
 Relies only on evaluation of $f$ and does not use the
-gradient or Hessian [@NelderMead1965]. This function directly calls
+gradient or Hessian [@Nelder-Mead-1965]. This function directly calls
 [nmmin][nmmin-src], the C function that gets invoked when using the
 [optim][Roptim-src] R function with `method = "Nelder-Mead"`.
 
@@ -2037,7 +2035,7 @@ print(out)
 
 ## BFGS
 
-Minimization using the BFGS (Broyden-Fletcher-Goldfarb-Shanno) algorithm [@Nash1990]. Relies on evaluation of $f$ and its gradient $g(\vec{x}) = \frac{\partial f(\vec{x})}{\partial \vec{x}}$ but not the Hessian. This function directly calls [vmmin][vmmin-src], the C function that gets invoked when using the [optim][Roptim-src] R function with `method = "BFGS"`.
+Minimization using the BFGS (Broyden-Fletcher-Goldfarb-Shanno) algorithm [@Nash-1990]. Relies on evaluation of $f$ and its gradient $g(\vec{x}) = \frac{\partial f(\vec{x})}{\partial \vec{x}}$ but not the Hessian. This function directly calls [vmmin][vmmin-src], the C function that gets invoked when using the [optim][Roptim-src] R function with `method = "BFGS"`.
 
 [vmmin-src]: https://github.com/r-devel/r-svn/blob/62dd8b09461d5d1313f4722d9d63abb463a9e42d/src/include/R_ext/Applic.h#L67
 [Roptim-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/optim.R
@@ -2178,7 +2176,7 @@ print(out$analytical)
 ## L-BFGS-B {#sec-lbfgs}
 
 Minimization using the L-BFGS-B (Limited memory
-Broyden-Fletcher-Goldfarb-Shanno) algorithm [@ByrdEtAl1995]. Relies on
+Broyden-Fletcher-Goldfarb-Shanno) algorithm [@Byrd-EtAl-1995]. Relies on
 evaluation of $f$ and its gradient $g(\vec{x}) = \frac{\partial f(\vec{x})}{\partial \vec{x}}$
 but not the Hessian. This function directly calls [lbfgsb][lbfgsb-src], the C
 function that gets invoked when using the [optim][Roptim-src] R function with
@@ -2338,7 +2336,7 @@ print(out$analytical)
 
 ## Conjugate Gradient {#sec-cg}
 
-Minimization using the conjugate gradient algorithm [@FletcherReeves1964; @Nash1990]. Relies on evaluation of $f$ and its gradient $g(\vec{x}) = \frac{\partial f(\vec{x})}{\partial \vec{x}}$ but not the Hessian. This function directly calls [cgmin][cgmin-src], the C function that gets invoked when using the [optim][Roptim-src] R function with `method = "CG"`.
+Minimization using the conjugate gradient algorithm [@Fletcher-Reeves-1964; @Nash-1990]. Relies on evaluation of $f$ and its gradient $g(\vec{x}) = \frac{\partial f(\vec{x})}{\partial \vec{x}}$ but not the Hessian. This function directly calls [cgmin][cgmin-src], the C function that gets invoked when using the [optim][Roptim-src] R function with `method = "CG"`.
 
 [cgmin-src]: https://github.com/r-devel/r-svn/blob/62dd8b09461d5d1313f4722d9d63abb463a9e42d/src/include/R_ext/Applic.h#L75
 [Roptim-src]: https://github.com/r-devel/r-svn/blob/main/src/library/stats/R/optim.R
@@ -2481,7 +2479,7 @@ print(out$analytical)
 
 ## Newton-Type Algorithm for Nonlinear Optimization
 
-Minimization using the Newton-type algorithm underlying the [nlm][nlm-src] R function. The amounts to calling the C function [optif9][optif9-src] within the (experimental) R API. The implementation of `optif9` is based on @DennisSchnabel1983.
+Minimization using the Newton-type algorithm underlying the [nlm][nlm-src] R function. The amounts to calling the C function [optif9][optif9-src] within the (experimental) R API. The implementation of `optif9` is based on @Dennis-Schnabel-1983.
 
 ::: {.callout-warning title="Experimental API"}
 The function `optif9` is in the experimental R API and therefore may be removed in future versions of R. If this occurs, the functions in the present section will be removed from `fntl` accordingly.
@@ -2999,7 +2997,7 @@ outer_sp_ex(X)
 
 ## Matrix-Free Linear Solve
 
-Solve a linear system $\vec{A} \vec{x} = \vec{b}$ for symmetric positive definite $\vec{A} \in \mathbb{R}^{n \times n}$ using the conjugate gradient method [e.g., @NocedalWright2006, Chapter 5], where the operation $\vec{A} \vec{x}$ is specified through a function $\ell(\vec{x}) = \vec{A} \vec{x}$. This can be used to avoid explicit storage of large matrices when $\vec{A}$ is sparse. The solution $\vec{x}^*$ is found by minimizing the quadratic function
+Solve a linear system $\vec{A} \vec{x} = \vec{b}$ for symmetric positive definite $\vec{A} \in \mathbb{R}^{n \times n}$ using the conjugate gradient method [e.g., @Nocedal-Wright-2006, Chapter 5], where the operation $\vec{A} \vec{x}$ is specified through a function $\ell(\vec{x}) = \vec{A} \vec{x}$. This can be used to avoid explicit storage of large matrices when $\vec{A}$ is sparse. The solution $\vec{x}^*$ is found by minimizing the quadratic function
 <!-- -->
 $$
 f(\vec{x}) = \frac{1}{2} \vec{x}^\top \ell(\vec{x}) - \vec{b}^\top \vec{x},
@@ -3009,9 +3007,9 @@ so that $f'(\vec{x}^*) = 0 \iff \vec{A} \vec{x}^* = \vec{b}$. Minimization is ca
 
 ### Functions {.unnumbered .unlisted}
 
-Primary location of source code is the file [inst/include/solve_cg.h][solve_cg-h].
+Primary location of source code is the file [inst/include/solve_cg.h][solve-cg-h].
 
-[solve_cg-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/solve_cg.h
+[solve-cg-h]: https://github.com/andrewraim/fntl/blob/main/inst/include/solve-cg.h
 
 ```{cpp}
 cg_result solve_cg(
