@@ -44,7 +44,8 @@ idx1 = which(E <= 3, arr.ind = T)
 expect_equal(B[idx1], E[idx1])
 expect_true(all(B[idx0] == 0))
 
-expect_true( all(outer1_matvec(X, f, a) == E %*% a) )
+expect_true(all.equal(outer1_matvec(X, f, a), E %*% a,
+	check.attributes = FALSE, check.class = FALSE))
 
 # ----- Test outer2, outer2_triplet, and outer2_matvec -----
 x = rnorm(m*d)
@@ -84,4 +85,5 @@ idx1 = which(E <= 3, arr.ind = T)
 expect_equal(B[idx1], E[idx1])
 expect_true(all(B[idx0] == 0))
 
-expect_equal(outer2_matvec(X, Y, f, a), as.numeric(E %*% a))
+expect_true(all.equal(outer2_matvec(X, Y, f, a), E %*% a,
+	check.attributes = FALSE, check.class = FALSE))
