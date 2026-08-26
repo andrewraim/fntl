@@ -1,6 +1,8 @@
 #ifndef FNTL_UTIL_H
 #define FNTL_UTIL_H
 
+#include <ctime>
+
 namespace fntl {
 
 inline void logger(const char* fmt, ...)
